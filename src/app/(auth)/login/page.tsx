@@ -2,16 +2,39 @@ import { LoginForm } from "@/components/auth/LoginForm";
 
 export default function LoginPage() {
   return (
-    <div className="rounded-lg border border-line bg-surface p-8 shadow-2">
-      <div className="mb-6">
-        <div className="text-page-title font-semibold tracking-tight text-ink-900">
-          itri<span className="text-sapphire-600">X</span>
-        </div>
-        <p className="mt-1 text-sec text-ink-500">
-          Internal Operations — sign in to continue.
-        </p>
+    <div className="animate-fade-up">
+      {/* Brand mark above the card, in oni white like the sidebar */}
+      <div className="mb-6 flex items-center justify-center gap-2 text-section font-semibold tracking-tight text-oni">
+        itri<span className="text-sapphire-300">X</span>
+        <span className="text-micro font-medium uppercase tracking-[0.1em] text-oni-muted">
+          Ops
+        </span>
       </div>
-      <LoginForm />
+
+      {/* Card — a lifted indigo-800 panel with a gold top hairline */}
+      <div className="relative overflow-hidden rounded-lg border border-sidebar-border bg-indigo-800/80 p-8 shadow-3 backdrop-blur-sm">
+        {/* Gold signature line across the top edge */}
+        <div
+          aria-hidden
+          className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-gold-500 to-transparent"
+        />
+
+        <div className="mb-6">
+          <div className="text-page-title font-semibold tracking-tight text-oni">
+            Welcome back
+          </div>
+          <p className="mt-1 text-sec text-oni-muted">
+            Internal Operations — sign in to continue.
+          </p>
+        </div>
+
+        <LoginForm />
+      </div>
+
+      {/* Quiet footer note */}
+      <p className="mt-6 text-center text-micro uppercase tracking-[0.08em] text-oni-muted/60">
+        Authorized personnel only
+      </p>
     </div>
   );
 }
