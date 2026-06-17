@@ -11,8 +11,8 @@ export default function LoginPage() {
         </span>
       </div>
 
-      {/* Card — a lifted indigo-800 panel with a gold top hairline */}
-      <div className="relative overflow-hidden rounded-lg border border-sidebar-border bg-indigo-800/80 p-8 shadow-3 backdrop-blur-sm">
+      {/* Card — luminous indigo panel, lifted off the deep background */}
+      <div className="relative overflow-hidden rounded-lg border border-sapphire-300/15 bg-gradient-to-b from-indigo-700/70 to-indigo-800/80 p-8 shadow-3 ring-1 ring-inset ring-oni/5 backdrop-blur-md">
         {/* Gold signature line across the top edge */}
         <div
           aria-hidden
