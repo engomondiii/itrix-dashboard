@@ -1,21 +1,28 @@
+import { cookies } from "next/headers";
+
 import { Sidebar } from "@/components/layout/Sidebar";
 import { Topbar } from "@/components/layout/Topbar";
+import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
 import type { SessionUser } from "@/types/auth";
 
-export function DashboardShell({
+export async function DashboardShell({
   user,
   children,
 }: {
   user: SessionUser;
   children: React.ReactNode;
 }) {
+  // Restore the collapsed/expanded state persisted by SidebarProvider.
+  const cookieStore = await cookies();
+  const defaultOpen = cookieStore.get("sidebar_state")?.value !== "false";
+
   return (
-    <div className="flex min-h-screen">
+    <SidebarProvider defaultOpen={defaultOpen}>
       <Sidebar />
-      <div className="flex min-w-0 flex-1 flex-col">
+      <SidebarInset>
         <Topbar user={user} />
         <main className="flex-1 bg-canvas px-4 py-6 sm:px-6">{children}</main>
-      </div>
-    </div>
+      </SidebarInset>
+    </SidebarProvider>
   );
 }
