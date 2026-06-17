@@ -1,17 +1,20 @@
-import { SidebarLink } from "@/components/layout/SidebarLink";
+import { SidebarNavItem } from "@/components/layout/SidebarLink";
+import {
+  SidebarGroup,
+  SidebarGroupLabel,
+  SidebarMenu,
+} from "@/components/ui/sidebar";
 import type { NavSection } from "@/config/navigation.config";
 
 export function SidebarSection({ section }: { section: NavSection }) {
   return (
-    <div className="space-y-0.5">
-      {section.label && (
-        <div className="px-3 pt-4 pb-1 text-micro font-semibold uppercase tracking-[0.08em] text-oni-muted/70">
-          {section.label}
-        </div>
-      )}
-      {section.items.map((item) => (
-        <SidebarLink key={item.href} item={item} />
-      ))}
-    </div>
+    <SidebarGroup>
+      {section.label && <SidebarGroupLabel>{section.label}</SidebarGroupLabel>}
+      <SidebarMenu>
+        {section.items.map((item) => (
+          <SidebarNavItem key={item.href} item={item} />
+        ))}
+      </SidebarMenu>
+    </SidebarGroup>
   );
 }
