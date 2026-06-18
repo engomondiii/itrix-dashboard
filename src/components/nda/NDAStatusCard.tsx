@@ -7,7 +7,7 @@ import { NDAMarkCompleteButton } from "@/components/nda/NDAMarkCompleteButton";
 import { NDASendButton } from "@/components/nda/NDASendButton";
 import { ROUTES } from "@/constants/routes";
 import { formatDate } from "@/lib/formatting";
-import type { NDARecord, NDAStatus } from "@/types/nda";
+import type { NDAListItem, NDAStatus } from "@/types/nda";
 
 const STATUS_VARIANT: Record<
   NDAStatus,
@@ -22,7 +22,7 @@ const STATUS_VARIANT: Record<
 
 const PENDING_STATUSES: NDAStatus[] = ["required", "sent"];
 
-export function NDAStatusCard({ nda }: { nda: NDARecord }) {
+export function NDAStatusCard({ nda }: { nda: NDAListItem }) {
   return (
     <div className="rounded-md border border-line bg-surface p-4 shadow-1">
       <div className="flex flex-wrap items-center gap-3">

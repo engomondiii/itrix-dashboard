@@ -38,3 +38,6 @@ export interface NDARecord {
   signedAt?: string | null;
   declineReason?: string;
 }
+
+/** Queue/list row — omits the heavy document body (only the detail view needs it). */
+export type NDAListItem = Omit<NDARecord, "body">;

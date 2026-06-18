@@ -1,9 +1,17 @@
 import { apiGet, apiSend } from "@/lib/api/client";
 import { API } from "@/constants/routes";
-import type { NDADocType, NDARecord } from "@/types/nda";
+import type { Paginated } from "@/types/api";
+import type { NDADocType, NDAListItem, NDARecord } from "@/types/nda";
 
-export function listNda() {
-  return apiGet<{ results: NDARecord[]; count: number }>(API.nda);
+export interface NdaQuery {
+  status?: string;
+  search?: string;
+  page?: number;
+  pageSize?: number;
+}
+
+export function listNda(query: NdaQuery = {}) {
+  return apiGet<Paginated<NDAListItem>>(API.nda, { ...query });
 }
 
 export function getNda(leadId: string) {

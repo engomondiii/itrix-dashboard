@@ -2,7 +2,7 @@ import "server-only";
 
 import { MOCK_LEADS } from "@/mocks/leads";
 import { getLead, setStatus } from "@/mocks/leadsDb";
-import type { NDADocType, NDARecord, NDAStatus } from "@/types/nda";
+import type { NDADocType, NDAListItem, NDARecord, NDAStatus } from "@/types/nda";
 
 const SIGNED_STATUSES = ["Evaluation", "PoC", "Licensed"];
 const NDA_LEAD_STATUSES = ["NDA", "Evaluation", "PoC", "Licensed"];
@@ -95,8 +95,45 @@ function build(): NDARecord[] {
   });
 }
 
-export function listNda(): NDARecord[] {
-  return build();
+/** Drop the heavy document body for list payloads. */
+function toListItem(n: NDARecord): NDAListItem {
+  const { body, ...rest } = n;
+  void body;
+  return rest;
+}
+
+export interface NdaListQuery {
+  status?: string;
+  search?: string;
+  page?: number;
+  pageSize?: number;
+}
+
+/** Filtered, searched, paginated NDA list (without document bodies). */
+export function listNda(query: NdaListQuery = {}): {
+  results: NDAListItem[];
+  count: number;
+  page: number;
+  pageSize: number;
+} {
+  const page = Math.max(1, query.page ?? 1);
+  const pageSize = Math.max(1, query.pageSize ?? 25);
+  const search = query.search?.toLowerCase().trim();
+
+  let rows = build();
+  if (query.status) rows = rows.filter((n) => n.status === query.status);
+  if (search) {
+    rows = rows.filter((n) =>
+      `${n.leadName} ${n.company ?? ""} ${n.signerName ?? ""} ${n.signerEmail ?? ""}`
+        .toLowerCase()
+        .includes(search),
+    );
+  }
+
+  const count = rows.length;
+  const start = (page - 1) * pageSize;
+  const results = rows.slice(start, start + pageSize).map(toListItem);
+  return { results, count, page, pageSize };
 }
 
 export function getNda(leadId: string): NDARecord | null {

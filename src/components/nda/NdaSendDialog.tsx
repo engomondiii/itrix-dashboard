@@ -15,14 +15,14 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useSendNda } from "@/hooks/useNda";
-import type { NDARecord } from "@/types/nda";
+import type { NDAListItem } from "@/types/nda";
 
 /** Send the drafted NDA to a named signer (required -> sent). */
 export function NdaSendDialog({
   nda,
   onClose,
 }: {
-  nda: NDARecord;
+  nda: NDAListItem;
   onClose: () => void;
 }) {
   const send = useSendNda();

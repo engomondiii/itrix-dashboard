@@ -16,12 +16,16 @@ import {
   sendNda,
   signNda,
   type NdaDraftInput,
+  type NdaQuery,
 } from "@/lib/api/ndaApi";
 import { useToast } from "@/hooks/useToast";
 import type { NDARecord } from "@/types/nda";
 
-export function useNdaQueue() {
-  return useQuery({ queryKey: ["nda"], queryFn: listNda });
+export function useNdaQueue(query: NdaQuery = {}) {
+  return useQuery({
+    queryKey: ["nda", "list", query],
+    queryFn: () => listNda(query),
+  });
 }
 
 export function useNdaRecord(leadId: string) {
