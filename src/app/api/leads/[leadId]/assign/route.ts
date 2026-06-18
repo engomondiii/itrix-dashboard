@@ -22,7 +22,8 @@ export async function POST(
     return NextResponse.json(await r.json(), { status: r.status });
   }
 
-  const lead = assignOwner(leadId, body?.owner ?? null, user.name);
+  const note = typeof body?.note === "string" ? body.note : undefined;
+  const lead = assignOwner(leadId, body?.owner ?? null, user.name, note);
   if (!lead) return NextResponse.json({ detail: "Not found" }, { status: 404 });
   return NextResponse.json(lead);
 }

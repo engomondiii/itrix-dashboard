@@ -26,12 +26,12 @@ export function getLead(id: string) {
   return apiGet<Lead>(API.lead(id));
 }
 
-export function assignOwner(id: string, owner: string | null) {
-  return apiSend<Lead>(API.leadAssign(id), "POST", { owner });
+export function assignOwner(id: string, owner: string | null, note?: string) {
+  return apiSend<Lead>(API.leadAssign(id), "POST", { owner, note });
 }
 
-export function setLeadStatus(id: string, status: LeadStatus) {
-  return apiSend<Lead>(API.leadStatus(id), "POST", { status });
+export function setLeadStatus(id: string, status: LeadStatus, reason?: string) {
+  return apiSend<Lead>(API.leadStatus(id), "POST", { status, reason });
 }
 
 export function addLeadNote(id: string, body: string) {

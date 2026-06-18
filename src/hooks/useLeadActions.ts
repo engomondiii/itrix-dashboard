@@ -36,12 +36,14 @@ export function useLeadActions(id: string) {
 
   return {
     assign: useMutation({
-      mutationFn: (owner: string | null) => assignOwner(id, owner),
+      mutationFn: (vars: { owner: string | null; note?: string }) =>
+        assignOwner(id, vars.owner, vars.note),
       onSuccess: (l) => onSuccess(l, "Owner updated"),
       onError,
     }),
     setStatus: useMutation({
-      mutationFn: (status: LeadStatus) => setLeadStatus(id, status),
+      mutationFn: (vars: { status: LeadStatus; reason?: string }) =>
+        setLeadStatus(id, vars.status, vars.reason),
       onSuccess: (l) => onSuccess(l, "Status updated"),
       onError,
     }),

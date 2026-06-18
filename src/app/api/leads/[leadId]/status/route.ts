@@ -22,7 +22,8 @@ export async function POST(
     return NextResponse.json(await r.json(), { status: r.status });
   }
 
-  const lead = setStatus(leadId, body?.status, user.name);
+  const reason = typeof body?.reason === "string" ? body.reason : undefined;
+  const lead = setStatus(leadId, body?.status, user.name, reason);
   if (!lead) return NextResponse.json({ detail: "Not found" }, { status: 404 });
   return NextResponse.json(lead);
 }

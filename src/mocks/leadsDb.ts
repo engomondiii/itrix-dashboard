@@ -62,19 +62,31 @@ export function getLead(id: string): Lead | null {
   return l ? enrich(l) : null;
 }
 
-export function assignOwner(id: string, owner: string | null, by?: string) {
+export function assignOwner(
+  id: string,
+  owner: string | null,
+  by?: string,
+  note?: string,
+) {
   const l = getLead(id);
   if (!l) return null;
   l.owner = owner;
-  pushActivity(l, "owner_change", `Owner set to ${owner ?? "Unassigned"}`, by);
+  const suffix = note?.trim() ? ` — ${note.trim()}` : "";
+  pushActivity(l, "owner_change", `Owner set to ${owner ?? "Unassigned"}${suffix}`, by);
   return l;
 }
 
-export function setStatus(id: string, status: Lead["status"], by?: string) {
+export function setStatus(
+  id: string,
+  status: Lead["status"],
+  by?: string,
+  reason?: string,
+) {
   const l = getLead(id);
   if (!l) return null;
   l.status = status;
-  pushActivity(l, "status_change", `Status → ${status}`, by);
+  const suffix = reason?.trim() ? ` — ${reason.trim()}` : "";
+  pushActivity(l, "status_change", `Status → ${status}${suffix}`, by);
   return l;
 }
 
