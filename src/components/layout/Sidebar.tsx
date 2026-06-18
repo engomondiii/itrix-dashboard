@@ -32,7 +32,7 @@ export function Sidebar() {
         </Link>
       </SidebarHeader>
 
-      <SidebarContent>
+      <SidebarContent className="nav-scroll">
         {navigation.map((section, i) => (
           <SidebarSection key={section.label ?? `top-${i}`} section={section} />
         ))}
