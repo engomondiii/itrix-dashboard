@@ -87,10 +87,21 @@ export function addNote(id: string, body: string, author: string) {
   return l;
 }
 
-export function escalate(id: string, by?: string) {
+export interface EscalationInput {
+  reason: string;
+  priority: string; // "normal" | "high" | "urgent"
+}
+
+export function escalate(id: string, input: EscalationInput, by?: string) {
   const l = getLead(id);
   if (!l) return null;
-  pushActivity(l, "escalated", "Escalated to executive review (Park Dae-hyuk)", by);
+  const priority = input.priority.toUpperCase();
+  pushActivity(
+    l,
+    "escalated",
+    `Escalated to executive review · ${priority} — ${input.reason.trim()}`,
+    by,
+  );
   return l;
 }
 

@@ -73,8 +73,17 @@ export function getEvaluation(id: string): Evaluation | null {
   return evalDb().find((e) => e.id === id) ?? null;
 }
 
+export interface EvaluationRequest {
+  scope?: string;
+  fee?: string;
+  timeline?: string;
+}
+
 /** Create an evaluation for a lead (idempotent per lead). */
-export function createEvaluationForLead(lead: Lead): Evaluation {
+export function createEvaluationForLead(
+  lead: Lead,
+  req: EvaluationRequest = {},
+): Evaluation {
   const existing = evalDb().find((e) => e.leadId === lead.id);
   if (existing) return existing;
   const ev: Evaluation = {
@@ -85,6 +94,9 @@ export function createEvaluationForLead(lead: Lead): Evaluation {
     pkg: pkgFor(lead.productRoute),
     status: "proposed",
     kpis: kpis(`ev-${lead.id}`),
+    scope: req.scope?.trim() || undefined,
+    fee: req.fee?.trim() || undefined,
+    timeline: req.timeline || undefined,
     createdAt: now(),
     updatedAt: now(),
   };

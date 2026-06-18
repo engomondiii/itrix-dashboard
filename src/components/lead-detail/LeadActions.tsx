@@ -10,15 +10,17 @@ import {
 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
-import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { BookMeetingDialog } from "@/components/lead-detail/BookMeetingDialog";
+import { EscalateDialog } from "@/components/lead-detail/EscalateDialog";
+import { RequestEvaluationDialog } from "@/components/lead-detail/RequestEvaluationDialog";
 import { useLeadActions } from "@/hooks/useLeadActions";
 import type { Lead } from "@/types/lead";
 
 export function LeadActions({ lead }: { lead: Lead }) {
-  const { escalate, markNda, requestEvaluation, markPoC } = useLeadActions(lead.id);
-  const [confirmEscalate, setConfirmEscalate] = useState(false);
+  const { markNda, markPoC } = useLeadActions(lead.id);
+  const [escalating, setEscalating] = useState(false);
   const [bookingMeeting, setBookingMeeting] = useState(false);
+  const [requestingEval, setRequestingEval] = useState(false);
 
   return (
     <div className="space-y-2">
@@ -41,8 +43,7 @@ export function LeadActions({ lead }: { lead: Lead }) {
       <Button
         variant="outline"
         className="w-full justify-start"
-        disabled={requestEvaluation.isPending}
-        onClick={() => requestEvaluation.mutate()}
+        onClick={() => setRequestingEval(true)}
       >
         <ClipboardCheckIcon />
         Request paid evaluation
@@ -59,28 +60,23 @@ export function LeadActions({ lead }: { lead: Lead }) {
       <Button
         variant="destructive"
         className="w-full justify-start"
-        onClick={() => setConfirmEscalate(true)}
+        onClick={() => setEscalating(true)}
       >
         <TriangleAlertIcon />
         Escalate to executive review
       </Button>
 
-      <ConfirmDialog
-        open={confirmEscalate}
-        onOpenChange={setConfirmEscalate}
-        title="Escalate to executive review?"
-        description="Exclusive / strategic requests are routed to Park Dae-hyuk and CEO Kang."
-        confirmLabel="Escalate"
-        destructive
-        loading={escalate.isPending}
-        onConfirm={() => {
-          escalate.mutate();
-          setConfirmEscalate(false);
-        }}
-      />
-
       {bookingMeeting && (
         <BookMeetingDialog lead={lead} onClose={() => setBookingMeeting(false)} />
+      )}
+      {requestingEval && (
+        <RequestEvaluationDialog
+          leadId={lead.id}
+          onClose={() => setRequestingEval(false)}
+        />
+      )}
+      {escalating && (
+        <EscalateDialog leadId={lead.id} onClose={() => setEscalating(false)} />
       )}
     </div>
   );

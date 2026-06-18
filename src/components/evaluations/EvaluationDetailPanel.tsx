@@ -53,6 +53,30 @@ export function EvaluationDetailPanel({ evaluation }: { evaluation: Evaluation }
         </div>
       </CardHeader>
       <CardContent className="space-y-4">
+        {(evaluation.scope || evaluation.fee || evaluation.timeline) && (
+          <div className="space-y-2 rounded-md border border-line bg-surface-sunken p-3">
+            {evaluation.scope && (
+              <div>
+                <div className="text-micro font-semibold uppercase tracking-[0.06em] text-ink-400">
+                  Scope
+                </div>
+                <p className="text-sec text-ink-700">{evaluation.scope}</p>
+              </div>
+            )}
+            <div className="flex flex-wrap gap-x-6 gap-y-1 text-sec text-ink-700">
+              {evaluation.fee && (
+                <span>
+                  <span className="text-ink-400">Fee:</span> {evaluation.fee}
+                </span>
+              )}
+              {evaluation.timeline && (
+                <span>
+                  <span className="text-ink-400">Timeline:</span> {evaluation.timeline}
+                </span>
+              )}
+            </div>
+          </div>
+        )}
         <EvaluationKPIList evaluationId={evaluation.id} kpis={evaluation.kpis} />
         {evaluation.status === "won" && (
           <div className="rounded-md border border-line bg-surface-sunken p-3">

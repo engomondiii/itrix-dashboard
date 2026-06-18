@@ -38,16 +38,27 @@ export function addLeadNote(id: string, body: string) {
   return apiSend<Lead>(API.leadNote(id), "POST", { body });
 }
 
-export function escalateLead(id: string) {
-  return apiSend<Lead>(API.leadEscalate(id), "POST");
+export interface EscalateInput {
+  reason: string;
+  priority: string;
+}
+
+export function escalateLead(id: string, input: EscalateInput) {
+  return apiSend<Lead>(API.leadEscalate(id), "POST", input);
 }
 
 export function markLeadNda(id: string) {
   return apiSend<Lead>(API.leadNda(id), "POST");
 }
 
-export function requestLeadEvaluation(id: string) {
-  return apiSend<Lead>(API.leadEvaluation(id), "POST");
+export interface RequestEvaluationInput {
+  scope?: string;
+  fee?: string;
+  timeline?: string;
+}
+
+export function requestLeadEvaluation(id: string, input: RequestEvaluationInput = {}) {
+  return apiSend<Lead>(API.leadEvaluation(id), "POST", input);
 }
 
 export function markLeadPoC(id: string) {

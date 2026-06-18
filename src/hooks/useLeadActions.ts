@@ -12,6 +12,8 @@ import {
   requestLeadEvaluation,
   setLeadStatus,
   type BookMeetingInput,
+  type EscalateInput,
+  type RequestEvaluationInput,
 } from "@/lib/api/leadsApi";
 import { useToast } from "@/hooks/useToast";
 import type { LeadStatus } from "@/constants/statuses";
@@ -48,7 +50,7 @@ export function useLeadActions(id: string) {
       onError,
     }),
     escalate: useMutation({
-      mutationFn: () => escalateLead(id),
+      mutationFn: (input: EscalateInput) => escalateLead(id, input),
       onSuccess: (l) => onSuccess(l, "Escalated to executive review"),
       onError,
     }),
@@ -58,7 +60,7 @@ export function useLeadActions(id: string) {
       onError,
     }),
     requestEvaluation: useMutation({
-      mutationFn: () => requestLeadEvaluation(id),
+      mutationFn: (input: RequestEvaluationInput) => requestLeadEvaluation(id, input),
       onSuccess: (l) => onSuccess(l, "Paid evaluation opened"),
       onError,
     }),

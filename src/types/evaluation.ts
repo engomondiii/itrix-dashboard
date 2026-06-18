@@ -33,6 +33,10 @@ export interface Evaluation {
   pkg: EvaluationPackage;
   status: EvaluationStatus;
   kpis: EvaluationKPI[];
+  /** Captured when the evaluation is requested. */
+  scope?: string;
+  fee?: string;
+  timeline?: string;
   createdAt: string; // ISO
   updatedAt: string; // ISO
 }
