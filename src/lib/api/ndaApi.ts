@@ -14,8 +14,8 @@ export function signNda(leadId: string) {
   return apiSend<NDARecord>(API.ndaItem(leadId), "POST", { action: "sign" });
 }
 
-export function declineNda(leadId: string) {
-  return apiSend<NDARecord>(API.ndaItem(leadId), "POST", { action: "decline" });
+export function declineNda(leadId: string, reason: string) {
+  return apiSend<NDARecord>(API.ndaItem(leadId), "POST", { action: "decline", reason });
 }
 
 export function expireNda(leadId: string) {

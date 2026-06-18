@@ -7,7 +7,10 @@ import type { NDARecord, NDAStatus } from "@/types/nda";
 const SIGNED_STATUSES = ["Evaluation", "PoC", "Licensed"];
 const NDA_LEAD_STATUSES = ["NDA", "Evaluation", "PoC", "Licensed"];
 
-const overrides = new Map<string, { status: NDAStatus; signedAt?: string }>();
+const overrides = new Map<
+  string,
+  { status: NDAStatus; signedAt?: string; declineReason?: string }
+>();
 
 function checklist(signed: boolean) {
   return [
@@ -33,6 +36,7 @@ function build(): NDARecord[] {
       checklist: checklist(signed),
       requestedAt: l.submittedAt,
       signedAt: signed ? (o?.signedAt ?? l.submittedAt) : null,
+      declineReason: status === "declined" ? o?.declineReason : undefined,
     };
   });
 }
@@ -53,8 +57,8 @@ export function signNda(leadId: string, by?: string): NDARecord | null {
   return getNda(leadId);
 }
 
-export function declineNda(leadId: string): NDARecord | null {
-  overrides.set(leadId, { status: "declined" });
+export function declineNda(leadId: string, reason?: string): NDARecord | null {
+  overrides.set(leadId, { status: "declined", declineReason: reason?.trim() || undefined });
   return getNda(leadId);
 }
 

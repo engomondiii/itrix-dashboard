@@ -47,10 +47,22 @@ export function useSignNda() {
   return useNdaMutation(signNda, "NDA marked signed");
 }
 
-export function useDeclineNda() {
-  return useNdaMutation(declineNda, "NDA declined");
-}
-
 export function useExpireNda() {
   return useNdaMutation(expireNda, "NDA marked expired");
+}
+
+/** Decline carries a reason, so it can't use the single-arg factory. */
+export function useDeclineNda() {
+  const qc = useQueryClient();
+  const { toast } = useToast();
+  return useMutation({
+    mutationFn: (vars: { leadId: string; reason: string }) =>
+      declineNda(vars.leadId, vars.reason),
+    onSuccess: (nda) => {
+      qc.setQueryData(["nda", nda.leadId], nda);
+      qc.invalidateQueries({ queryKey: ["nda"] });
+      toast.success("NDA declined");
+    },
+    onError: (e) => toast.error((e as Error).message),
+  });
 }

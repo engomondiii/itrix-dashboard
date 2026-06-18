@@ -22,4 +22,5 @@ export interface NDARecord {
   checklist: NDAChecklistItem[];
   requestedAt: string; // ISO
   signedAt?: string | null;
+  declineReason?: string;
 }

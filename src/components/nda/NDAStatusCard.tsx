@@ -36,6 +36,11 @@ export function NDAStatusCard({ nda }: { nda: NDARecord }) {
           {nda.signedAt ? `Signed ${formatDate(nda.signedAt)}` : `Requested ${formatDate(nda.requestedAt)}`}
         </span>
       </div>
+      {nda.status === "declined" && nda.declineReason && (
+        <p className="mt-2 text-caption text-error-text">
+          Declined: {nda.declineReason}
+        </p>
+      )}
       <div className="mt-3">
         <NDAChecklistDisplay items={nda.checklist} />
       </div>

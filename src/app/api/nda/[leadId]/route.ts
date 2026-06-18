@@ -39,16 +39,24 @@ export async function POST(
   if (!siteConfig.useMocks) {
     // v3: NDA is keyed by NDA-record id; sign/decline/expire via POST /nda/{id}/{action}/.
     // (The [leadId] route param carries the NDA record id at cutover.)
-    const r = await djangoFetch(`/nda/${leadId}/${action}/`, { method: "POST" });
+    const r = await djangoFetch(`/nda/${leadId}/${action}/`, {
+      method: "POST",
+      body: JSON.stringify(body),
+    });
     return NextResponse.json(await r.json(), { status: r.status });
   }
 
-  const nda =
-    action === "decline"
-      ? declineNda(leadId)
-      : action === "expire"
-        ? expireNda(leadId)
-        : signNda(leadId, user.name);
+  if (action === "decline") {
+    const reason = String(body?.reason ?? "").trim();
+    if (!reason) {
+      return NextResponse.json({ detail: "A decline reason is required" }, { status: 400 });
+    }
+    const nda = declineNda(leadId, reason);
+    if (!nda) return NextResponse.json({ detail: "Not found" }, { status: 404 });
+    return NextResponse.json(nda);
+  }
+
+  const nda = action === "expire" ? expireNda(leadId) : signNda(leadId, user.name);
   if (!nda) return NextResponse.json({ detail: "Not found" }, { status: 404 });
   return NextResponse.json(nda);
 }
