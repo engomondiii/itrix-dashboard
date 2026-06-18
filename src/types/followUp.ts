@@ -1,6 +1,6 @@
 import type { Tier } from "@/constants/tiers";
 
-export type FollowUpStatus = "pending" | "completed" | "snoozed";
+export type FollowUpStatus = "pending" | "completed" | "snoozed" | "dismissed";
 
 export interface FollowUpTask {
   id: string;

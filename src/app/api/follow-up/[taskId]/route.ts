@@ -3,7 +3,14 @@ import { NextResponse } from "next/server";
 import { siteConfig } from "@/config/site.config";
 import { getSessionUser } from "@/lib/server/session";
 import { djangoFetch } from "@/lib/server/proxy";
-import { completeTask, snoozeTask } from "@/mocks/followUpDb";
+import {
+  completeTask,
+  dismissTask,
+  rescheduleTask,
+  snoozeTask,
+} from "@/mocks/followUpDb";
+
+type FollowUpAction = "complete" | "snooze" | "dismiss" | "reschedule";
 
 export async function PATCH(
   req: Request,
@@ -14,22 +21,41 @@ export async function PATCH(
   }
   const { taskId } = await params;
   const body = await req.json().catch(() => ({}));
-  const action = body?.action as "complete" | "snooze" | undefined;
+  const action = body?.action as FollowUpAction | undefined;
 
   if (!siteConfig.useMocks) {
-    // v3: POST /follow-up/{id}/complete/ or /follow-up/{id}/snooze/
-    const sub = action === "snooze" ? "snooze" : "complete";
+    // v3: POST /follow-up/{id}/{complete|snooze|dismiss|reschedule}/
+    const sub: FollowUpAction = action ?? "complete";
+    const payload =
+      sub === "snooze"
+        ? JSON.stringify({ hours: body?.hours ?? 24 })
+        : sub === "reschedule"
+          ? JSON.stringify({ dueAt: body?.dueAt })
+          : undefined;
     const r = await djangoFetch(`/follow-up/${taskId}/${sub}/`, {
       method: "POST",
-      body: sub === "snooze" ? JSON.stringify({ hours: body?.hours ?? 24 }) : undefined,
+      body: payload,
     });
     return NextResponse.json(await r.json(), { status: r.status });
   }
 
-  const task =
-    action === "snooze"
-      ? snoozeTask(taskId, body?.hours ?? 24)
-      : completeTask(taskId);
+  let task;
+  switch (action) {
+    case "snooze":
+      task = snoozeTask(taskId, body?.hours ?? 24);
+      break;
+    case "dismiss":
+      task = dismissTask(taskId);
+      break;
+    case "reschedule":
+      if (typeof body?.dueAt !== "string") {
+        return NextResponse.json({ detail: "dueAt is required" }, { status: 400 });
+      }
+      task = rescheduleTask(taskId, body.dueAt);
+      break;
+    default:
+      task = completeTask(taskId);
+  }
 
   if (!task) return NextResponse.json({ detail: "Not found" }, { status: 404 });
   return NextResponse.json(task);

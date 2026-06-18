@@ -34,7 +34,19 @@ function all(): FollowUpTask[] {
 }
 
 export function listFollowUps(): FollowUpTask[] {
-  return all().filter((t) => t.status !== "completed");
+  const now = Date.now();
+  return all().filter((t) => {
+    if (t.status === "completed" || t.status === "dismissed") return false;
+    // A snoozed task stays hidden until its snooze window elapses.
+    if (
+      t.status === "snoozed" &&
+      t.snoozedUntil &&
+      new Date(t.snoozedUntil).getTime() > now
+    ) {
+      return false;
+    }
+    return true;
+  });
 }
 
 export function completeTask(id: string): FollowUpTask | null {
@@ -50,5 +62,22 @@ export function snoozeTask(id: string, hours = 24): FollowUpTask | null {
   t.status = "snoozed";
   t.snoozedUntil = new Date(Date.now() + hours * 3600_000).toISOString();
   t.dueAt = t.snoozedUntil;
+  return t;
+}
+
+export function dismissTask(id: string): FollowUpTask | null {
+  const t = all().find((x) => x.id === id);
+  if (!t) return null;
+  t.status = "dismissed";
+  return t;
+}
+
+/** Set a deliberate next-touch date and return the task to the active queue. */
+export function rescheduleTask(id: string, dueAt: string): FollowUpTask | null {
+  const t = all().find((x) => x.id === id);
+  if (!t) return null;
+  t.status = "pending";
+  t.snoozedUntil = null;
+  t.dueAt = dueAt;
   return t;
 }

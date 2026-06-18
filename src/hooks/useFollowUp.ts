@@ -4,7 +4,9 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 import {
   completeFollowUp,
+  dismissFollowUp,
   listFollowUp,
+  rescheduleFollowUp,
   snoozeFollowUp,
   type FollowUpFilter,
 } from "@/lib/api/followUpApi";
@@ -38,6 +40,23 @@ export function useFollowUpActions() {
       onSuccess: () => {
         invalidate();
         toast.success("Snoozed 24h");
+      },
+      onError: (e) => toast.error((e as Error).message),
+    }),
+    dismiss: useMutation({
+      mutationFn: (id: string) => dismissFollowUp(id),
+      onSuccess: () => {
+        invalidate();
+        toast.success("Follow-up dismissed");
+      },
+      onError: (e) => toast.error((e as Error).message),
+    }),
+    reschedule: useMutation({
+      mutationFn: ({ id, dueAt }: { id: string; dueAt: string }) =>
+        rescheduleFollowUp(id, dueAt),
+      onSuccess: () => {
+        invalidate();
+        toast.success("Follow-up rescheduled");
       },
       onError: (e) => toast.error((e as Error).message),
     }),
