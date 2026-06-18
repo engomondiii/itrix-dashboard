@@ -61,8 +61,15 @@ export function requestLeadEvaluation(id: string, input: RequestEvaluationInput 
   return apiSend<Lead>(API.leadEvaluation(id), "POST", input);
 }
 
-export function markLeadPoC(id: string) {
-  return apiSend<Lead>(API.leadPoc(id), "POST");
+export interface MarkPoCInput {
+  scope?: string;
+  durationWeeks?: number;
+  successMetrics?: string;
+  startDate?: string;
+}
+
+export function markLeadPoC(id: string, input: MarkPoCInput = {}) {
+  return apiSend<Lead>(API.leadPoc(id), "POST", input);
 }
 
 export interface BookMeetingInput {

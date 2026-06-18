@@ -58,6 +58,11 @@ export interface PoC {
   milestones: PoCMilestone[];
   kpis: PoCKPI[];
   risks: PoCRisk[];
+  /** Captured when the PoC is opened. */
+  scope?: string;
+  durationWeeks?: number;
+  successMetrics?: string;
+  startDate?: string; // YYYY-MM-DD
   createdAt: string; // ISO
   updatedAt: string; // ISO
 }

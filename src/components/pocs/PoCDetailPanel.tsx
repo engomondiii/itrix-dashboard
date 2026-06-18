@@ -24,6 +24,43 @@ export function PoCDetailPanel({ poc }: { poc: PoC }) {
   return (
     <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
       <div className="space-y-6 lg:col-span-2">
+        {(poc.scope || poc.successMetrics || poc.durationWeeks || poc.startDate) && (
+          <Card>
+            <CardHeader>
+              <CardTitle>Brief</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              {poc.scope && (
+                <div>
+                  <div className="text-micro font-semibold uppercase tracking-[0.06em] text-ink-400">
+                    Scope
+                  </div>
+                  <p className="text-sec text-ink-700">{poc.scope}</p>
+                </div>
+              )}
+              {poc.successMetrics && (
+                <div>
+                  <div className="text-micro font-semibold uppercase tracking-[0.06em] text-ink-400">
+                    Success metrics
+                  </div>
+                  <p className="text-sec text-ink-700">{poc.successMetrics}</p>
+                </div>
+              )}
+              <div className="flex flex-wrap gap-x-6 gap-y-1 text-sec text-ink-700">
+                {poc.durationWeeks && (
+                  <span>
+                    <span className="text-ink-400">Duration:</span> {poc.durationWeeks} weeks
+                  </span>
+                )}
+                {poc.startDate && (
+                  <span>
+                    <span className="text-ink-400">Starts:</span> {poc.startDate}
+                  </span>
+                )}
+              </div>
+            </CardContent>
+          </Card>
+        )}
         <Card>
           <CardHeader>
             <CardTitle>KPIs</CardTitle>

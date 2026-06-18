@@ -175,8 +175,15 @@ export function getPoC(id: string): PoC | null {
   return pocDb().find((p) => p.id === id) ?? null;
 }
 
+export interface PoCRequest {
+  scope?: string;
+  durationWeeks?: number;
+  successMetrics?: string;
+  startDate?: string;
+}
+
 /** Create a PoC for a lead (idempotent per lead). */
-export function createPoCForLead(lead: Lead): PoC {
+export function createPoCForLead(lead: Lead, req: PoCRequest = {}): PoC {
   const existing = pocDb().find((p) => p.leadId === lead.id);
   if (existing) return existing;
   const poc: PoC = {
@@ -193,6 +200,10 @@ export function createPoCForLead(lead: Lead): PoC {
     ],
     kpis: kpis(`poc-${lead.id}`).map((k) => ({ ...k, baseline: "current stack" })),
     risks: [],
+    scope: req.scope?.trim() || undefined,
+    durationWeeks: req.durationWeeks || undefined,
+    successMetrics: req.successMetrics?.trim() || undefined,
+    startDate: req.startDate || undefined,
     createdAt: now(),
     updatedAt: now(),
   };

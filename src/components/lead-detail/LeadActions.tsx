@@ -13,14 +13,16 @@ import { Button } from "@/components/ui/button";
 import { BookMeetingDialog } from "@/components/lead-detail/BookMeetingDialog";
 import { EscalateDialog } from "@/components/lead-detail/EscalateDialog";
 import { RequestEvaluationDialog } from "@/components/lead-detail/RequestEvaluationDialog";
+import { MarkPoCDialog } from "@/components/lead-detail/MarkPoCDialog";
 import { useLeadActions } from "@/hooks/useLeadActions";
 import type { Lead } from "@/types/lead";
 
 export function LeadActions({ lead }: { lead: Lead }) {
-  const { markNda, markPoC } = useLeadActions(lead.id);
+  const { markNda } = useLeadActions(lead.id);
   const [escalating, setEscalating] = useState(false);
   const [bookingMeeting, setBookingMeeting] = useState(false);
   const [requestingEval, setRequestingEval] = useState(false);
+  const [markingPoC, setMarkingPoC] = useState(false);
 
   return (
     <div className="space-y-2">
@@ -51,8 +53,7 @@ export function LeadActions({ lead }: { lead: Lead }) {
       <Button
         variant="outline"
         className="w-full justify-start"
-        disabled={markPoC.isPending}
-        onClick={() => markPoC.mutate()}
+        onClick={() => setMarkingPoC(true)}
       >
         <FlaskConicalIcon />
         Mark PoC candidate
@@ -74,6 +75,9 @@ export function LeadActions({ lead }: { lead: Lead }) {
           leadId={lead.id}
           onClose={() => setRequestingEval(false)}
         />
+      )}
+      {markingPoC && (
+        <MarkPoCDialog leadId={lead.id} onClose={() => setMarkingPoC(false)} />
       )}
       {escalating && (
         <EscalateDialog leadId={lead.id} onClose={() => setEscalating(false)} />
