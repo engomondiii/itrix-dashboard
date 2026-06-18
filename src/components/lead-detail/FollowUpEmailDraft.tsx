@@ -1,7 +1,13 @@
 "use client";
 
 import { useState } from "react";
-import { ChevronDownIcon, SendIcon } from "lucide-react";
+import {
+  ChevronDownIcon,
+  PaperclipIcon,
+  PlusIcon,
+  SendIcon,
+  XIcon,
+} from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { CopyButton } from "@/components/ui/copy-button";
@@ -45,6 +51,12 @@ export function FollowUpEmailDraft({ lead }: { lead: Lead }) {
   const initial = defaultDraft(lead);
   const [subject, setSubject] = useState(initial.subject);
   const [body, setBody] = useState(initial.body);
+  const [cc, setCc] = useState("");
+  const [scheduleLater, setScheduleLater] = useState(false);
+  const [date, setDate] = useState("");
+  const [time, setTime] = useState("");
+  const [attachments, setAttachments] = useState<string[]>([]);
+  const [attachmentDraft, setAttachmentDraft] = useState("");
 
   function applyTemplate(tpl: Template) {
     const rendered = renderTemplate(tpl.body, leadTemplateValues(lead));
@@ -53,7 +65,28 @@ export function FollowUpEmailDraft({ lead }: { lead: Lead }) {
     setBody(split.body);
   }
 
+  function addAttachment() {
+    const v = attachmentDraft.trim();
+    if (!v) return;
+    setAttachments((prev) => [...prev, v]);
+    setAttachmentDraft("");
+  }
+
   const emailTemplates = templates.data?.results ?? [];
+  const scheduledAt = scheduleLater && date && time ? `${date}T${time}` : undefined;
+  const scheduleIncomplete = scheduleLater && !(date && time);
+
+  function send() {
+    sendEmail.mutate({
+      to: lead.email,
+      subject,
+      body,
+      leadId: lead.id,
+      cc: cc.trim() || undefined,
+      scheduledAt,
+      attachments: attachments.length ? attachments : undefined,
+    });
+  }
 
   return (
     <div className="space-y-2">
@@ -94,16 +127,104 @@ export function FollowUpEmailDraft({ lead }: { lead: Lead }) {
         aria-label="Email body"
         className="max-h-72"
       />
+
+      <Input
+        value={cc}
+        onChange={(e) => setCc(e.target.value)}
+        placeholder="Cc (comma-separated)"
+        aria-label="Cc"
+      />
+
+      {/* Attachments — links or file references */}
+      <div className="space-y-1.5">
+        <div className="flex items-center gap-1">
+          <Input
+            value={attachmentDraft}
+            onChange={(e) => setAttachmentDraft(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") {
+                e.preventDefault();
+                addAttachment();
+              }
+            }}
+            placeholder="Attach a link or document"
+            aria-label="Attachment"
+          />
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            onClick={addAttachment}
+            disabled={!attachmentDraft.trim()}
+            aria-label="Add attachment"
+          >
+            <PlusIcon />
+          </Button>
+        </div>
+        {attachments.length > 0 && (
+          <ul className="space-y-1">
+            {attachments.map((a, i) => (
+              <li
+                key={`${a}-${i}`}
+                className="flex items-center gap-1.5 rounded-md bg-surface-sunken px-2 py-1 text-caption text-ink-700"
+              >
+                <PaperclipIcon className="size-3.5 shrink-0 text-ink-400" />
+                <span className="truncate">{a}</span>
+                <button
+                  type="button"
+                  onClick={() => setAttachments((prev) => prev.filter((_, j) => j !== i))}
+                  className="ml-auto text-ink-400 hover:text-ink-700"
+                  aria-label={`Remove ${a}`}
+                >
+                  <XIcon className="size-3.5" />
+                </button>
+              </li>
+            ))}
+          </ul>
+        )}
+      </div>
+
+      {/* Schedule for later */}
+      <label className="flex items-center gap-2 text-sec text-ink-700">
+        <input
+          type="checkbox"
+          checked={scheduleLater}
+          onChange={(e) => setScheduleLater(e.target.checked)}
+          className="size-3.5"
+        />
+        Schedule for later
+      </label>
+      {scheduleLater && (
+        <div className="grid grid-cols-2 gap-2">
+          <Input
+            type="date"
+            value={date}
+            onChange={(e) => setDate(e.target.value)}
+            aria-label="Send date"
+          />
+          <Input
+            type="time"
+            value={time}
+            onChange={(e) => setTime(e.target.value)}
+            aria-label="Send time"
+          />
+        </div>
+      )}
+
       <Button
         size="sm"
         className="w-full"
-        disabled={sendEmail.isPending || !subject.trim() || !body.trim()}
-        onClick={() =>
-          sendEmail.mutate({ to: lead.email, subject, body, leadId: lead.id })
+        disabled={
+          sendEmail.isPending || !subject.trim() || !body.trim() || scheduleIncomplete
         }
+        onClick={send}
       >
         <SendIcon />
-        {sendEmail.isPending ? "Sending…" : "Send follow-up"}
+        {sendEmail.isPending
+          ? "Sending…"
+          : scheduledAt
+            ? "Schedule send"
+            : "Send follow-up"}
       </Button>
     </div>
   );

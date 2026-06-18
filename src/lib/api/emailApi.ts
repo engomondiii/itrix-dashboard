@@ -7,8 +7,16 @@ export interface SendEmailInput {
   body: string;
   leadId?: string;
   templateId?: string;
+  cc?: string;
+  /** Local datetime "YYYY-MM-DDTHH:mm"; if in the future, the send is queued. */
+  scheduledAt?: string;
+  attachments?: string[];
 }
 
 export function sendEmail(input: SendEmailInput) {
-  return apiSend<{ ok: true; queued: boolean }>(API.emailSend, "POST", input);
+  return apiSend<{ ok: true; queued: boolean; scheduled: boolean }>(
+    API.emailSend,
+    "POST",
+    input,
+  );
 }

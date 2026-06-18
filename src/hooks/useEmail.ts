@@ -11,8 +11,8 @@ export function useSendEmail() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: (input: SendEmailInput) => sendEmail(input),
-    onSuccess: (_data, vars) => {
-      toast.success("Email queued for sending");
+    onSuccess: (data, vars) => {
+      toast.success(data?.scheduled ? "Follow-up scheduled" : "Email queued for sending");
       // A lead-scoped send adds a timeline entry — refresh the detail + list.
       if (vars.leadId) {
         qc.invalidateQueries({ queryKey: ["lead", vars.leadId] });

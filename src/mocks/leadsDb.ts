@@ -173,10 +173,36 @@ export function bookMeeting(id: string, input: MeetingInput, by?: string) {
  * Record an outbound follow-up on the lead's timeline. A first touch on a
  * brand-new lead also advances it out of the "New" stage.
  */
-export function logEmailSent(id: string, subject: string, by?: string) {
+export interface EmailLogOptions {
+  scheduledAt?: string;
+  cc?: string;
+  attachments?: string[];
+}
+
+export function logEmailSent(
+  id: string,
+  subject: string,
+  by?: string,
+  opts: EmailLogOptions = {},
+) {
   const l = getLead(id);
   if (!l) return null;
-  if (l.status === "New") l.status = "Contacted";
-  pushActivity(l, "email_sent", `Follow-up sent: ${subject}`, by);
+  const scheduled =
+    !!opts.scheduledAt && new Date(opts.scheduledAt).getTime() > Date.now();
+  // Only an actual send (not a future-scheduled one) advances the lead.
+  if (!scheduled && l.status === "New") l.status = "Contacted";
+
+  const extras: string[] = [];
+  if (opts.cc?.trim()) extras.push(`cc ${opts.cc.trim()}`);
+  if (opts.attachments?.length) {
+    extras.push(
+      `${opts.attachments.length} attachment${opts.attachments.length > 1 ? "s" : ""}`,
+    );
+  }
+  const suffix = extras.length ? ` (${extras.join("; ")})` : "";
+  const label = scheduled
+    ? `Follow-up scheduled for ${opts.scheduledAt!.replace("T", " ")}: ${subject}${suffix}`
+    : `Follow-up sent: ${subject}${suffix}`;
+  pushActivity(l, "email_sent", label, by);
   return l;
 }
