@@ -28,7 +28,8 @@ export async function PATCH(
   req: Request,
   { params }: { params: Promise<{ pocId: string }> },
 ) {
-  if (!(await getSessionUser())) {
+  const user = await getSessionUser();
+  if (!user) {
     return NextResponse.json({ detail: "Unauthorized" }, { status: 401 });
   }
   const { pocId } = await params;
@@ -47,7 +48,7 @@ export async function PATCH(
   if (!(POC_STATUSES as readonly string[]).includes(status)) {
     return NextResponse.json({ detail: "Invalid status" }, { status: 400 });
   }
-  const poc = setPoCStatus(pocId, status as PoCStatus);
+  const poc = setPoCStatus(pocId, status as PoCStatus, user.name);
   if (!poc) return NextResponse.json({ detail: "Not found" }, { status: 404 });
   return NextResponse.json(poc);
 }

@@ -1,6 +1,7 @@
 import "server-only";
 
 import { MOCK_LEADS } from "@/mocks/leads";
+import { getLead, setStatus } from "@/mocks/leadsDb";
 import type { NDARecord, NDAStatus } from "@/types/nda";
 
 const SIGNED_STATUSES = ["Evaluation", "PoC", "Licensed"];
@@ -44,8 +45,11 @@ export function getNda(leadId: string): NDARecord | null {
   return build().find((n) => n.leadId === leadId) ?? null;
 }
 
-export function signNda(leadId: string): NDARecord | null {
+export function signNda(leadId: string, by?: string): NDARecord | null {
   overrides.set(leadId, { status: "signed", signedAt: new Date().toISOString() });
+  // A signed NDA clears the lead into the evaluation stage of the pipeline.
+  const lead = getLead(leadId);
+  if (lead?.status === "NDA") setStatus(leadId, "Evaluation", by);
   return getNda(leadId);
 }
 

@@ -34,6 +34,9 @@ function useNdaMutation(
     onSuccess: (nda) => {
       qc.setQueryData(["nda", nda.leadId], nda);
       qc.invalidateQueries({ queryKey: ["nda"] });
+      // Signing advances the lead's pipeline status — refresh lead caches too.
+      qc.invalidateQueries({ queryKey: ["leads"] });
+      qc.invalidateQueries({ queryKey: ["lead", nda.leadId] });
       toast.success(message);
     },
     onError: (e) => toast.error((e as Error).message),

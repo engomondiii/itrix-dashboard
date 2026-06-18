@@ -1,6 +1,7 @@
 import "server-only";
 
 import { MOCK_LEADS } from "@/mocks/leads";
+import { getLead, setStatus } from "@/mocks/leadsDb";
 import type { ProductRoute } from "@/constants/products";
 import type { Evaluation, EvaluationStatus } from "@/types/evaluation";
 import type {
@@ -187,11 +188,18 @@ export function createPoCForLead(lead: Lead): PoC {
   return poc;
 }
 
-export function setPoCStatus(id: string, status: PoCStatus): PoC | null {
+export function setPoCStatus(id: string, status: PoCStatus, by?: string): PoC | null {
   const p = pocDb().find((x) => x.id === id);
   if (!p) return null;
   p.status = status;
   p.updatedAt = now();
+  // A completed PoC converts the lead into a licensed customer.
+  if (status === "completed") {
+    const lead = getLead(p.leadId);
+    if (lead && lead.status !== "Licensed" && lead.status !== "Closed") {
+      setStatus(p.leadId, "Licensed", by);
+    }
+  }
   return p;
 }
 

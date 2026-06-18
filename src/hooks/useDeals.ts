@@ -17,6 +17,7 @@ import {
   updatePoCRisk,
   type RiskInput,
 } from "@/lib/api/dealsApi";
+import { markLeadPoC } from "@/lib/api/leadsApi";
 import { useToast } from "@/hooks/useToast";
 import type { Evaluation, EvaluationStatus } from "@/types/evaluation";
 import type { MilestoneStatus, PoC, PoCStatus } from "@/types/poc";
@@ -68,6 +69,18 @@ export function useEvaluationActions(id: string) {
       },
       onError,
     }),
+    // A won evaluation graduates to a PoC: creates the PoC record and moves
+    // the lead into the PoC stage.
+    convertToPoC: useMutation({
+      mutationFn: (leadId: string) => markLeadPoC(leadId),
+      onSuccess: (lead) => {
+        qc.invalidateQueries({ queryKey: ["pocs"] });
+        qc.invalidateQueries({ queryKey: ["leads"] });
+        qc.setQueryData(["lead", lead.id], lead);
+        toast.success("PoC created");
+      },
+      onError,
+    }),
   };
 }
 
@@ -86,6 +99,9 @@ export function usePoCActions(id: string) {
       mutationFn: (status: PoCStatus) => setPoCStatus(id, status),
       onSuccess: (p) => {
         write(p);
+        // Completing a PoC licenses the lead — refresh lead-facing caches.
+        qc.invalidateQueries({ queryKey: ["leads"] });
+        qc.invalidateQueries({ queryKey: ["lead", p.leadId] });
         toast.success("Status updated");
       },
       onError,
@@ -93,7 +109,10 @@ export function usePoCActions(id: string) {
     setMilestone: useMutation({
       mutationFn: (vars: { milestoneId: string; status: MilestoneStatus }) =>
         setMilestoneStatus(id, vars.milestoneId, vars.status),
-      onSuccess: (p) => write(p),
+      onSuccess: (p) => {
+        write(p);
+        toast.success("Milestone updated");
+      },
       onError,
     }),
     updateKpi: useMutation({

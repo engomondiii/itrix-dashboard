@@ -28,7 +28,8 @@ export async function POST(
   req: Request,
   { params }: { params: Promise<{ leadId: string }> },
 ) {
-  if (!(await getSessionUser())) {
+  const user = await getSessionUser();
+  if (!user) {
     return NextResponse.json({ detail: "Unauthorized" }, { status: 401 });
   }
   const { leadId } = await params;
@@ -47,7 +48,7 @@ export async function POST(
       ? declineNda(leadId)
       : action === "expire"
         ? expireNda(leadId)
-        : signNda(leadId);
+        : signNda(leadId, user.name);
   if (!nda) return NextResponse.json({ detail: "Not found" }, { status: 404 });
   return NextResponse.json(nda);
 }

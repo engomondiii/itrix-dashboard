@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { CheckIcon, ChevronDownIcon } from "lucide-react";
+import { CheckIcon, ChevronDownIcon, FlaskConicalIcon } from "lucide-react";
 
 import { EvaluationKPIList } from "@/components/evaluations/EvaluationKPIList";
 import { EvaluationPackageBadge } from "@/components/evaluations/EvaluationPackageBadge";
@@ -23,7 +23,7 @@ import {
 } from "@/types/evaluation";
 
 export function EvaluationDetailPanel({ evaluation }: { evaluation: Evaluation }) {
-  const { setStatus } = useEvaluationActions(evaluation.id);
+  const { setStatus, convertToPoC } = useEvaluationActions(evaluation.id);
 
   return (
     <Card>
@@ -54,6 +54,22 @@ export function EvaluationDetailPanel({ evaluation }: { evaluation: Evaluation }
       </CardHeader>
       <CardContent className="space-y-4">
         <EvaluationKPIList evaluationId={evaluation.id} kpis={evaluation.kpis} />
+        {evaluation.status === "won" && (
+          <div className="rounded-md border border-line bg-surface-sunken p-3">
+            <p className="text-sec text-ink-700">
+              This evaluation was won. Graduate the lead to a proof-of-concept.
+            </p>
+            <Button
+              size="sm"
+              className="mt-2"
+              disabled={convertToPoC.isPending}
+              onClick={() => convertToPoC.mutate(evaluation.leadId)}
+            >
+              <FlaskConicalIcon />
+              Create PoC from this evaluation
+            </Button>
+          </div>
+        )}
         <Link
           href={ROUTES.lead(evaluation.leadId)}
           className="inline-block text-sec font-medium text-sapphire-600"
