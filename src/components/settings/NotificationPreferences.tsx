@@ -1,24 +1,33 @@
 "use client";
 
-import { useState } from "react";
-
 import { Label } from "@/components/ui/label";
+import { Spinner } from "@/components/ui/spinner";
 import { Switch } from "@/components/ui/switch";
+import {
+  useNotificationPrefs,
+  useUpdateNotificationPrefs,
+} from "@/hooks/useSettings";
+import type { NotificationPrefs } from "@/types/settings";
 
 const PREFS = [
   { key: "tier1", label: "New Tier 1 lead" },
   { key: "sla", label: "Follow-up past SLA" },
   { key: "nda", label: "NDA signed" },
   { key: "weekly", label: "Weekly pipeline report" },
-] as const;
+] as const satisfies ReadonlyArray<{ key: keyof NotificationPrefs; label: string }>;
 
 export function NotificationPreferences() {
-  const [on, setOn] = useState<Record<string, boolean>>({
-    tier1: true,
-    sla: true,
-    nda: false,
-    weekly: true,
-  });
+  const { data, isLoading } = useNotificationPrefs();
+  const update = useUpdateNotificationPrefs();
+
+  if (isLoading || !data) {
+    return <Spinner />;
+  }
+
+  const prefs = data;
+  function toggle(key: keyof NotificationPrefs, on: boolean) {
+    update.mutate({ ...prefs, [key]: on });
+  }
 
   return (
     <div className="space-y-3">
@@ -32,8 +41,9 @@ export function NotificationPreferences() {
           </Label>
           <Switch
             id={`pref-${p.key}`}
-            checked={on[p.key]}
-            onCheckedChange={(v) => setOn((s) => ({ ...s, [p.key]: !!v }))}
+            checked={data[p.key]}
+            onCheckedChange={(v) => toggle(p.key, !!v)}
+            disabled={update.isPending}
           />
         </div>
       ))}

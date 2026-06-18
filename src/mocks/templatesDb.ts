@@ -1,8 +1,9 @@
 import "server-only";
 
-import type { Template } from "@/types/template";
+import type { Template, TemplateKind } from "@/types/template";
 
-export const MOCK_TEMPLATES: Template[] = [
+/** Seed templates; the mutable store is cloned from these on first access. */
+const SEED: Template[] = [
   {
     id: "tpl-email-followup",
     kind: "email",
@@ -85,3 +86,74 @@ Bottleneck: {{bottleneck}}
 Recommended next step: {{nextStep}}`,
   },
 ];
+
+/** Back-compat export (seed list). Mutations go through the functions below. */
+export const MOCK_TEMPLATES = SEED;
+
+let store: Template[] | null = null;
+function db(): Template[] {
+  if (!store) store = SEED.map((t) => ({ ...t, variables: [...t.variables] }));
+  return store;
+}
+
+/** Pull distinct {{variable}} names out of a template body. */
+function extractVars(body: string): string[] {
+  const set = new Set<string>();
+  for (const m of body.matchAll(/\{\{\s*([^}]+?)\s*\}\}/g)) set.add(m[1].trim());
+  return [...set];
+}
+
+export function listTemplates(kind?: TemplateKind): {
+  results: Template[];
+  count: number;
+} {
+  const all = db();
+  const results = kind ? all.filter((t) => t.kind === kind) : all;
+  return { results, count: results.length };
+}
+
+export function getTemplate(id: string): Template | null {
+  return db().find((t) => t.id === id) ?? null;
+}
+
+let seq = 0;
+export function createTemplate(input: {
+  kind: TemplateKind;
+  name: string;
+  body: string;
+}): Template {
+  const tpl: Template = {
+    id: `tpl-new-${(seq += 1)}`,
+    kind: input.kind,
+    name: input.name.trim(),
+    body: input.body,
+    variables: extractVars(input.body),
+    updatedAt: new Date().toISOString(),
+  };
+  db().unshift(tpl);
+  return tpl;
+}
+
+export function updateTemplate(
+  id: string,
+  patch: { name?: string; kind?: TemplateKind; body?: string },
+): Template | null {
+  const tpl = db().find((t) => t.id === id);
+  if (!tpl) return null;
+  if (patch.name != null) tpl.name = patch.name.trim();
+  if (patch.kind != null) tpl.kind = patch.kind;
+  if (patch.body != null) {
+    tpl.body = patch.body;
+    tpl.variables = extractVars(patch.body);
+  }
+  tpl.updatedAt = new Date().toISOString();
+  return tpl;
+}
+
+export function deleteTemplate(id: string): boolean {
+  const arr = db();
+  const i = arr.findIndex((t) => t.id === id);
+  if (i === -1) return false;
+  arr.splice(i, 1);
+  return true;
+}

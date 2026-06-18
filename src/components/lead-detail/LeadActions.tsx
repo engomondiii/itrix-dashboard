@@ -12,17 +12,20 @@ import {
 import { Button } from "@/components/ui/button";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { useLeadActions } from "@/hooks/useLeadActions";
-import { useToast } from "@/hooks/useToast";
 import type { Lead } from "@/types/lead";
 
 export function LeadActions({ lead }: { lead: Lead }) {
-  const { escalate, markNda } = useLeadActions(lead.id);
-  const { toast } = useToast();
+  const { escalate, markNda, requestEvaluation, markPoC, bookMeeting } =
+    useLeadActions(lead.id);
   const [confirmEscalate, setConfirmEscalate] = useState(false);
 
   return (
     <div className="space-y-2">
-      <Button className="w-full justify-start" onClick={() => toast.info("Opens Calendly in Phase 10")}>
+      <Button
+        className="w-full justify-start"
+        disabled={bookMeeting.isPending}
+        onClick={() => bookMeeting.mutate()}
+      >
         <CalendarIcon />
         Book meeting
       </Button>
@@ -38,7 +41,8 @@ export function LeadActions({ lead }: { lead: Lead }) {
       <Button
         variant="outline"
         className="w-full justify-start"
-        onClick={() => toast.info("Creates a paid evaluation in Phase 8")}
+        disabled={requestEvaluation.isPending}
+        onClick={() => requestEvaluation.mutate()}
       >
         <ClipboardCheckIcon />
         Request paid evaluation
@@ -46,7 +50,8 @@ export function LeadActions({ lead }: { lead: Lead }) {
       <Button
         variant="outline"
         className="w-full justify-start"
-        onClick={() => toast.info("Creates a PoC record in Phase 8")}
+        disabled={markPoC.isPending}
+        onClick={() => markPoC.mutate()}
       >
         <FlaskConicalIcon />
         Mark PoC candidate

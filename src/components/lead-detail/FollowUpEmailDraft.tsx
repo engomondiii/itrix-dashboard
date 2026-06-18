@@ -4,7 +4,7 @@ import { SendIcon } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { CopyButton } from "@/components/ui/copy-button";
-import { useToast } from "@/hooks/useToast";
+import { useSendEmail } from "@/hooks/useEmail";
 import type { Lead } from "@/types/lead";
 
 /** AI-drafted follow-up email (template from the Master Architecture §9.5). */
@@ -24,7 +24,7 @@ iTrix Assessment Team`;
 }
 
 export function FollowUpEmailDraft({ lead }: { lead: Lead }) {
-  const { toast } = useToast();
+  const sendEmail = useSendEmail();
   const { subject, body } = draftFor(lead);
 
   return (
@@ -42,10 +42,13 @@ export function FollowUpEmailDraft({ lead }: { lead: Lead }) {
       <Button
         size="sm"
         className="w-full"
-        onClick={() => toast.success("Email queued (Resend wires up at cutover)")}
+        disabled={sendEmail.isPending}
+        onClick={() =>
+          sendEmail.mutate({ to: lead.email, subject, body, leadId: lead.id })
+        }
       >
         <SendIcon />
-        Send follow-up
+        {sendEmail.isPending ? "Sending…" : "Send follow-up"}
       </Button>
     </div>
   );

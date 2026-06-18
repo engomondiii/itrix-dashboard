@@ -3,7 +3,8 @@ import { NextResponse } from "next/server";
 import { siteConfig } from "@/config/site.config";
 import { getSessionUser } from "@/lib/server/session";
 import { djangoFetch } from "@/lib/server/proxy";
-import { MOCK_TEMPLATES } from "@/mocks/templatesDb";
+import { createTemplate, listTemplates } from "@/mocks/templatesDb";
+import { TEMPLATE_KINDS, type TemplateKind } from "@/types/template";
 
 export async function GET(req: Request) {
   if (!(await getSessionUser())) {
@@ -17,6 +18,35 @@ export async function GET(req: Request) {
     return NextResponse.json(await r.json(), { status: r.status });
   }
 
-  const results = kind ? MOCK_TEMPLATES.filter((t) => t.kind === kind) : MOCK_TEMPLATES;
-  return NextResponse.json({ results, count: results.length });
+  return NextResponse.json(
+    listTemplates((kind as TemplateKind) || undefined),
+  );
+}
+
+/** Create a template. */
+export async function POST(req: Request) {
+  if (!(await getSessionUser())) {
+    return NextResponse.json({ detail: "Unauthorized" }, { status: 401 });
+  }
+  const body = await req.json().catch(() => ({}));
+
+  if (!siteConfig.useMocks) {
+    // v3: template create endpoint
+    const r = await djangoFetch("/templates/", {
+      method: "POST",
+      body: JSON.stringify(body),
+    });
+    return NextResponse.json(await r.json(), { status: r.status });
+  }
+
+  const name = String(body?.name ?? "").trim();
+  const text = String(body?.body ?? "");
+  const kind = String(body?.kind ?? "");
+  if (!name || !text.trim() || !(TEMPLATE_KINDS as readonly string[]).includes(kind)) {
+    return NextResponse.json({ detail: "Invalid template" }, { status: 400 });
+  }
+  return NextResponse.json(
+    createTemplate({ name, body: text, kind: kind as TemplateKind }),
+    { status: 201 },
+  );
 }

@@ -1,22 +1,36 @@
 "use client";
 
 import Link from "next/link";
-import { FileTextIcon } from "lucide-react";
+import { FileTextIcon, PlusIcon } from "lucide-react";
 
 import { PageHeader } from "@/components/layout/PageHeader";
+import { Button } from "@/components/ui/button";
 import { Spinner } from "@/components/ui/spinner";
 import { EmptyState } from "@/components/ui/empty-state";
 import { ROUTES } from "@/constants/routes";
 import { formatDate } from "@/lib/formatting";
-import { useReports } from "@/hooks/useReporting";
+import { useReportActions, useReports } from "@/hooks/useReporting";
 
 export default function ReportingPage() {
   const { data, isLoading } = useReports();
+  const { generate } = useReportActions();
   const reports = data?.results ?? [];
 
   return (
     <>
-      <PageHeader title="Reporting" description="Monthly performance reports." />
+      <PageHeader
+        title="Reporting"
+        description="Monthly performance reports."
+        actions={
+          <Button
+            onClick={() => generate.mutate(undefined)}
+            disabled={generate.isPending}
+          >
+            <PlusIcon />
+            {generate.isPending ? "Generating…" : "Generate report"}
+          </Button>
+        }
+      />
       {isLoading ? (
         <div className="flex justify-center py-16">
           <Spinner className="size-5" />

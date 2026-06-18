@@ -10,19 +10,28 @@ import {
 } from "@/lib/api/analyticsApi";
 import { dashboardConfig } from "@/config/dashboard.config";
 
-export function useOverview() {
+export function useOverview(days = 30) {
   return useQuery({
-    queryKey: ["analytics", "overview"],
-    queryFn: getOverview,
+    queryKey: ["analytics", "overview", days],
+    queryFn: () => getOverview(days),
     refetchInterval: dashboardConfig.polling.overview,
   });
 }
-export function useFunnel() {
-  return useQuery({ queryKey: ["analytics", "funnel"], queryFn: getFunnel });
+export function useFunnel(days = 30) {
+  return useQuery({
+    queryKey: ["analytics", "funnel", days],
+    queryFn: () => getFunnel(days),
+  });
 }
-export function useResponseTime() {
-  return useQuery({ queryKey: ["analytics", "response-time"], queryFn: getResponseTime });
+export function useResponseTime(days = 30) {
+  return useQuery({
+    queryKey: ["analytics", "response-time", days],
+    queryFn: () => getResponseTime(days),
+  });
 }
-export function useBottlenecks() {
-  return useQuery({ queryKey: ["analytics", "bottlenecks"], queryFn: getBottlenecks });
+export function useBottlenecks(days = 30) {
+  return useQuery({
+    queryKey: ["analytics", "bottlenecks", days],
+    queryFn: () => getBottlenecks(days),
+  });
 }

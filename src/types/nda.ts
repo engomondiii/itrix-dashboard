@@ -1,4 +1,11 @@
-export type NDAStatus = "required" | "sent" | "signed";
+export const NDA_STATUSES = [
+  "required",
+  "sent",
+  "signed",
+  "declined",
+  "expired",
+] as const;
+export type NDAStatus = (typeof NDA_STATUSES)[number];
 
 export interface NDAChecklistItem {
   id: string;

@@ -95,3 +95,39 @@ export function markNda(id: string, by?: string) {
   pushActivity(l, "nda", "Marked NDA required", by);
   return l;
 }
+
+export function markEvaluation(id: string, by?: string) {
+  const l = getLead(id);
+  if (!l) return null;
+  l.status = "Evaluation";
+  pushActivity(l, "evaluation", "Requested paid evaluation", by);
+  return l;
+}
+
+export function markPoC(id: string, by?: string) {
+  const l = getLead(id);
+  if (!l) return null;
+  l.status = "PoC";
+  pushActivity(l, "poc", "Marked PoC candidate", by);
+  return l;
+}
+
+export function bookMeeting(id: string, by?: string) {
+  const l = getLead(id);
+  if (!l) return null;
+  l.status = "Meeting Booked";
+  pushActivity(l, "status_change", "Meeting booked", by);
+  return l;
+}
+
+/**
+ * Record an outbound follow-up on the lead's timeline. A first touch on a
+ * brand-new lead also advances it out of the "New" stage.
+ */
+export function logEmailSent(id: string, subject: string, by?: string) {
+  const l = getLead(id);
+  if (!l) return null;
+  if (l.status === "New") l.status = "Contacted";
+  pushActivity(l, "email_sent", `Follow-up sent: ${subject}`, by);
+  return l;
+}

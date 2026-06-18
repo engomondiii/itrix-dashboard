@@ -21,7 +21,9 @@ export function PipelineColumn({ stage }: { stage: PipelineStage }) {
         {stage.leads.length === 0 ? (
           <p className="px-1 py-4 text-center text-caption text-ink-400">No leads</p>
         ) : (
-          stage.leads.map((card) => <PipelineCard key={card.id} card={card} />)
+          stage.leads.map((card) => (
+            <PipelineCard key={card.id} card={card} currentStatus={stage.status} />
+          ))
         )}
       </div>
     </div>

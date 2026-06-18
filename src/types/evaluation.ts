@@ -1,11 +1,21 @@
 import type { EvaluationPackage } from "@/constants/products";
 
-export type EvaluationStatus =
-  | "proposed"
-  | "in_progress"
-  | "delivered"
-  | "won"
-  | "lost";
+export const EVALUATION_STATUSES = [
+  "proposed",
+  "in_progress",
+  "delivered",
+  "won",
+  "lost",
+] as const;
+export type EvaluationStatus = (typeof EVALUATION_STATUSES)[number];
+
+export const EVALUATION_STATUS_LABELS: Record<EvaluationStatus, string> = {
+  proposed: "Proposed",
+  in_progress: "In progress",
+  delivered: "Delivered",
+  won: "Won",
+  lost: "Lost",
+};
 
 export interface EvaluationKPI {
   id: string;

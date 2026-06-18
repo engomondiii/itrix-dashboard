@@ -1,37 +1,85 @@
-import Link from "next/link";
+"use client";
 
-import { LeadTierBadge } from "@/components/leads/LeadTierBadge";
-import { LeadScoreBadge } from "@/components/leads/LeadScoreBadge";
+import Link from "next/link";
+import { CheckIcon, ChevronsRightIcon } from "lucide-react";
+
 import { LeadOwnerAvatar } from "@/components/leads/LeadOwnerAvatar";
+import { LeadScoreBadge } from "@/components/leads/LeadScoreBadge";
+import { LeadTierBadge } from "@/components/leads/LeadTierBadge";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { LEAD_STATUSES, type LeadStatus } from "@/constants/statuses";
 import { ROUTES } from "@/constants/routes";
+import { useMoveLead } from "@/hooks/usePipeline";
 import { cn } from "@/lib/utils";
 import type { PipelineCardData } from "@/types/pipeline";
 
-export function PipelineCard({ card }: { card: PipelineCardData }) {
+export function PipelineCard({
+  card,
+  currentStatus,
+}: {
+  card: PipelineCardData;
+  currentStatus: LeadStatus;
+}) {
+  const move = useMoveLead();
+
   return (
-    <Link
-      href={ROUTES.lead(card.id)}
+    <div
       className={cn(
-        "relative block rounded-md border border-line bg-surface p-3 shadow-1 transition-colors hover:border-sapphire-300",
+        "relative rounded-md border border-line bg-surface p-3 shadow-1 transition-colors hover:border-sapphire-300",
         card.overdue && "pl-4",
       )}
     >
       {card.overdue && (
         <span className="absolute top-2 bottom-2 left-0 w-[3px] rounded-full bg-error" />
       )}
-      <div className="flex items-start justify-between gap-2">
-        <span className="text-sec font-medium text-ink-900">
-          {card.company ?? "—"}
-        </span>
-        <LeadTierBadge tier={card.tier} />
+      {/* Stretched link: clicks on non-interactive areas open the lead. */}
+      <Link
+        href={ROUTES.lead(card.id)}
+        aria-label={`Open ${card.company ?? "lead"}`}
+        className="absolute inset-0 rounded-md"
+      />
+      <div className="pointer-events-none relative">
+        <div className="flex items-start justify-between gap-2">
+          <span className="text-sec font-medium text-ink-900">
+            {card.company ?? "—"}
+          </span>
+          <LeadTierBadge tier={card.tier} />
+        </div>
+        <div className="mt-1 text-caption text-ink-500">
+          {card.primaryPain} · {card.productRoute}
+        </div>
+        <div className="mt-2 flex items-center justify-between">
+          <LeadOwnerAvatar owner={card.owner} />
+          <div className="flex items-center gap-1.5">
+            <LeadScoreBadge score={card.score} tier={card.tier} />
+            <DropdownMenu>
+              <DropdownMenuTrigger
+                aria-label="Move to stage"
+                className="pointer-events-auto inline-flex size-6 items-center justify-center rounded-md text-ink-400 outline-none hover:bg-muted hover:text-ink-700 focus-visible:ring-2 focus-visible:ring-ring"
+              >
+                <ChevronsRightIcon className="size-3.5" />
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="pointer-events-auto">
+                {LEAD_STATUSES.map((s) => (
+                  <DropdownMenuItem
+                    key={s}
+                    disabled={s === currentStatus || move.isPending}
+                    onClick={() => move.mutate({ leadId: card.id, status: s })}
+                  >
+                    {s}
+                    {s === currentStatus && <CheckIcon className="ml-auto" />}
+                  </DropdownMenuItem>
+                ))}
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
+        </div>
       </div>
-      <div className="mt-1 text-caption text-ink-500">
-        {card.primaryPain} · {card.productRoute}
-      </div>
-      <div className="mt-2 flex items-center justify-between">
-        <LeadOwnerAvatar owner={card.owner} />
-        <LeadScoreBadge score={card.score} tier={card.tier} />
-      </div>
-    </Link>
+    </div>
   );
 }

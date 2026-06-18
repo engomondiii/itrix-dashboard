@@ -62,7 +62,7 @@ export default function PipelineStagePage({
       ) : (
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
           {leads.map((card) => (
-            <PipelineCard key={card.id} card={card} />
+            <PipelineCard key={card.id} card={card} currentStatus={status} />
           ))}
         </div>
       )}

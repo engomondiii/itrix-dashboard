@@ -8,17 +8,24 @@ import type {
   ResponseTimeMetrics,
 } from "@/types/analytics";
 
-export function getOverview() {
-  return apiGet<OverviewMetrics>(API.analyticsOverview);
+export function getOverview(days?: number) {
+  return apiGet<OverviewMetrics>(API.analyticsOverview, days ? { days } : undefined);
 }
-export function getFunnel() {
-  return apiGet<{ stages: FunnelStage[] }>(API.analyticsFunnel);
+export function getFunnel(days?: number) {
+  return apiGet<{ stages: FunnelStage[] }>(
+    API.analyticsFunnel,
+    days ? { days } : undefined,
+  );
 }
-export function getResponseTime() {
-  return apiGet<ResponseTimeMetrics>(API.analyticsResponseTime);
+export function getResponseTime(days?: number) {
+  return apiGet<ResponseTimeMetrics>(
+    API.analyticsResponseTime,
+    days ? { days } : undefined,
+  );
 }
-export function getBottlenecks() {
+export function getBottlenecks(days?: number) {
   return apiGet<{ bottlenecks: BottleneckPattern[]; industries: IndustryBreakdown[] }>(
     API.analyticsBottlenecks,
+    days ? { days } : undefined,
   );
 }

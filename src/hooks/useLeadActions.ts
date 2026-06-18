@@ -5,8 +5,11 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import {
   addLeadNote,
   assignOwner,
+  bookLeadMeeting,
   escalateLead,
   markLeadNda,
+  markLeadPoC,
+  requestLeadEvaluation,
   setLeadStatus,
 } from "@/lib/api/leadsApi";
 import { useToast } from "@/hooks/useToast";
@@ -51,6 +54,21 @@ export function useLeadActions(id: string) {
     markNda: useMutation({
       mutationFn: () => markLeadNda(id),
       onSuccess: (l) => onSuccess(l, "Marked NDA required"),
+      onError,
+    }),
+    requestEvaluation: useMutation({
+      mutationFn: () => requestLeadEvaluation(id),
+      onSuccess: (l) => onSuccess(l, "Paid evaluation opened"),
+      onError,
+    }),
+    markPoC: useMutation({
+      mutationFn: () => markLeadPoC(id),
+      onSuccess: (l) => onSuccess(l, "PoC opened"),
+      onError,
+    }),
+    bookMeeting: useMutation({
+      mutationFn: () => bookLeadMeeting(id),
+      onSuccess: (l) => onSuccess(l, "Meeting booked"),
       onError,
     }),
   };

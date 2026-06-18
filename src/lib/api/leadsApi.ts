@@ -45,3 +45,15 @@ export function escalateLead(id: string) {
 export function markLeadNda(id: string) {
   return apiSend<Lead>(API.leadNda(id), "POST");
 }
+
+export function requestLeadEvaluation(id: string) {
+  return apiSend<Lead>(API.leadEvaluation(id), "POST");
+}
+
+export function markLeadPoC(id: string) {
+  return apiSend<Lead>(API.leadPoc(id), "POST");
+}
+
+export function bookLeadMeeting(id: string) {
+  return apiSend<Lead>(API.leadMeeting(id), "POST");
+}

@@ -1,4 +1,19 @@
-export type TemplateKind = "email" | "follow-up" | "evaluation" | "poc" | "handoff";
+export const TEMPLATE_KINDS = [
+  "email",
+  "follow-up",
+  "evaluation",
+  "poc",
+  "handoff",
+] as const;
+export type TemplateKind = (typeof TEMPLATE_KINDS)[number];
+
+export const TEMPLATE_KIND_LABELS: Record<TemplateKind, string> = {
+  email: "Email",
+  "follow-up": "Follow-up",
+  evaluation: "Evaluation",
+  poc: "PoC",
+  handoff: "Handoff",
+};
 
 export interface Template {
   id: string;
