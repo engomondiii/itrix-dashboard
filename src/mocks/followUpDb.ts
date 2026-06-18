@@ -2,6 +2,7 @@ import "server-only";
 
 import { MOCK_LEADS } from "@/mocks/leads";
 import { slaDeadline } from "@/lib/sla/slaCalculator";
+import { getSlaConfig } from "@/mocks/settingsDb";
 import type { FollowUpTask } from "@/types/followUp";
 
 let tasks: FollowUpTask[] | null = null;
@@ -13,7 +14,8 @@ function build(): FollowUpTask[] {
   ).map((l, i) => {
     // Spread created times across the last ~3 days for a realistic overdue/soon mix.
     const createdAt = new Date(now - ((i * 7) % 80) * 3600_000).toISOString();
-    const due = slaDeadline(createdAt, l.tier) ?? new Date(now + 24 * 3600_000);
+    const due =
+      slaDeadline(createdAt, l.tier, getSlaConfig()) ?? new Date(now + 24 * 3600_000);
     return {
       id: `fu-${l.id}`,
       leadId: l.id,

@@ -1,5 +1,7 @@
 import { ROUTES } from "@/constants/routes";
-import type { Notification } from "@/types/notification";
+import { getNotificationPrefs } from "@/mocks/settingsDb";
+import type { NotificationKind, Notification } from "@/types/notification";
+import type { NotificationPrefs } from "@/types/settings";
 
 /**
  * In-memory notification store for mock mode. Mutations (mark read / read all)
@@ -49,8 +51,22 @@ export interface NotificationFeed {
   unread: number;
 }
 
+/** Which preference toggle (if any) gates a notification kind. */
+const KIND_PREF: Partial<Record<NotificationKind, keyof NotificationPrefs>> = {
+  tier1_lead: "tier1",
+  sla_breach: "sla",
+  nda_signed: "nda",
+};
+
+/** A notification is shown unless its category has been toggled off. */
+function isEnabled(n: Notification, prefs: NotificationPrefs): boolean {
+  const pref = KIND_PREF[n.kind];
+  return pref ? prefs[pref] : true;
+}
+
 export function listNotifications(): NotificationFeed {
-  const results = db();
+  const prefs = getNotificationPrefs();
+  const results = db().filter((n) => isEnabled(n, prefs));
   return {
     results,
     count: results.length,

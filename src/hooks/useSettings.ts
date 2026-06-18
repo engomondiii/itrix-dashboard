@@ -46,7 +46,12 @@ export function useUpdateNotificationPrefs() {
   const { toast } = useToast();
   return useMutation({
     mutationFn: (prefs: NotificationPrefs) => updateNotificationPrefs(prefs),
-    onSuccess: (p) => qc.setQueryData(["settings", "notification-prefs"], p),
+    onSuccess: (p) => {
+      qc.setQueryData(["settings", "notification-prefs"], p);
+      // Toggling a category re-filters the bell feed — refresh it.
+      qc.invalidateQueries({ queryKey: ["notifications"] });
+      toast.success("Notification preferences saved");
+    },
     onError: (e) => toast.error((e as Error).message),
   });
 }

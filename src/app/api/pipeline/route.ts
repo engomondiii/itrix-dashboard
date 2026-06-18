@@ -6,13 +6,14 @@ import { djangoFetch } from "@/lib/server/proxy";
 import { MOCK_LEADS } from "@/mocks/leads";
 import { LEAD_STATUSES } from "@/constants/statuses";
 import { slaState } from "@/lib/sla/slaCalculator";
+import { getSlaConfig } from "@/mocks/settingsDb";
 import type { Lead } from "@/types/lead";
 import type { PipelineBoard, PipelineCardData, PipelineStage } from "@/types/pipeline";
 
 function isOverdue(l: Lead): boolean {
   if (l.tier > 2) return false;
   if (l.status !== "New" && l.status !== "Contacted") return false;
-  return slaState(l.submittedAt, l.tier) === "breached";
+  return slaState(l.submittedAt, l.tier, { hours: getSlaConfig() }) === "breached";
 }
 
 function toCard(l: Lead): PipelineCardData {

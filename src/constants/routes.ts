@@ -39,7 +39,6 @@ export const ROUTES = {
 
   templates: "/templates",
   templatesEmails: "/templates/emails",
-  templateEmail: (id: string) => `/templates/emails/${id}`,
   templatesFollowUp: "/templates/follow-up",
   templatesEvaluation: "/templates/evaluation",
   templatesPoc: "/templates/poc",

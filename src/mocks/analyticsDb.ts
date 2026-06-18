@@ -5,6 +5,7 @@ import { LEAD_STATUSES } from "@/constants/statuses";
 import { PRODUCT_ROUTES } from "@/constants/products";
 import { TIERS } from "@/constants/tiers";
 import { slaState, slaDeadline } from "@/lib/sla/slaCalculator";
+import { getSlaConfig } from "@/mocks/settingsDb";
 import type {
   BottleneckPattern,
   FunnelStage,
@@ -22,7 +23,7 @@ function overdueCount(): number {
     (l) =>
       l.tier <= 2 &&
       (l.status === "New" || l.status === "Contacted") &&
-      slaState(l.submittedAt, l.tier) === "breached",
+      slaState(l.submittedAt, l.tier, { hours: getSlaConfig() }) === "breached",
   ).length;
 }
 
@@ -81,13 +82,13 @@ export function responseTime(): ResponseTimeMetrics {
     rows.filter(
       (l) =>
         (l.status === "New" || l.status === "Contacted") &&
-        slaState(l.submittedAt, l.tier) === "breached",
+        slaState(l.submittedAt, l.tier, { hours: getSlaConfig() }) === "breached",
     ).length;
   // Mock "avg response" = hours from submit to SLA deadline midpoint (illustrative).
   const avg = (rows: typeof MOCK_LEADS) => {
     if (rows.length === 0) return 0;
     const total = rows.reduce((acc, l) => {
-      const d = slaDeadline(l.submittedAt, l.tier);
+      const d = slaDeadline(l.submittedAt, l.tier, getSlaConfig());
       return acc + (d ? (d.getTime() - +new Date(l.submittedAt)) / HOUR / 2 : 0);
     }, 0);
     return Math.round(total / rows.length);
