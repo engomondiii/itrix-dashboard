@@ -40,11 +40,11 @@ export function LeadTableRow({
         </Link>
         <div className="text-caption text-ink-400">{lead.visitorName ?? lead.role}</div>
       </TableCell>
-      <TableCell className="text-ink-500">{lead.industry}</TableCell>
-      <TableCell>
+      <TableCell className="hidden text-ink-500 lg:table-cell">{lead.industry}</TableCell>
+      <TableCell className="hidden md:table-cell">
         <LeadProductRouteBadge route={lead.productRoute} />
       </TableCell>
-      <TableCell className="text-ink-500">{lead.primaryPain}</TableCell>
+      <TableCell className="hidden text-ink-500 xl:table-cell">{lead.primaryPain}</TableCell>
       <TableCell>
         <LeadTierBadge tier={lead.tier} />
       </TableCell>
@@ -54,10 +54,10 @@ export function LeadTableRow({
       <TableCell>
         <LeadStatusBadge status={lead.status} />
       </TableCell>
-      <TableCell>
+      <TableCell className="hidden lg:table-cell">
         <LeadOwnerAvatar owner={lead.owner} />
       </TableCell>
-      <TableCell className="text-right text-caption tabular-nums text-ink-400">
+      <TableCell className="hidden text-right text-caption tabular-nums text-ink-400 sm:table-cell">
         {formatDate(lead.submittedAt)}
       </TableCell>
     </TableRow>

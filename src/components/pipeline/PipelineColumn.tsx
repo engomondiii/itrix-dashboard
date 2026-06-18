@@ -9,7 +9,7 @@ import type { PipelineStage } from "@/types/pipeline";
 
 export function PipelineColumn({ stage }: { stage: PipelineStage }) {
   return (
-    <div className="flex w-72 shrink-0 flex-col rounded-md bg-canvas-deep">
+    <div className="flex w-[80vw] max-w-72 shrink-0 flex-col rounded-md bg-canvas-deep sm:w-72">
       <Link
         href={ROUTES.pipelineStage(statusToSlug(stage.status))}
         className="flex items-center justify-between gap-2 px-3 py-2.5 hover:opacity-80"

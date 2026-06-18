@@ -31,16 +31,18 @@ export function LeadTable({
               />
             </TableHead>
             <SortableHeader sortKey="company">Lead</SortableHeader>
-            <TableHead>Industry</TableHead>
-            <SortableHeader sortKey="productRoute">Route</SortableHeader>
-            <TableHead>Pain</TableHead>
+            <TableHead className="hidden lg:table-cell">Industry</TableHead>
+            <SortableHeader sortKey="productRoute" className="hidden md:table-cell">
+              Route
+            </SortableHeader>
+            <TableHead className="hidden xl:table-cell">Pain</TableHead>
             <SortableHeader sortKey="tier">Tier</SortableHeader>
             <SortableHeader sortKey="score" className="text-right">
               Score
             </SortableHeader>
             <SortableHeader sortKey="status">Status</SortableHeader>
-            <TableHead>Owner</TableHead>
-            <SortableHeader sortKey="submittedAt" className="text-right">
+            <TableHead className="hidden lg:table-cell">Owner</TableHead>
+            <SortableHeader sortKey="submittedAt" className="hidden text-right sm:table-cell">
               Submitted
             </SortableHeader>
           </TableRow>
