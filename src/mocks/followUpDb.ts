@@ -12,7 +12,10 @@ function build(): FollowUpTask[] {
   return MOCK_LEADS.filter(
     (l) => l.tier <= 3 && ["New", "Contacted", "Meeting Booked"].includes(l.status),
   ).map((l, i) => {
-    // Spread created times across the last ~3 days for a realistic overdue/soon mix.
+    // `createdAt` is the SLA clock-start — the rep's last touch on this lead;
+    // `dueAt` = that + the tier's SLA window, so the countdown has a real basis.
+    // Mock mode spreads last-touch times across the last ~3 days for a realistic
+    // overdue/soon mix; real mode uses Django's actual transition timestamps.
     const createdAt = new Date(now - ((i * 7) % 80) * 3600_000).toISOString();
     const due =
       slaDeadline(createdAt, l.tier, getSlaConfig()) ?? new Date(now + 24 * 3600_000);

@@ -54,6 +54,14 @@ export function markLeadPoC(id: string) {
   return apiSend<Lead>(API.leadPoc(id), "POST");
 }
 
-export function bookLeadMeeting(id: string) {
-  return apiSend<Lead>(API.leadMeeting(id), "POST");
+export interface BookMeetingInput {
+  scheduledAt: string;
+  durationMins: number;
+  attendee: string;
+  location: string;
+  notes?: string;
+}
+
+export function bookLeadMeeting(id: string, input: BookMeetingInput) {
+  return apiSend<Lead>(API.leadMeeting(id), "POST", input);
 }

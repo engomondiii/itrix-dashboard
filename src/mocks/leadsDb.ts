@@ -1,7 +1,12 @@
 import "server-only";
 
 import { MOCK_LEADS } from "@/mocks/leads";
-import type { Lead, LeadActivity, LeadActivityType } from "@/types/lead";
+import type {
+  Lead,
+  LeadActivity,
+  LeadActivityType,
+  LeadMeeting,
+} from "@/types/lead";
 
 /**
  * In-process mutable mock store. Mutations persist for the life of the dev
@@ -26,6 +31,7 @@ function enrich(l: Lead): Lead {
     };
   }
   if (!l.notes) l.notes = [];
+  if (!l.meetings) l.meetings = [];
   if (!l.activity) {
     l.activity = [
       {
@@ -112,11 +118,31 @@ export function markPoC(id: string, by?: string) {
   return l;
 }
 
-export function bookMeeting(id: string, by?: string) {
+export interface MeetingInput {
+  scheduledAt: string; // local datetime, "YYYY-MM-DDTHH:mm"
+  durationMins: number;
+  attendee: string;
+  location: string;
+  notes?: string;
+}
+
+export function bookMeeting(id: string, input: MeetingInput, by?: string) {
   const l = getLead(id);
   if (!l) return null;
+  const meeting: LeadMeeting = {
+    id: `mtg-${seq++}`,
+    scheduledAt: input.scheduledAt,
+    durationMins: input.durationMins,
+    attendee: input.attendee.trim(),
+    location: input.location.trim(),
+    notes: input.notes?.trim() || undefined,
+    bookedBy: by,
+    createdAt: new Date().toISOString(),
+  };
+  l.meetings = [meeting, ...(l.meetings ?? [])];
   l.status = "Meeting Booked";
-  pushActivity(l, "status_change", "Meeting booked", by);
+  const when = input.scheduledAt.replace("T", " ");
+  pushActivity(l, "meeting", `Meeting booked for ${when}`, by);
   return l;
 }
 

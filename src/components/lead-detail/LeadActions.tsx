@@ -11,20 +11,20 @@ import {
 
 import { Button } from "@/components/ui/button";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
+import { BookMeetingDialog } from "@/components/lead-detail/BookMeetingDialog";
 import { useLeadActions } from "@/hooks/useLeadActions";
 import type { Lead } from "@/types/lead";
 
 export function LeadActions({ lead }: { lead: Lead }) {
-  const { escalate, markNda, requestEvaluation, markPoC, bookMeeting } =
-    useLeadActions(lead.id);
+  const { escalate, markNda, requestEvaluation, markPoC } = useLeadActions(lead.id);
   const [confirmEscalate, setConfirmEscalate] = useState(false);
+  const [bookingMeeting, setBookingMeeting] = useState(false);
 
   return (
     <div className="space-y-2">
       <Button
         className="w-full justify-start"
-        disabled={bookMeeting.isPending}
-        onClick={() => bookMeeting.mutate()}
+        onClick={() => setBookingMeeting(true)}
       >
         <CalendarIcon />
         Book meeting
@@ -78,6 +78,10 @@ export function LeadActions({ lead }: { lead: Lead }) {
           setConfirmEscalate(false);
         }}
       />
+
+      {bookingMeeting && (
+        <BookMeetingDialog lead={lead} onClose={() => setBookingMeeting(false)} />
+      )}
     </div>
   );
 }

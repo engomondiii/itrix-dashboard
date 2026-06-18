@@ -11,6 +11,7 @@ import {
   markLeadPoC,
   requestLeadEvaluation,
   setLeadStatus,
+  type BookMeetingInput,
 } from "@/lib/api/leadsApi";
 import { useToast } from "@/hooks/useToast";
 import type { LeadStatus } from "@/constants/statuses";
@@ -67,7 +68,7 @@ export function useLeadActions(id: string) {
       onError,
     }),
     bookMeeting: useMutation({
-      mutationFn: () => bookLeadMeeting(id),
+      mutationFn: (input: BookMeetingInput) => bookLeadMeeting(id, input),
       onSuccess: (l) => onSuccess(l, "Meeting booked"),
       onError,
     }),

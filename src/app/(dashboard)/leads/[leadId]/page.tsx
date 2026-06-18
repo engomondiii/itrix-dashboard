@@ -16,6 +16,7 @@ import { LeadScoreBreakdown } from "@/components/lead-detail/LeadScoreBreakdown"
 import { LeadStatusControl } from "@/components/lead-detail/LeadStatusControl";
 import { LeadOwnerControl } from "@/components/lead-detail/LeadOwnerControl";
 import { LeadActions } from "@/components/lead-detail/LeadActions";
+import { LeadMeetings } from "@/components/lead-detail/LeadMeetings";
 import { FollowUpEmailDraft } from "@/components/lead-detail/FollowUpEmailDraft";
 import { LeadProductRouteBadge } from "@/components/leads/LeadProductRouteBadge";
 import { Badge } from "@/components/ui/badge";
@@ -119,6 +120,17 @@ Recommended next step: ${lead.recommendedNextStep}`;
               <LeadActions lead={lead} />
             </CardContent>
           </Card>
+
+          {lead.meetings && lead.meetings.length > 0 && (
+            <Card>
+              <CardHeader>
+                <CardTitle>Meetings</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <LeadMeetings meetings={lead.meetings} />
+              </CardContent>
+            </Card>
+          )}
 
           <Card>
             <CardHeader>

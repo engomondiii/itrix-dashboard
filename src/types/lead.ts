@@ -35,7 +35,20 @@ export type LeadActivityType =
   | "escalated"
   | "nda"
   | "evaluation"
-  | "poc";
+  | "poc"
+  | "meeting";
+
+/** A scheduled meeting with the lead (captured by the Book meeting flow). */
+export interface LeadMeeting {
+  id: string;
+  scheduledAt: string; // ISO date-time
+  durationMins: number;
+  attendee: string; // the customer-side contact
+  location: string; // video link or room
+  notes?: string;
+  bookedBy?: string;
+  createdAt: string; // ISO
+}
 
 export interface LeadActivity {
   id: string;
@@ -75,6 +88,7 @@ export interface Lead {
   qualification?: QualificationAnswers;
   notes?: LeadNote[];
   activity?: LeadActivity[];
+  meetings?: LeadMeeting[];
 }
 
 /** Lightweight row for list/table views. */
