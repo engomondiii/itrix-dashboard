@@ -1,14 +1,30 @@
 "use client";
 
-import { SendIcon } from "lucide-react";
+import { useState } from "react";
+import { ChevronDownIcon, SendIcon } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { CopyButton } from "@/components/ui/copy-button";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { useSendEmail } from "@/hooks/useEmail";
+import { useTemplates } from "@/hooks/useTemplates";
+import {
+  leadTemplateValues,
+  renderTemplate,
+  splitSubject,
+} from "@/lib/templates/render";
 import type { Lead } from "@/types/lead";
+import type { Template } from "@/types/template";
 
-/** AI-drafted follow-up email (template from the Master Architecture §9.5). */
-function draftFor(lead: Lead) {
+/** Default AI-drafted follow-up (Master Architecture §9.5), used until a template is applied. */
+function defaultDraft(lead: Lead) {
   const subject = `Your ALPHA Compute / Core Assessment — ${lead.company ?? "your team"}`;
   const body = `Dear ${lead.visitorName ?? "there"},
 
@@ -25,24 +41,63 @@ iTrix Assessment Team`;
 
 export function FollowUpEmailDraft({ lead }: { lead: Lead }) {
   const sendEmail = useSendEmail();
-  const { subject, body } = draftFor(lead);
+  const templates = useTemplates("email");
+  const initial = defaultDraft(lead);
+  const [subject, setSubject] = useState(initial.subject);
+  const [body, setBody] = useState(initial.body);
+
+  function applyTemplate(tpl: Template) {
+    const rendered = renderTemplate(tpl.body, leadTemplateValues(lead));
+    const split = splitSubject(rendered);
+    if (split.subject) setSubject(split.subject);
+    setBody(split.body);
+  }
+
+  const emailTemplates = templates.data?.results ?? [];
 
   return (
     <div className="space-y-2">
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between gap-2">
         <div className="text-micro font-semibold uppercase tracking-[0.06em] text-ink-400">
           Subject
         </div>
-        <CopyButton value={`${subject}\n\n${body}`} label="Copy" />
+        <div className="flex items-center gap-1">
+          <DropdownMenu>
+            <DropdownMenuTrigger
+              render={
+                <Button variant="ghost" size="sm" disabled={!emailTemplates.length} />
+              }
+            >
+              Use template
+              <ChevronDownIcon />
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-56">
+              {emailTemplates.map((t) => (
+                <DropdownMenuItem key={t.id} onClick={() => applyTemplate(t)}>
+                  {t.name}
+                </DropdownMenuItem>
+              ))}
+            </DropdownMenuContent>
+          </DropdownMenu>
+          <CopyButton value={`${subject}\n\n${body}`} label="Copy" />
+        </div>
       </div>
-      <div className="text-sec text-ink-800">{subject}</div>
-      <pre className="max-h-56 overflow-y-auto rounded-md bg-surface-sunken p-3 font-sans text-sec whitespace-pre-wrap text-ink-700">
-        {body}
-      </pre>
+      <Input
+        value={subject}
+        onChange={(e) => setSubject(e.target.value)}
+        aria-label="Email subject"
+      />
+      <Textarea
+        value={body}
+        onChange={(e) => setBody(e.target.value)}
+        rows={9}
+        aria-label="Email body"
+        className="max-h-72"
+      />
       <Button
         size="sm"
         className="w-full"
-        disabled={sendEmail.isPending}
+        disabled={sendEmail.isPending || !subject.trim() || !body.trim()}
         onClick={() =>
           sendEmail.mutate({ to: lead.email, subject, body, leadId: lead.id })
         }
