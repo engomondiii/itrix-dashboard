@@ -3,7 +3,7 @@ import { NextResponse } from "next/server";
 import { siteConfig } from "@/config/site.config";
 import { getSessionUser } from "@/lib/server/session";
 import { djangoFetch } from "@/lib/server/proxy";
-import { declineNda, expireNda, getNda, signNda } from "@/mocks/ndaDb";
+import { declineNda, expireNda, getNda, sendNda, signNda } from "@/mocks/ndaDb";
 
 export async function GET(
   _req: Request,
@@ -34,7 +34,9 @@ export async function POST(
   }
   const { leadId } = await params;
   const body = await req.json().catch(() => ({}));
-  const action = body?.action === "decline" || body?.action === "expire" ? body.action : "sign";
+  const action = ["decline", "expire", "send"].includes(body?.action)
+    ? body.action
+    : "sign";
 
   if (!siteConfig.useMocks) {
     // v3: NDA is keyed by NDA-record id; sign/decline/expire via POST /nda/{id}/{action}/.
@@ -56,7 +58,12 @@ export async function POST(
     return NextResponse.json(nda);
   }
 
-  const nda = action === "expire" ? expireNda(leadId) : signNda(leadId, user.name);
+  const nda =
+    action === "expire"
+      ? expireNda(leadId)
+      : action === "send"
+        ? sendNda(leadId)
+        : signNda(leadId, user.name);
   if (!nda) return NextResponse.json({ detail: "Not found" }, { status: 404 });
   return NextResponse.json(nda);
 }

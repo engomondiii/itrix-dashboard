@@ -10,6 +10,10 @@ export function getNda(leadId: string) {
   return apiGet<NDARecord>(API.ndaItem(leadId));
 }
 
+export function sendNda(leadId: string) {
+  return apiSend<NDARecord>(API.ndaItem(leadId), "POST", { action: "send" });
+}
+
 export function signNda(leadId: string) {
   return apiSend<NDARecord>(API.ndaItem(leadId), "POST", { action: "sign" });
 }

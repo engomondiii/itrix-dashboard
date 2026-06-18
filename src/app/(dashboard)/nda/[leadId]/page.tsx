@@ -11,7 +11,21 @@ import { Spinner } from "@/components/ui/spinner";
 import { EmptyState } from "@/components/ui/empty-state";
 import { NDAChecklistDisplay } from "@/components/nda/NDAChecklistDisplay";
 import { NDAMarkCompleteButton } from "@/components/nda/NDAMarkCompleteButton";
+import { NDASendButton } from "@/components/nda/NDASendButton";
+import { NDAActionsMenu } from "@/components/nda/NDAActionsMenu";
 import { ROUTES } from "@/constants/routes";
+import type { NDAStatus } from "@/types/nda";
+
+const STATUS_VARIANT: Record<
+  NDAStatus,
+  "info" | "warning" | "success" | "error" | "neutral"
+> = {
+  required: "info",
+  sent: "warning",
+  signed: "success",
+  declined: "error",
+  expired: "neutral",
+};
 import { formatDate } from "@/lib/formatting";
 import { useNdaRecord } from "@/hooks/useNda";
 
@@ -60,9 +74,7 @@ export default function NDADetailPage({
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             NDA
-            <Badge variant={nda.status === "signed" ? "success" : "warning"}>
-              {nda.status}
-            </Badge>
+            <Badge variant={STATUS_VARIANT[nda.status]}>{nda.status}</Badge>
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
@@ -71,9 +83,18 @@ export default function NDADetailPage({
               ? `Signed ${formatDate(nda.signedAt)}`
               : `Requested ${formatDate(nda.requestedAt)}`}
           </div>
+          {nda.status === "declined" && nda.declineReason && (
+            <p className="text-caption text-error-text">Declined: {nda.declineReason}</p>
+          )}
           <NDAChecklistDisplay items={nda.checklist} />
-          <div className="flex justify-end">
-            <NDAMarkCompleteButton leadId={nda.leadId} signed={nda.status === "signed"} />
+          <div className="flex items-center justify-end gap-1.5">
+            {nda.status === "required" && <NDASendButton leadId={nda.leadId} />}
+            {nda.status === "sent" && (
+              <NDAMarkCompleteButton leadId={nda.leadId} signed={false} />
+            )}
+            {(nda.status === "required" || nda.status === "sent") && (
+              <NDAActionsMenu leadId={nda.leadId} />
+            )}
           </div>
         </CardContent>
       </Card>

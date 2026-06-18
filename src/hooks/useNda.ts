@@ -7,7 +7,14 @@ import {
   type UseMutationResult,
 } from "@tanstack/react-query";
 
-import { declineNda, expireNda, getNda, listNda, signNda } from "@/lib/api/ndaApi";
+import {
+  declineNda,
+  expireNda,
+  getNda,
+  listNda,
+  sendNda,
+  signNda,
+} from "@/lib/api/ndaApi";
 import { useToast } from "@/hooks/useToast";
 import type { NDARecord } from "@/types/nda";
 
@@ -41,6 +48,10 @@ function useNdaMutation(
     },
     onError: (e) => toast.error((e as Error).message),
   });
+}
+
+export function useSendNda() {
+  return useNdaMutation(sendNda, "NDA sent to counterparty");
 }
 
 export function useSignNda() {

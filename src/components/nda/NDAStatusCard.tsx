@@ -4,6 +4,7 @@ import { Badge } from "@/components/ui/badge";
 import { NDAActionsMenu } from "@/components/nda/NDAActionsMenu";
 import { NDAChecklistDisplay } from "@/components/nda/NDAChecklistDisplay";
 import { NDAMarkCompleteButton } from "@/components/nda/NDAMarkCompleteButton";
+import { NDASendButton } from "@/components/nda/NDASendButton";
 import { ROUTES } from "@/constants/routes";
 import { formatDate } from "@/lib/formatting";
 import type { NDARecord, NDAStatus } from "@/types/nda";
@@ -45,7 +46,10 @@ export function NDAStatusCard({ nda }: { nda: NDARecord }) {
         <NDAChecklistDisplay items={nda.checklist} />
       </div>
       <div className="mt-3 flex items-center justify-end gap-1.5">
-        <NDAMarkCompleteButton leadId={nda.leadId} signed={nda.status === "signed"} />
+        {nda.status === "required" && <NDASendButton leadId={nda.leadId} />}
+        {nda.status === "sent" && (
+          <NDAMarkCompleteButton leadId={nda.leadId} signed={false} />
+        )}
         {PENDING_STATUSES.includes(nda.status) && (
           <NDAActionsMenu leadId={nda.leadId} />
         )}

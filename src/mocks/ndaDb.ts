@@ -12,20 +12,23 @@ const overrides = new Map<
   { status: NDAStatus; signedAt?: string; declineReason?: string }
 >();
 
-function checklist(signed: boolean) {
+/** Checklist mirrors the pipeline so it reflects real progress, not a fixed list. */
+function checklist(status: NDAStatus) {
+  const sentOrBeyond = status === "sent" || status === "signed";
   return [
-    { id: "c1", label: "Confidentiality scope agreed", done: true },
-    { id: "c2", label: "Counterparty entity confirmed", done: true },
-    { id: "c3", label: "Disclosure boundary set (public / NDA-only)", done: true },
-    { id: "c4", label: "Signed by both parties", done: signed },
+    { id: "c1", label: "Draft prepared (scope + counterparty)", done: true },
+    { id: "c2", label: "Sent to counterparty", done: sentOrBeyond },
+    { id: "c3", label: "Signed by both parties", done: status === "signed" },
   ];
 }
 
 function build(): NDARecord[] {
   return MOCK_LEADS.filter((l) => NDA_LEAD_STATUSES.includes(l.status)).map((l) => {
     const o = overrides.get(l.id);
+    // A lead past the NDA stage has a signed NDA; a lead just at "NDA" has a
+    // drafted ("required") NDA awaiting send. Overrides drive sent/signed/etc.
     const status: NDAStatus =
-      o?.status ?? (SIGNED_STATUSES.includes(l.status) ? "signed" : "sent");
+      o?.status ?? (SIGNED_STATUSES.includes(l.status) ? "signed" : "required");
     const signed = status === "signed";
     return {
       id: `nda-${l.id}`,
@@ -33,7 +36,7 @@ function build(): NDARecord[] {
       leadName: l.company ?? l.email,
       company: l.company,
       status,
-      checklist: checklist(signed),
+      checklist: checklist(status),
       requestedAt: l.submittedAt,
       signedAt: signed ? (o?.signedAt ?? l.submittedAt) : null,
       declineReason: status === "declined" ? o?.declineReason : undefined,
@@ -47,6 +50,12 @@ export function listNda(): NDARecord[] {
 
 export function getNda(leadId: string): NDARecord | null {
   return build().find((n) => n.leadId === leadId) ?? null;
+}
+
+/** Send a drafted ("required") NDA to the counterparty: required -> sent. */
+export function sendNda(leadId: string): NDARecord | null {
+  overrides.set(leadId, { status: "sent" });
+  return getNda(leadId);
 }
 
 export function signNda(leadId: string, by?: string): NDARecord | null {
