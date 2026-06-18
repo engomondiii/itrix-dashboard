@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 
 import { siteConfig } from "@/config/site.config";
 import { getSessionUser } from "@/lib/server/session";
-import { djangoFetch } from "@/lib/server/proxy";
+import { djangoFetch, djangoJson } from "@/lib/server/proxy";
 import { deleteTemplate, getTemplate, updateTemplate } from "@/mocks/templatesDb";
 import { TEMPLATE_KINDS, type TemplateKind } from "@/types/template";
 
@@ -16,7 +16,7 @@ export async function GET(
   const { templateId } = await params;
   if (!siteConfig.useMocks) {
     const r = await djangoFetch(`/templates/${templateId}/`);
-    return NextResponse.json(await r.json(), { status: r.status });
+    return djangoJson(r);
   }
   const tpl = getTemplate(templateId);
   if (!tpl) return NextResponse.json({ detail: "Not found" }, { status: 404 });
@@ -39,7 +39,7 @@ export async function PATCH(
       method: "PATCH",
       body: JSON.stringify(body),
     });
-    return NextResponse.json(await r.json(), { status: r.status });
+    return djangoJson(r);
   }
 
   const rawKind = body?.kind != null ? String(body.kind) : undefined;

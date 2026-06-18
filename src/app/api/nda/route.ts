@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 
 import { siteConfig } from "@/config/site.config";
 import { getSessionUser } from "@/lib/server/session";
-import { djangoFetch } from "@/lib/server/proxy";
+import { djangoFetch, djangoJson } from "@/lib/server/proxy";
 import { listNda } from "@/mocks/ndaDb";
 
 export async function GET() {
@@ -11,7 +11,7 @@ export async function GET() {
   }
   if (!siteConfig.useMocks) {
     const r = await djangoFetch("/nda/");
-    return NextResponse.json(await r.json(), { status: r.status });
+    return djangoJson(r);
   }
   const results = listNda();
   return NextResponse.json({ results, count: results.length });

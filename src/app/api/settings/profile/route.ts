@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 
 import { siteConfig } from "@/config/site.config";
 import { getSessionUser } from "@/lib/server/session";
-import { djangoFetch } from "@/lib/server/proxy";
+import { djangoFetch, djangoJson } from "@/lib/server/proxy";
 import { getProfile, updateProfile } from "@/mocks/settingsDb";
 
 export async function GET() {
@@ -12,7 +12,7 @@ export async function GET() {
   if (!siteConfig.useMocks) {
     // v3: current-user profile endpoint
     const r = await djangoFetch("/auth/profile/");
-    return NextResponse.json(await r.json(), { status: r.status });
+    return djangoJson(r);
   }
   return NextResponse.json(getProfile(user));
 }
@@ -28,7 +28,7 @@ export async function PATCH(req: Request) {
       method: "PATCH",
       body: JSON.stringify(body),
     });
-    return NextResponse.json(await r.json(), { status: r.status });
+    return djangoJson(r);
   }
   return NextResponse.json(updateProfile(user, { name: body?.name }));
 }

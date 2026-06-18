@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 
 import { siteConfig } from "@/config/site.config";
 import { getSessionUser } from "@/lib/server/session";
-import { djangoFetch } from "@/lib/server/proxy";
+import { djangoFetch, djangoJson } from "@/lib/server/proxy";
 import { generateReport, listReports } from "@/mocks/reportingDb";
 
 export async function GET() {
@@ -11,7 +11,7 @@ export async function GET() {
   }
   if (!siteConfig.useMocks) {
     const r = await djangoFetch("/reporting/");
-    return NextResponse.json(await r.json(), { status: r.status });
+    return djangoJson(r);
   }
   const results = listReports();
   return NextResponse.json({ results, count: results.length });
@@ -30,7 +30,7 @@ export async function POST(req: Request) {
       method: "POST",
       body: JSON.stringify(body),
     });
-    return NextResponse.json(await r.json(), { status: r.status });
+    return djangoJson(r);
   }
 
   const month = typeof body?.month === "string" ? body.month : undefined;

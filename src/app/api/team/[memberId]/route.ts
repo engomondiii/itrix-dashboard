@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 
 import { siteConfig } from "@/config/site.config";
 import { getSessionUser } from "@/lib/server/session";
-import { djangoFetch } from "@/lib/server/proxy";
+import { djangoFetch, djangoJson } from "@/lib/server/proxy";
 import { removeMember, updateMember } from "@/mocks/teamDb";
 import { ROLES, type Role } from "@/constants/roles";
 
@@ -22,7 +22,7 @@ export async function PATCH(
       method: "PATCH",
       body: JSON.stringify(body),
     });
-    return NextResponse.json(await r.json(), { status: r.status });
+    return djangoJson(r);
   }
 
   const rawRole = body?.role != null ? String(body.role) : undefined;

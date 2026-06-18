@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 
 import { siteConfig } from "@/config/site.config";
 import { getSessionUser } from "@/lib/server/session";
-import { djangoFetch } from "@/lib/server/proxy";
+import { djangoFetch, djangoJson } from "@/lib/server/proxy";
 import { deleteReport, getReport } from "@/mocks/reportingDb";
 
 export async function GET(
@@ -15,7 +15,7 @@ export async function GET(
   const { reportId } = await params;
   if (!siteConfig.useMocks) {
     const r = await djangoFetch(`/reporting/${reportId}/`);
-    return NextResponse.json(await r.json(), { status: r.status });
+    return djangoJson(r);
   }
   const report = getReport(reportId);
   if (!report) return NextResponse.json({ detail: "Not found" }, { status: 404 });

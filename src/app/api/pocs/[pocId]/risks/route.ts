@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 
 import { siteConfig } from "@/config/site.config";
 import { getSessionUser } from "@/lib/server/session";
-import { djangoFetch } from "@/lib/server/proxy";
+import { djangoFetch, djangoJson } from "@/lib/server/proxy";
 import { addPoCRisk } from "@/mocks/dealsDb";
 import { RISK_SEVERITIES, type RiskSeverity } from "@/types/poc";
 
@@ -23,7 +23,7 @@ export async function POST(
       method: "POST",
       body: JSON.stringify(body),
     });
-    return NextResponse.json(await r.json(), { status: r.status });
+    return djangoJson(r);
   }
 
   const description = String(body?.description ?? "").trim();

@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 
 import { siteConfig } from "@/config/site.config";
 import { getSessionUser } from "@/lib/server/session";
-import { djangoFetch } from "@/lib/server/proxy";
+import { djangoFetch, djangoJson } from "@/lib/server/proxy";
 import { declineNda, expireNda, getNda, sendNda, signNda } from "@/mocks/ndaDb";
 
 export async function GET(
@@ -16,7 +16,7 @@ export async function GET(
 
   if (!siteConfig.useMocks) {
     const r = await djangoFetch(`/nda/${leadId}/`);
-    return NextResponse.json(await r.json(), { status: r.status });
+    return djangoJson(r);
   }
   const nda = getNda(leadId);
   if (!nda) return NextResponse.json({ detail: "Not found" }, { status: 404 });
@@ -45,7 +45,7 @@ export async function POST(
       method: "POST",
       body: JSON.stringify(body),
     });
-    return NextResponse.json(await r.json(), { status: r.status });
+    return djangoJson(r);
   }
 
   if (action === "decline") {

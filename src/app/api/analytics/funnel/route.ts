@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 
 import { siteConfig } from "@/config/site.config";
 import { getSessionUser } from "@/lib/server/session";
-import { djangoFetch } from "@/lib/server/proxy";
+import { djangoFetch, djangoJson } from "@/lib/server/proxy";
 import { funnel } from "@/mocks/analyticsDb";
 
 export async function GET(req: Request) {
@@ -13,7 +13,7 @@ export async function GET(req: Request) {
   if (!siteConfig.useMocks) {
     // v3: single /analytics/?days=N endpoint; extract the funnel block.
     const r = await djangoFetch(`/analytics/?days=${encodeURIComponent(days)}`);
-    if (!r.ok) return NextResponse.json(await r.json(), { status: r.status });
+    if (!r.ok) return djangoJson(r);
     const d = await r.json();
     return NextResponse.json({ stages: d.funnel ?? [] });
   }

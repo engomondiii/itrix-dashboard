@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 
 import { siteConfig } from "@/config/site.config";
 import { getSessionUser } from "@/lib/server/session";
-import { djangoFetch } from "@/lib/server/proxy";
+import { djangoFetch, djangoJson } from "@/lib/server/proxy";
 import { bookMeeting, getLead } from "@/mocks/leadsDb";
 
 /** Book a meeting for a lead (captures details, moves status to "Meeting Booked"). */
@@ -21,7 +21,7 @@ export async function POST(
       method: "POST",
       body: JSON.stringify(body),
     });
-    return NextResponse.json(await r.json(), { status: r.status });
+    return djangoJson(r);
   }
 
   const scheduledAt = String(body?.scheduledAt ?? "").trim();

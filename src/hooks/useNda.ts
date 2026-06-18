@@ -72,6 +72,9 @@ export function useDeclineNda() {
     onSuccess: (nda) => {
       qc.setQueryData(["nda", nda.leadId], nda);
       qc.invalidateQueries({ queryKey: ["nda"] });
+      // Match sign/expire: keep lead views in sync with NDA changes.
+      qc.invalidateQueries({ queryKey: ["leads"] });
+      qc.invalidateQueries({ queryKey: ["lead", nda.leadId] });
       toast.success("NDA declined");
     },
     onError: (e) => toast.error((e as Error).message),

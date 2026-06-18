@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 
 import { siteConfig } from "@/config/site.config";
 import { getSessionUser } from "@/lib/server/session";
-import { djangoFetch } from "@/lib/server/proxy";
+import { djangoFetch, djangoJson } from "@/lib/server/proxy";
 import { MOCK_LEADS } from "@/mocks/leads";
 import { LEAD_STATUSES } from "@/constants/statuses";
 import { slaState } from "@/lib/sla/slaCalculator";
@@ -43,7 +43,7 @@ export async function GET() {
 
   if (!siteConfig.useMocks) {
     const r = await djangoFetch("/pipeline/");
-    return NextResponse.json(await r.json(), { status: r.status });
+    return djangoJson(r);
   }
 
   const stages: PipelineStage[] = LEAD_STATUSES.map((status) => {

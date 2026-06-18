@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 
 import { siteConfig } from "@/config/site.config";
 import { getSessionUser } from "@/lib/server/session";
-import { djangoFetch } from "@/lib/server/proxy";
+import { djangoFetch, djangoJson } from "@/lib/server/proxy";
 import { markNda } from "@/mocks/leadsDb";
 
 export async function POST(
@@ -15,7 +15,7 @@ export async function POST(
 
   if (!siteConfig.useMocks) {
     const r = await djangoFetch(`/leads/${leadId}/nda/`, { method: "POST" });
-    return NextResponse.json(await r.json(), { status: r.status });
+    return djangoJson(r);
   }
 
   const lead = markNda(leadId, user.name);

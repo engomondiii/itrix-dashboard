@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 
 import { siteConfig } from "@/config/site.config";
 import { getSessionUser } from "@/lib/server/session";
-import { djangoFetch } from "@/lib/server/proxy";
+import { djangoFetch, djangoJson } from "@/lib/server/proxy";
 import { inviteMember, listTeam } from "@/mocks/teamDb";
 import { ROLES, type Role } from "@/constants/roles";
 
@@ -12,7 +12,7 @@ export async function GET() {
   }
   if (!siteConfig.useMocks) {
     const r = await djangoFetch("/team/");
-    return NextResponse.json(await r.json(), { status: r.status });
+    return djangoJson(r);
   }
   return NextResponse.json(listTeam());
 }
@@ -30,7 +30,7 @@ export async function POST(req: Request) {
       method: "POST",
       body: JSON.stringify(body),
     });
-    return NextResponse.json(await r.json(), { status: r.status });
+    return djangoJson(r);
   }
 
   const name = String(body?.name ?? "").trim();

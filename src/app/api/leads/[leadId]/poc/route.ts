@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 
 import { siteConfig } from "@/config/site.config";
 import { getSessionUser } from "@/lib/server/session";
-import { djangoFetch } from "@/lib/server/proxy";
+import { djangoFetch, djangoJson } from "@/lib/server/proxy";
 import { createPoCForLead } from "@/mocks/dealsDb";
 import { getLead, markPoC } from "@/mocks/leadsDb";
 
@@ -22,14 +22,15 @@ export async function POST(
       method: "POST",
       body: JSON.stringify(body),
     });
-    return NextResponse.json(await r.json(), { status: r.status });
+    return djangoJson(r);
   }
 
   const lead = getLead(leadId);
   if (!lead) return NextResponse.json({ detail: "Not found" }, { status: 404 });
+  const durationWeeks = Number(body?.durationWeeks);
   createPoCForLead(lead, {
     scope: typeof body?.scope === "string" ? body.scope : undefined,
-    durationWeeks: Number(body?.durationWeeks) || undefined,
+    durationWeeks: Number.isFinite(durationWeeks) && durationWeeks > 0 ? durationWeeks : undefined,
     successMetrics: typeof body?.successMetrics === "string" ? body.successMetrics : undefined,
     startDate: typeof body?.startDate === "string" ? body.startDate : undefined,
   });

@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 
 import { siteConfig } from "@/config/site.config";
 import { getSessionUser } from "@/lib/server/session";
-import { djangoFetch } from "@/lib/server/proxy";
+import { djangoFetch, djangoJson } from "@/lib/server/proxy";
 import { createTemplate, listTemplates } from "@/mocks/templatesDb";
 import { TEMPLATE_KINDS, type TemplateKind } from "@/types/template";
 
@@ -15,7 +15,7 @@ export async function GET(req: Request) {
 
   if (!siteConfig.useMocks) {
     const r = await djangoFetch(`/templates/?${searchParams}`);
-    return NextResponse.json(await r.json(), { status: r.status });
+    return djangoJson(r);
   }
 
   return NextResponse.json(
@@ -36,7 +36,7 @@ export async function POST(req: Request) {
       method: "POST",
       body: JSON.stringify(body),
     });
-    return NextResponse.json(await r.json(), { status: r.status });
+    return djangoJson(r);
   }
 
   const name = String(body?.name ?? "").trim();

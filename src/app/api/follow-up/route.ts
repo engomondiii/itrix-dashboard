@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 
 import { siteConfig } from "@/config/site.config";
 import { getSessionUser } from "@/lib/server/session";
-import { djangoFetch } from "@/lib/server/proxy";
+import { djangoFetch, djangoJson } from "@/lib/server/proxy";
 import { listFollowUps } from "@/mocks/followUpDb";
 
 export async function GET(req: Request) {
@@ -21,7 +21,7 @@ export async function GET(req: Request) {
           ? "/follow-up/today/"
           : "/follow-up/";
     const r = await djangoFetch(path);
-    return NextResponse.json(await r.json(), { status: r.status });
+    return djangoJson(r);
   }
 
   const now = Date.now();

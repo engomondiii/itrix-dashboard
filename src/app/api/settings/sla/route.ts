@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 
 import { siteConfig } from "@/config/site.config";
 import { getSessionUser } from "@/lib/server/session";
-import { djangoFetch } from "@/lib/server/proxy";
+import { djangoFetch, djangoJson } from "@/lib/server/proxy";
 import { getSlaConfig, setSlaConfig } from "@/mocks/settingsDb";
 import type { SlaConfig } from "@/types/settings";
 
@@ -13,7 +13,7 @@ export async function GET() {
   if (!siteConfig.useMocks) {
     // v3: SLA configuration endpoint
     const r = await djangoFetch("/settings/sla/");
-    return NextResponse.json(await r.json(), { status: r.status });
+    return djangoJson(r);
   }
   return NextResponse.json(getSlaConfig());
 }
@@ -30,7 +30,7 @@ export async function PATCH(req: Request) {
       method: "PATCH",
       body: JSON.stringify(body),
     });
-    return NextResponse.json(await r.json(), { status: r.status });
+    return djangoJson(r);
   }
   return NextResponse.json(setSlaConfig(body));
 }

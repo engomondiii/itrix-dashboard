@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 
 import { siteConfig } from "@/config/site.config";
 import { getSessionUser } from "@/lib/server/session";
+import { djangoFetch, djangoJson } from "@/lib/server/proxy";
 import { MOCK_LEADS } from "@/mocks/leads";
 import type { Lead, LeadListItem } from "@/types/lead";
 import type { Paginated } from "@/types/api";
@@ -34,10 +35,8 @@ export async function GET(req: Request) {
 
   // Real mode: forward to Django (thin proxy).
   if (!siteConfig.useMocks) {
-    const r = await fetch(`${siteConfig.djangoApiUrl}/leads/?${searchParams}`, {
-      cache: "no-store",
-    });
-    return NextResponse.json(await r.json(), { status: r.status });
+    const r = await djangoFetch(`/leads/?${searchParams}`);
+    return djangoJson(r);
   }
 
   // Mock mode: filter / sort / search / paginate the fixtures.

@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 
 import { siteConfig } from "@/config/site.config";
 import { getSessionUser } from "@/lib/server/session";
-import { djangoFetch } from "@/lib/server/proxy";
+import { djangoFetch, djangoJson } from "@/lib/server/proxy";
 import { getLead } from "@/mocks/leadsDb";
 
 export async function GET(
@@ -16,7 +16,7 @@ export async function GET(
 
   if (!siteConfig.useMocks) {
     const r = await djangoFetch(`/leads/${leadId}/`);
-    return NextResponse.json(await r.json(), { status: r.status });
+    return djangoJson(r);
   }
 
   const lead = getLead(leadId);

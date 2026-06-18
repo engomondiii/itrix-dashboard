@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 
 import { siteConfig } from "@/config/site.config";
 import { getSessionUser } from "@/lib/server/session";
-import { djangoFetch } from "@/lib/server/proxy";
+import { djangoFetch, djangoJson } from "@/lib/server/proxy";
 import { getNotificationPrefs, setNotificationPrefs } from "@/mocks/settingsDb";
 import type { NotificationPrefs } from "@/types/settings";
 
@@ -13,7 +13,7 @@ export async function GET() {
   if (!siteConfig.useMocks) {
     // v3: notification preferences endpoint
     const r = await djangoFetch("/settings/notifications/");
-    return NextResponse.json(await r.json(), { status: r.status });
+    return djangoJson(r);
   }
   return NextResponse.json(getNotificationPrefs());
 }
@@ -30,7 +30,7 @@ export async function PATCH(req: Request) {
       method: "PATCH",
       body: JSON.stringify(body),
     });
-    return NextResponse.json(await r.json(), { status: r.status });
+    return djangoJson(r);
   }
   return NextResponse.json(setNotificationPrefs(body));
 }

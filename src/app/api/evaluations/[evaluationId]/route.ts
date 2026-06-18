@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 
 import { siteConfig } from "@/config/site.config";
 import { getSessionUser } from "@/lib/server/session";
-import { djangoFetch } from "@/lib/server/proxy";
+import { djangoFetch, djangoJson } from "@/lib/server/proxy";
 import { getEvaluation, setEvaluationStatus } from "@/mocks/dealsDb";
 import { EVALUATION_STATUSES, type EvaluationStatus } from "@/types/evaluation";
 
@@ -16,7 +16,7 @@ export async function GET(
   const { evaluationId } = await params;
   if (!siteConfig.useMocks) {
     const r = await djangoFetch(`/evaluations/${evaluationId}/`);
-    return NextResponse.json(await r.json(), { status: r.status });
+    return djangoJson(r);
   }
   const ev = getEvaluation(evaluationId);
   if (!ev) return NextResponse.json({ detail: "Not found" }, { status: 404 });
@@ -41,7 +41,7 @@ export async function PATCH(
       method: "PATCH",
       body: JSON.stringify(body),
     });
-    return NextResponse.json(await r.json(), { status: r.status });
+    return djangoJson(r);
   }
 
   const status = String(body?.status ?? "");
