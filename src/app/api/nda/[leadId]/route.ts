@@ -3,7 +3,15 @@ import { NextResponse } from "next/server";
 import { siteConfig } from "@/config/site.config";
 import { getSessionUser } from "@/lib/server/session";
 import { djangoFetch, djangoJson } from "@/lib/server/proxy";
-import { declineNda, expireNda, getNda, sendNda, signNda } from "@/mocks/ndaDb";
+import {
+  declineNda,
+  expireNda,
+  getNda,
+  prepareNda,
+  sendNda,
+  signNda,
+} from "@/mocks/ndaDb";
+import { NDA_DOC_TYPES, type NDADocType } from "@/types/nda";
 
 export async function GET(
   _req: Request,
@@ -23,7 +31,7 @@ export async function GET(
   return NextResponse.json(nda);
 }
 
-/** Advance an NDA: { action: "sign" | "decline" | "expire" } (default sign). */
+/** Advance/edit an NDA: { action: "prepare" | "send" | "sign" | "decline" | "expire" }. */
 export async function POST(
   req: Request,
   { params }: { params: Promise<{ leadId: string }> },
@@ -34,18 +42,48 @@ export async function POST(
   }
   const { leadId } = await params;
   const body = await req.json().catch(() => ({}));
-  const action = ["decline", "expire", "send"].includes(body?.action)
+  const action = ["prepare", "decline", "expire", "send"].includes(body?.action)
     ? body.action
     : "sign";
 
   if (!siteConfig.useMocks) {
-    // v3: NDA is keyed by NDA-record id; sign/decline/expire via POST /nda/{id}/{action}/.
-    // (The [leadId] route param carries the NDA record id at cutover.)
+    // v3: NDA is keyed by NDA-record id; prepare/send/sign/decline/expire via
+    // POST /nda/{id}/{action}/. (The [leadId] param carries the record id at cutover.)
     const r = await djangoFetch(`/nda/${leadId}/${action}/`, {
       method: "POST",
       body: JSON.stringify(body),
     });
     return djangoJson(r);
+  }
+
+  if (action === "prepare") {
+    const docType = NDA_DOC_TYPES.includes(body?.docType)
+      ? (body.docType as NDADocType)
+      : undefined;
+    const nda = prepareNda(leadId, {
+      docType,
+      body: typeof body?.body === "string" ? body.body : undefined,
+      signerName: typeof body?.signerName === "string" ? body.signerName : undefined,
+      signerEmail: typeof body?.signerEmail === "string" ? body.signerEmail : undefined,
+    });
+    if (!nda) return NextResponse.json({ detail: "Not found" }, { status: 404 });
+    return NextResponse.json(nda);
+  }
+
+  if (action === "send") {
+    const signerEmail = String(body?.signerEmail ?? "").trim();
+    if (!signerEmail) {
+      return NextResponse.json(
+        { detail: "A signer email is required to send the NDA" },
+        { status: 400 },
+      );
+    }
+    const nda = sendNda(leadId, {
+      signerEmail,
+      signerName: typeof body?.signerName === "string" ? body.signerName : undefined,
+    });
+    if (!nda) return NextResponse.json({ detail: "Not found" }, { status: 404 });
+    return NextResponse.json(nda);
   }
 
   if (action === "decline") {
@@ -58,12 +96,7 @@ export async function POST(
     return NextResponse.json(nda);
   }
 
-  const nda =
-    action === "expire"
-      ? expireNda(leadId)
-      : action === "send"
-        ? sendNda(leadId)
-        : signNda(leadId, user.name);
+  const nda = action === "expire" ? expireNda(leadId) : signNda(leadId, user.name);
   if (!nda) return NextResponse.json({ detail: "Not found" }, { status: 404 });
   return NextResponse.json(nda);
 }

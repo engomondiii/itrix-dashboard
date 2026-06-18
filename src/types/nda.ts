@@ -7,6 +7,14 @@ export const NDA_STATUSES = [
 ] as const;
 export type NDAStatus = (typeof NDA_STATUSES)[number];
 
+export const NDA_DOC_TYPES = ["mutual", "one-way"] as const;
+export type NDADocType = (typeof NDA_DOC_TYPES)[number];
+
+export const NDA_DOC_TYPE_LABELS: Record<NDADocType, string> = {
+  mutual: "Mutual NDA",
+  "one-way": "One-way NDA",
+};
+
 export interface NDAChecklistItem {
   id: string;
   label: string;
@@ -20,7 +28,13 @@ export interface NDARecord {
   company: string | null;
   status: NDAStatus;
   checklist: NDAChecklistItem[];
+  /** The NDA document itself. */
+  docType: NDADocType;
+  body: string;
+  signerName?: string;
+  signerEmail?: string;
   requestedAt: string; // ISO
+  sentAt?: string | null;
   signedAt?: string | null;
   declineReason?: string;
 }

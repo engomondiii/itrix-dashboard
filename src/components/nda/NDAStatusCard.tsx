@@ -46,7 +46,7 @@ export function NDAStatusCard({ nda }: { nda: NDARecord }) {
         <NDAChecklistDisplay items={nda.checklist} />
       </div>
       <div className="mt-3 flex items-center justify-end gap-1.5">
-        {nda.status === "required" && <NDASendButton leadId={nda.leadId} />}
+        {nda.status === "required" && <NDASendButton nda={nda} />}
         {nda.status === "sent" && (
           <NDAMarkCompleteButton leadId={nda.leadId} signed={false} />
         )}
