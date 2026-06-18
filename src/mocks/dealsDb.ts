@@ -107,11 +107,19 @@ export function createEvaluationForLead(
 export function setEvaluationStatus(
   id: string,
   status: EvaluationStatus,
+  by?: string,
 ): Evaluation | null {
   const e = evalDb().find((x) => x.id === id);
   if (!e) return null;
   e.status = status;
   e.updatedAt = now();
+  // A lost evaluation ends the deal — don't leave the lead stranded "active".
+  if (status === "lost") {
+    const lead = getLead(e.leadId);
+    if (lead && lead.status === "Evaluation") {
+      setStatus(e.leadId, "Closed", by, "Evaluation lost");
+    }
+  }
   return e;
 }
 
@@ -221,6 +229,13 @@ export function setPoCStatus(id: string, status: PoCStatus, by?: string): PoC | 
     const lead = getLead(p.leadId);
     if (lead && lead.status !== "Licensed" && lead.status !== "Closed") {
       setStatus(p.leadId, "Licensed", by);
+    }
+  }
+  // A cancelled PoC ends the deal. ("stalled" is recoverable — leave the lead.)
+  if (status === "cancelled") {
+    const lead = getLead(p.leadId);
+    if (lead && lead.status === "PoC") {
+      setStatus(p.leadId, "Closed", by, "PoC cancelled");
     }
   }
   return p;

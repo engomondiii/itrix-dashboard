@@ -28,7 +28,8 @@ export async function PATCH(
   req: Request,
   { params }: { params: Promise<{ evaluationId: string }> },
 ) {
-  if (!(await getSessionUser())) {
+  const user = await getSessionUser();
+  if (!user) {
     return NextResponse.json({ detail: "Unauthorized" }, { status: 401 });
   }
   const { evaluationId } = await params;
@@ -47,7 +48,7 @@ export async function PATCH(
   if (!(EVALUATION_STATUSES as readonly string[]).includes(status)) {
     return NextResponse.json({ detail: "Invalid status" }, { status: 400 });
   }
-  const ev = setEvaluationStatus(evaluationId, status as EvaluationStatus);
+  const ev = setEvaluationStatus(evaluationId, status as EvaluationStatus, user.name);
   if (!ev) return NextResponse.json({ detail: "Not found" }, { status: 404 });
   return NextResponse.json(ev);
 }

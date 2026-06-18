@@ -54,6 +54,9 @@ export function useEvaluationActions(id: string) {
       mutationFn: (status: EvaluationStatus) => setEvaluationStatus(id, status),
       onSuccess: (ev) => {
         write(ev);
+        // A terminal status (lost) can close the lead — refresh lead caches.
+        qc.invalidateQueries({ queryKey: ["leads"] });
+        qc.invalidateQueries({ queryKey: ["lead", ev.leadId] });
         toast.success("Status updated");
       },
       onError,
