@@ -51,7 +51,7 @@ export function PipelineCard({
           <LeadTierBadge tier={card.tier} />
         </div>
         <div className="mt-1 text-caption text-ink-500">
-          {card.primaryPain} · {card.productRoute}
+          {[card.primaryPain, card.productRoute].filter(Boolean).join(" · ") || "—"}
         </div>
         <div className="mt-2 flex items-center justify-between">
           <LeadOwnerAvatar owner={card.owner} />

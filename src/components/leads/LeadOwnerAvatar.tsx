@@ -1,16 +1,15 @@
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 
 function initials(name: string) {
-  return name
+  const parts = name
     .split(" ")
-    .map((p) => p[0])
-    .slice(0, 2)
-    .join("")
-    .toUpperCase();
+    .map((p) => p.trim()[0])
+    .filter(Boolean);
+  return parts.slice(0, 2).join("").toUpperCase() || "?";
 }
 
 export function LeadOwnerAvatar({ owner }: { owner: string | null }) {
-  if (!owner) {
+  if (!owner || !owner.trim()) {
     return <span className="text-caption text-ink-400">Unassigned</span>;
   }
   return (

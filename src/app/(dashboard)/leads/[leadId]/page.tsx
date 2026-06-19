@@ -54,12 +54,12 @@ export default function LeadDetailPage({
     );
   }
 
-  const handoffMemo = `LEAD HANDOFF — ${lead.company ?? lead.email}
+  const handoffMemo = `LEAD HANDOFF — ${lead.company ?? lead.visitorName ?? lead.email}
 Tier ${lead.tier} · Score ${lead.score} · ${lead.productRoute} · ${lead.commercialPath}
-Bottleneck: ${lead.computeBottleneck}
-Primary pain: ${lead.primaryPain} | Workload: ${lead.workloadType}
-Stack: ${lead.currentStack.join(", ")}
-Recommended next step: ${lead.recommendedNextStep}`;
+Bottleneck: ${lead.computeBottleneck || "—"}
+Primary pain: ${lead.primaryPain || "—"} | Workload: ${lead.workloadType || "—"}
+Stack: ${(lead.currentStack ?? []).join(", ") || "—"}
+Recommended next step: ${lead.recommendedNextStep || "—"}`;
 
   return (
     <>
@@ -73,10 +73,14 @@ Recommended next step: ${lead.recommendedNextStep}`;
               <CardTitle>AI summary</CardTitle>
             </CardHeader>
             <CardContent className="space-y-3">
-              <p className="text-body text-ink-800">{lead.computeBottleneck}</p>
-              <div className="rounded-md bg-sapphire-50 p-3 text-sec text-sapphire-700">
-                Recommended next step: {lead.recommendedNextStep}
-              </div>
+              <p className="text-body text-ink-800">
+                {lead.computeBottleneck || "No AI summary yet for this lead."}
+              </p>
+              {lead.recommendedNextStep && (
+                <div className="rounded-md bg-sapphire-50 p-3 text-sec text-sapphire-700">
+                  Recommended next step: {lead.recommendedNextStep}
+                </div>
+              )}
             </CardContent>
           </Card>
 

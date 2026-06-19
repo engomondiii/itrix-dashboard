@@ -19,14 +19,14 @@ export function leadTemplateValues(lead: Lead): Record<string, string> {
   return {
     company: lead.company ?? "your team",
     name: lead.visitorName ?? "there",
-    pain: lead.primaryPain.toLowerCase(),
-    industry: lead.industry,
-    route: lead.productRoute,
-    tier: String(lead.tier),
-    role: lead.role,
-    timeline: lead.timeline,
-    bottleneck: lead.computeBottleneck,
-    nextStep: lead.recommendedNextStep,
+    pain: (lead.primaryPain ?? "").toLowerCase(),
+    industry: lead.industry ?? "",
+    route: lead.productRoute ?? "",
+    tier: String(lead.tier ?? ""),
+    role: lead.role ?? "",
+    timeline: lead.timeline ?? "",
+    bottleneck: lead.computeBottleneck ?? "",
+    nextStep: lead.recommendedNextStep ?? "",
   };
 }
 

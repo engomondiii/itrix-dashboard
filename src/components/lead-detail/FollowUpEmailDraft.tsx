@@ -32,11 +32,13 @@ import type { Template } from "@/types/template";
 /** Default AI-drafted follow-up (Master Architecture §9.5), used until a template is applied. */
 function defaultDraft(lead: Lead) {
   const subject = `Your ALPHA Compute / Core Assessment — ${lead.company ?? "your team"}`;
+  const pain = (lead.primaryPain || "compute").toLowerCase();
+  const sector = lead.industry || "your sector";
   const body = `Dear ${lead.visitorName ?? "there"},
 
 Thank you for sharing your compute bottleneck with iTrix.
 
-Based on your response, your organization appears to be facing a potential ${lead.primaryPain.toLowerCase()} constraint in ${lead.industry}. Our initial assessment suggests this may be relevant to ${lead.productRoute}.
+Based on your response, your organization appears to be facing a potential ${pain} constraint in ${sector}. Our initial assessment suggests this may be relevant to ${lead.productRoute}.
 
 The appropriate next step would be a confidential discussion to determine whether a paid ALPHA assessment is justified. Before any sensitive technical information is exchanged, we can proceed under NDA.
 

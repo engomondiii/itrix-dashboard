@@ -6,7 +6,7 @@ export function LeadScoreBreakdown({ breakdown }: { breakdown: ScoreBreakdown })
     <div className="space-y-2.5">
       {SCORING_CATEGORIES.map((cat) => {
         const def = SCORING_WEIGHTS[cat];
-        const val = breakdown[cat] ?? 0;
+        const val = breakdown?.[cat] ?? 0;
         const pct = Math.min(100, (val / def.weight) * 100);
         return (
           <div key={cat}>
