@@ -8,6 +8,8 @@ export const dashboardConfig = {
     overview: 60_000,
     followUp: 30_000,
     notifications: 45_000,
+    /** Console thread + approval queue poll cadence (until realtime is on). */
+    console: 15_000,
   },
 
   /** SLA countdown tick interval (ms) for live timers. */

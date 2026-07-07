@@ -7,7 +7,7 @@ import {
   SidebarHeader,
   SidebarRail,
 } from "@/components/ui/sidebar";
-import { navigation } from "@/config/navigation.config";
+import { visibleNavigation } from "@/config/navigation.config";
 import { ROUTES } from "@/constants/routes";
 
 export function Sidebar() {
@@ -33,7 +33,7 @@ export function Sidebar() {
       </SidebarHeader>
 
       <SidebarContent className="nav-scroll">
-        {navigation.map((section, i) => (
+        {visibleNavigation().map((section, i) => (
           <SidebarSection key={section.label ?? `top-${i}`} section={section} />
         ))}
       </SidebarContent>

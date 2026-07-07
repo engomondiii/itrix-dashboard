@@ -36,6 +36,19 @@ export const ROUTES = {
   analyticsLeads: "/analytics/leads",
   analyticsResponseTime: "/analytics/response-time",
   analyticsBottlenecks: "/analytics/bottlenecks",
+  analyticsPitch: "/analytics/pitch",
+
+  // Surface 2 v3.0 — agentic operator core
+  console: "/console",
+  consoleThread: (id: string) => `/console/${id}`,
+  agentApprovals: "/agents/approvals",
+  agentRuns: "/agents/runs",
+
+  // Surface 2 v3.0 — governance admin
+  governanceClaimCards: "/governance/claim-cards",
+  governanceClaimCard: (id: string) => `/governance/claim-cards/${id}`,
+  governanceAudit: "/governance/audit",
+  settingsGovernance: "/settings/governance",
 
   templates: "/templates",
   templatesEmails: "/templates/emails",
@@ -85,6 +98,28 @@ export const API = {
   pocRisks: (id: string) => `/api/pocs/${id}/risks`,
   pocRisk: (id: string, riskId: string) => `/api/pocs/${id}/risks/${riskId}`,
   emailSend: "/api/email/send",
+  // Surface 2 v3.0 — journey monitor
+  journeyLead: (id: string) => `/api/journey/leads/${id}`,
+  journeyAdvance: (id: string) => `/api/journey/leads/${id}/advance`,
+  journeyOverview: "/api/journey/overview",
+  // Surface 2 v3.0 — agent oversight
+  agentApprovalQueue: "/api/agents/approval-queue",
+  agentApprovalAction: (id: string, action: "approve" | "edit" | "reject") =>
+    `/api/agents/approval/${id}/${action}`,
+  agentRuns: "/api/agents/runs",
+  agentRun: (key: string) => `/api/agents/${key}/run`,
+  // Surface 2 v3.0 — cockpit
+  cockpitLead: (id: string) => `/api/cockpit/leads/${id}`,
+  cockpitNextAction: (id: string) => `/api/cockpit/leads/${id}/next-action`,
+  analyticsPitch: "/api/analytics/pitch",
+  // Surface 2 v3.0 — console
+  consoleConversations: "/api/console/conversations",
+  consoleMessages: (id: string) => `/api/console/conversations/${id}/messages`,
+  consoleMessage: (id: string) => `/api/console/conversations/${id}/message`,
+  // Surface 2 v3.0 — governance
+  governanceClaimCards: "/api/governance/claim-cards",
+  governanceClaimCard: (id: string) => `/api/governance/claim-cards/${id}`,
+  governanceAudit: "/api/governance/audit",
   pipeline: "/api/pipeline",
   analyticsOverview: "/api/analytics/overview",
   analyticsFunnel: "/api/analytics/funnel",

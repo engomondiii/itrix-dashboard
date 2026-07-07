@@ -1,0 +1,57 @@
+"use client";
+
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+
+import {
+  approveDraft,
+  editDraft,
+  listAgentRuns,
+  listApprovalQueue,
+  rejectDraft,
+} from "@/lib/api/agentsApi";
+import { useToast } from "@/hooks/useToast";
+import type { ApprovalRequest } from "@/types/agent";
+
+export function useApprovalQueue() {
+  return useQuery({ queryKey: ["approvals"], queryFn: listApprovalQueue });
+}
+
+export function useAgentRuns() {
+  return useQuery({ queryKey: ["agent-runs"], queryFn: listAgentRuns });
+}
+
+export function useApprovalActions() {
+  const qc = useQueryClient();
+  const { toast } = useToast();
+
+  function done(msg: string) {
+    qc.invalidateQueries({ queryKey: ["approvals"] });
+    toast.success(msg);
+  }
+  function fail(e: unknown) {
+    toast.error((e as Error).message);
+  }
+
+  return {
+    approve: useMutation({
+      mutationFn: (v: { id: string; body?: string }) => approveDraft(v.id, v.body),
+      onSuccess: (r: ApprovalRequest) =>
+        done(
+          r.status === "awaiting_second"
+            ? "Approved — awaiting a second approver"
+            : "Approved & delivered",
+        ),
+      onError: fail,
+    }),
+    edit: useMutation({
+      mutationFn: (v: { id: string; body: string }) => editDraft(v.id, v.body),
+      onSuccess: () => done("Draft edited"),
+      onError: fail,
+    }),
+    reject: useMutation({
+      mutationFn: (v: { id: string; reason?: string }) => rejectDraft(v.id, v.reason),
+      onSuccess: () => done("Draft rejected"),
+      onError: fail,
+    }),
+  };
+}

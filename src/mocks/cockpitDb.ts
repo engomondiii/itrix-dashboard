@@ -1,0 +1,144 @@
+import "server-only";
+
+import type { AgentKey } from "@/constants/agentKeys";
+import type { ClaimLevel } from "@/constants/claimLevels";
+import type { JourneyState } from "@/constants/journeyStates";
+import type { LadderStage } from "@/constants/cockpit";
+import type { LeadStatus } from "@/constants/statuses";
+import type { AgentRunResult } from "@/types/agent";
+import type { CockpitLead, CockpitNextAction, PitchAnalytics } from "@/types/cockpit";
+import { getLead } from "@/mocks/leadsDb";
+import { getJourney } from "@/mocks/journeyDb";
+
+const clamp = (n: number) => Math.max(0, Math.min(100, Math.round(n)));
+
+function visitorTypeFor(productRoute: string): string {
+  if (productRoute === "alpha_core") return "Semiconductor / Hardware partner";
+  if (productRoute === "both") return "Strategic executive";
+  if (productRoute === "general") return "Curious visitor";
+  return "Cloud / AI infrastructure";
+}
+
+const STATUS_TO_STAGE: Record<LeadStatus, LadderStage> = {
+  New: "Review",
+  Contacted: "Review",
+  "Meeting Booked": "Review",
+  NDA: "Assessment",
+  Evaluation: "Assessment",
+  PoC: "PoC",
+  Licensed: "License-out",
+  Closed: "Review",
+};
+
+export function getCockpit(leadId: string): CockpitLead | null {
+  const lead = getLead(leadId);
+  if (!lead) return null;
+  const journey = getJourney(leadId);
+  const state: JourneyState = journey?.state ?? "ARRIVED";
+  const strong = lead.tier <= 2;
+
+  return {
+    leadId,
+    company: lead.company,
+    tier: lead.tier,
+    score: lead.score,
+    journeyState: state,
+    productRoute: lead.productRoute,
+    commercialPath: lead.commercialPath,
+    valueDelivered: journey?.valueDelivered ?? false,
+    pitchEngagement: {
+      opened: strong,
+      slidesViewed: strong ? 6 : 2,
+      totalDwellSeconds: strong ? 135 : 40,
+      ctaClicks: strong ? 2 : 0,
+      questionsAsked: strong ? 2 : 0,
+      reopens: strong ? 1 : 0,
+      engagementScore: clamp(lead.score + 8),
+    },
+    // v3: richer read (mock-only)
+    pain: lead.primaryPain || undefined,
+    gain: "Lower compute cost at the same SLA, validated through evaluation.",
+    visitorType: visitorTypeFor(lead.productRoute),
+    buyerPsychology:
+      "Buys validated evidence, not claims — reassured by a scoped paid assessment before commitment.",
+    objectionSignals: lead.score < 60 ? ["Wants proof before any commitment"] : [],
+    readiness: {
+      nda: clamp(lead.score - 8),
+      assessment: clamp(lead.score),
+      poc: clamp(lead.score - 18),
+    },
+    licenseOutProbability: clamp(lead.score + (lead.specialRights !== "None" ? 18 : 0)),
+    ladderStage: STATUS_TO_STAGE[lead.status],
+  };
+}
+
+const NEXT_ACTION: Record<JourneyState, { nextAction: string; reason: string }> = {
+  ARRIVED: { nextAction: "review", reason: "No prompt yet — nothing to act on." },
+  IN_REVIEW: { nextAction: "await_diagnosis", reason: "Qualification is in progress." },
+  DIAGNOSED: {
+    nextAction: "reveal_client_page",
+    reason: "Diagnosis is ready — reveal the personalized client page.",
+  },
+  CLIENT_PAGE: {
+    nextAction: "send_account_invite",
+    reason: "Engaged with the page — offer account creation if the gate passes.",
+  },
+  INVITED: { nextAction: "await_claim", reason: "Invite sent — awaiting account creation." },
+  CLIENT: {
+    nextAction: "propose_evaluation",
+    reason: "Client active — propose the paid ALPHA Compute Assessment.",
+  },
+  ENGAGED: {
+    nextAction: "advance_engagement",
+    reason: "In evaluation / PoC — advance the engagement toward license-out.",
+  },
+  DORMANT: { nextAction: "reactivate", reason: "Dormant — nurture and re-score on return." },
+};
+
+export function getNextAction(leadId: string): CockpitNextAction | null {
+  const journey = getJourney(leadId);
+  if (!getLead(leadId)) return null;
+  const state: JourneyState = journey?.state ?? "ARRIVED";
+  const na = NEXT_ACTION[state];
+  return { leadId, state, nextAction: na.nextAction, reason: na.reason };
+}
+
+const AGENT_CLAIM: Partial<Record<AgentKey, ClaimLevel>> = {
+  strategy: 2,
+  buyer: 2,
+  objection: 3,
+  proof: 3,
+  proposal: 5,
+};
+
+export function getPitchAnalytics(windowDays = 30): PitchAnalytics {
+  return {
+    totalPitchesOpened: 24,
+    totalCtaClicks: 11,
+    totalQuestionsAsked: 9,
+    byPitchType: {
+      "Strategic Executive": 7,
+      "Technical Buyer": 5,
+      "Cloud / AI Infrastructure": 6,
+      "Semiconductor / Hardware Partner": 3,
+      "Investor / Strategic Partner": 3,
+    },
+    windowDays,
+  };
+}
+
+export function runAgent(key: AgentKey, leadId: string): AgentRunResult {
+  const level = AGENT_CLAIM[key] ?? 2;
+  const held = level > 2;
+  return {
+    agentKey: key,
+    usedAi: false,
+    governanceStatus: held ? "under_review" : "auto_approved",
+    claimLevel: level,
+    output: {
+      summary: `${key} draft prepared for lead ${leadId}.`,
+      held,
+    },
+    chunkIds: [],
+  };
+}

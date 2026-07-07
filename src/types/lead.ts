@@ -2,6 +2,14 @@ import type { ProductRoute, LicensePath, SpecialRights } from "@/constants/produ
 import type { Tier } from "@/constants/tiers";
 import type { LeadStatus } from "@/constants/statuses";
 import type { ScoringCategory } from "@/constants/scoring";
+import type { JourneyState } from "@/constants/journeyStates";
+
+/** The 1:1 portal account a lead is promoted to once the invite gate fires. */
+export interface LeadClientLink {
+  id: string;
+  status: string;
+  createdAt: string; // ISO
+}
 
 /** Q1–Q9 qualification answers (Master Architecture §4.3). */
 export interface QualificationAnswers {
@@ -89,6 +97,11 @@ export interface Lead {
   notes?: LeadNote[];
   activity?: LeadActivity[];
   meetings?: LeadMeeting[];
+  // v3 (Surface 2 v3.0): journey-machine fields, populated by the backend.
+  journeyState?: JourneyState;
+  client?: LeadClientLink | null;
+  valueDeliveredAt?: string | null;
+  gateDecision?: string | null;
 }
 
 /** Lightweight row for list/table views. */
