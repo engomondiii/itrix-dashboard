@@ -75,7 +75,7 @@ function valueDelivered(state: JourneyState): boolean {
 function buildTransitions(leadId: string, target: JourneyState, submittedAt: string): JourneyTransition[] {
   const base = Date.parse(submittedAt) || Date.parse("2026-07-01T09:00:00Z");
   const steps = pathTo(target);
-  const rows = steps.map((step, i) => ({
+  const rows: JourneyTransition[] = steps.map((step, i) => ({
     id: `${leadId}-jt-${i}`,
     fromState: step.from,
     toState: step.to,
