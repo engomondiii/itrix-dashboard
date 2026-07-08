@@ -1,5 +1,6 @@
 "use client";
 
+import { ApprovalsIndicator } from "@/components/layout/ApprovalsIndicator";
 import { BreadCrumb } from "@/components/layout/BreadCrumb";
 import { CommandMenu } from "@/components/layout/CommandMenu";
 import { NotificationBell } from "@/components/layout/NotificationBell";
@@ -16,6 +17,7 @@ export function Topbar({ user }: { user: SessionUser }) {
       <BreadCrumb />
       <div className="ml-auto flex items-center gap-2">
         <CommandMenu />
+        <ApprovalsIndicator />
         <NotificationBell />
         <UserMenu user={user} />
       </div>
