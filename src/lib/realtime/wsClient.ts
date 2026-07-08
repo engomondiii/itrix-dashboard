@@ -4,7 +4,7 @@ type Handler = (event: SocketEvent) => void;
 
 /**
  * Minimal WebSocket client with exponential-backoff reconnect (Surface 2 v3.0).
- * Inert until `NEXT_PUBLIC_ENABLE_REALTIME` is on. NOTE: team-JWT auth is httpOnly,
+ * Inert until `REALTIME_ENABLED` is flipped on. NOTE: team-JWT auth is httpOnly,
  * so a browser can't attach it as a subprotocol directly — wiring the token to the
  * WS handshake is // v3: pending (a same-origin upgrade proxy). Until then this
  * connects unauthenticated and the app falls back to polling.

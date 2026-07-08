@@ -5,7 +5,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { getThread, listConversations, sendTeamMessage } from "@/lib/api/consoleApi";
 import { useToast } from "@/hooks/useToast";
 import { dashboardConfig } from "@/config/dashboard.config";
-import { siteConfig } from "@/config/site.config";
+import { REALTIME_ENABLED } from "@/lib/realtime/config";
 
 export function useConversations() {
   return useQuery({ queryKey: ["conversations"], queryFn: listConversations });
@@ -17,7 +17,7 @@ export function useConversation(id: string) {
     queryFn: () => getThread(id),
     enabled: Boolean(id),
     // Until realtime is on, poll the open thread so new messages appear.
-    refetchInterval: siteConfig.flags.realtime ? false : dashboardConfig.polling.console,
+    refetchInterval: REALTIME_ENABLED ? false : dashboardConfig.polling.console,
   });
 }
 

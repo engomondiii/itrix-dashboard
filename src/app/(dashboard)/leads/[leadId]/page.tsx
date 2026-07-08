@@ -23,7 +23,6 @@ import { ClientLinkCard } from "@/components/journey/ClientLinkCard";
 import { CockpitPanel } from "@/components/cockpit/CockpitPanel";
 import { RunAgentMenu } from "@/components/agents/RunAgentMenu";
 import { LeadProductRouteBadge } from "@/components/leads/LeadProductRouteBadge";
-import { siteConfig } from "@/config/site.config";
 import { Badge } from "@/components/ui/badge";
 import { ROUTES } from "@/constants/routes";
 import { useLeadDetail } from "@/hooks/useLeadDetail";
@@ -130,22 +129,20 @@ Recommended next step: ${lead.recommendedNextStep || "—"}`;
             </CardContent>
           </Card>
 
-          {siteConfig.flags.cockpit && <CockpitPanel leadId={lead.id} />}
+          <CockpitPanel leadId={lead.id} />
 
           <JourneyPanel leadId={lead.id} />
 
           <ClientLinkCard lead={lead} />
 
-          {siteConfig.flags.agentConsole && (
-            <Card>
-              <CardHeader>
-                <CardTitle>Run an agent</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <RunAgentMenu leadId={lead.id} />
-              </CardContent>
-            </Card>
-          )}
+          <Card>
+            <CardHeader>
+              <CardTitle>Run an agent</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <RunAgentMenu leadId={lead.id} />
+            </CardContent>
+          </Card>
 
           {lead.meetings && lead.meetings.length > 0 && (
             <Card>

@@ -3,21 +3,15 @@
 import Link from "next/link";
 import { ShieldCheckIcon } from "lucide-react";
 
-import { siteConfig } from "@/config/site.config";
 import { useApprovalQueue } from "@/hooks/useApprovals";
 import { ROUTES } from "@/constants/routes";
 
 /**
- * Topbar chip: how many agent/team drafts are waiting for approval. Only shown
- * when the agent console is enabled and the queue is non-empty. Refreshes on the
- * shared ["approvals"] cache (live-invalidated when realtime is on).
+ * Topbar chip: how many agent/team drafts are waiting for approval. Hidden when
+ * the queue is empty. Refreshes on the shared ["approvals"] cache (live-invalidated
+ * once the realtime transport is wired).
  */
 export function ApprovalsIndicator() {
-  if (!siteConfig.flags.agentConsole) return null;
-  return <ApprovalsChip />;
-}
-
-function ApprovalsChip() {
   const { data } = useApprovalQueue();
   const count = data?.length ?? 0;
   if (count === 0) return null;

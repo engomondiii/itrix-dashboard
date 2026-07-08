@@ -4,7 +4,7 @@ import { Badge } from "@/components/ui/badge";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Spinner } from "@/components/ui/spinner";
 import { useConversation } from "@/hooks/useConsole";
-import { siteConfig } from "@/config/site.config";
+import { REALTIME_ENABLED } from "@/lib/realtime/config";
 import { CONVERSATION_CONTEXT_LABEL } from "@/types/conversation";
 
 import { AgentTeamComposer } from "./AgentTeamComposer";
@@ -35,7 +35,7 @@ export function LiveThread({ conversationId }: { conversationId: string }) {
         <h2 className="text-section font-semibold text-ink-900">{data.title}</h2>
         <Badge variant="neutral">{CONVERSATION_CONTEXT_LABEL[data.context]}</Badge>
         <span className="ml-auto text-micro text-ink-400">
-          {siteConfig.flags.realtime ? "Live" : "Polling"}
+          {REALTIME_ENABLED ? "Live" : "Polling"}
         </span>
       </div>
       <div className="space-y-2">

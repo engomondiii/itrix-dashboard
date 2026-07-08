@@ -1,10 +1,8 @@
 import { ROUTES } from "@/constants/routes";
-import { isFeatureEnabled, type FeatureFlag } from "@/config/site.config";
 
 /**
  * Sidebar navigation. `icon` is a lucide-react icon name resolved by the
  * Sidebar via NAV_ICONS. Items with `children` render as collapsible groups.
- * An optional `flag` hides the item/section until that feature flag is on.
  */
 export interface NavItem {
   label: string;
@@ -12,16 +10,12 @@ export interface NavItem {
   icon: string;
   /** Optional nested links — rendered as a collapsible sub-menu. */
   children?: NavItem[];
-  /** Hide until this feature flag is enabled. */
-  flag?: FeatureFlag;
 }
 
 export interface NavSection {
   /** Section label (uppercase micro-label), or null for the top group. */
   label: string | null;
   items: NavItem[];
-  /** Hide the whole section until this feature flag is enabled. */
-  flag?: FeatureFlag;
 }
 
 export const navigation: NavSection[] = [
@@ -55,7 +49,6 @@ export const navigation: NavSection[] = [
   },
   {
     label: "Operations",
-    flag: "agentConsole",
     items: [
       { label: "Console", href: ROUTES.console, icon: "MessagesSquare" },
       { label: "Approvals", href: ROUTES.agentApprovals, icon: "ShieldCheck" },
@@ -64,7 +57,6 @@ export const navigation: NavSection[] = [
   },
   {
     label: "Governance",
-    flag: "governance",
     items: [
       { label: "Claim-Cards", href: ROUTES.governanceClaimCards, icon: "BadgeCheck" },
       { label: "Audit", href: ROUTES.governanceAudit, icon: "ScrollText" },
@@ -82,7 +74,7 @@ export const navigation: NavSection[] = [
           { label: "Leads", href: ROUTES.analyticsLeads, icon: "Users" },
           { label: "Response time", href: ROUTES.analyticsResponseTime, icon: "Timer" },
           { label: "Bottlenecks", href: ROUTES.analyticsBottlenecks, icon: "Gauge" },
-          { label: "Pitch", href: ROUTES.analyticsPitch, icon: "Presentation", flag: "cockpit" },
+          { label: "Pitch", href: ROUTES.analyticsPitch, icon: "Presentation" },
         ],
       },
       { label: "Reporting", href: ROUTES.reporting, icon: "FileText" },
@@ -120,7 +112,6 @@ export const navigation: NavSection[] = [
             label: "Governance",
             href: ROUTES.settingsGovernance,
             icon: "ShieldCheck",
-            flag: "governance",
           },
           { label: "Profile", href: ROUTES.settingsProfile, icon: "User" },
         ],
@@ -128,19 +119,3 @@ export const navigation: NavSection[] = [
     ],
   },
 ];
-
-/** Navigation with feature-flagged sections/items/children filtered out. */
-export function visibleNavigation(): NavSection[] {
-  return navigation
-    .filter((section) => isFeatureEnabled(section.flag))
-    .map((section) => ({
-      ...section,
-      items: section.items
-        .filter((item) => isFeatureEnabled(item.flag))
-        .map((item) => ({
-          ...item,
-          children: item.children?.filter((child) => isFeatureEnabled(child.flag)),
-        })),
-    }))
-    .filter((section) => section.items.length > 0);
-}

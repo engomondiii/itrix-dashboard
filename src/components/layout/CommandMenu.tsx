@@ -6,7 +6,7 @@ import { CornerDownLeftIcon, SearchIcon } from "lucide-react";
 
 import { NAV_ICONS } from "@/components/layout/nav-icons";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
-import { visibleNavigation } from "@/config/navigation.config";
+import { navigation } from "@/config/navigation.config";
 import { cn } from "@/lib/utils";
 
 interface Command {
@@ -17,10 +17,10 @@ interface Command {
   section: string;
 }
 
-/** Flatten the nav tree into a searchable list of destinations (respects feature flags). */
+/** Flatten the nav tree into a searchable list of destinations. */
 function buildCommands(): Command[] {
   const out: Command[] = [];
-  for (const section of visibleNavigation()) {
+  for (const section of navigation) {
     const group = section.label ?? "General";
     for (const item of section.items) {
       out.push({ label: item.label, href: item.href, icon: item.icon, section: group });

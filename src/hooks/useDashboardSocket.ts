@@ -4,19 +4,20 @@ import { useEffect } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 
 import { siteConfig } from "@/config/site.config";
+import { REALTIME_ENABLED } from "@/lib/realtime/config";
 import { WsClient } from "@/lib/realtime/wsClient";
 import { SOCKET_EVENTS } from "@/lib/realtime/socketEvents";
 
 /**
- * App-wide console socket. When realtime is off (default) this is a no-op and the
- * app relies on polling. When on, it invalidates the relevant query caches as
+ * App-wide console socket. While realtime is off (default) this is a no-op and the
+ * app relies on polling. When enabled, it invalidates the relevant query caches as
  * events arrive so the console, approvals, and journey views update live.
  */
 export function useDashboardSocket() {
   const qc = useQueryClient();
 
   useEffect(() => {
-    if (!siteConfig.flags.realtime) return;
+    if (!REALTIME_ENABLED) return;
 
     const client = new WsClient(`${siteConfig.wsUrl}/console/`, (event) => {
       switch (event.type) {
