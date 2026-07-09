@@ -53,9 +53,9 @@ export function toHtml(report: MonthlyReport): string {
   <meta charset="utf-8">
   <title>itriX Operations — ${escapeHtml(report.month)}</title>
   <style>
-    body { font-family: system-ui, sans-serif; max-width: 720px; margin: 2rem auto; color: #1f2937; padding: 0 1rem; }
+    body { font-family: system-ui, sans-serif; max-width: 720px; margin: 2rem auto; color: #1f2433; padding: 0 1rem; }
     h1 { font-size: 20px; } h2 { font-size: 16px; margin-bottom: .25rem; }
-    section { margin: 1.25rem 0; } em { color: #4b5563; }
+    section { margin: 1.25rem 0; } em { color: #6b7186; }
   </style>
 </head>
 <body>

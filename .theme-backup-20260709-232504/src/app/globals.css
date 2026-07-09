@@ -1,0 +1,254 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+@import "shadcn/tailwind.css";
+
+/* Dark only ever applies under an explicit .dark ancestor (never set) —
+   keeps OS dark-mode from leaking into this single light-majority system. */
+@custom-variant dark (&:is(.dark *));
+
+/* ============================================================
+   itriX — Atelier Indigo v2.0  (Tailwind v4, CSS-first)
+   Warm paper + deep indigo + sapphire + brushed gold.
+   Raw palette: every entry is a --color-* token so Tailwind
+   generates bg-/text-/border- utilities and var() works.
+   shadcn semantic tokens (--background, --primary, …) are
+   remapped onto this palette in the :root + @theme inline
+   blocks below, so shadcn components wear the theme too.
+   ============================================================ */
+@theme {
+  /* Foundations — warm paper canvas (~70% of every screen) */
+  --color-canvas: #faf8f5;
+  --color-canvas-deep: #f4f1ec;
+  --color-surface: #ffffff;
+  --color-surface-warm: #fdfcfa;
+  --color-surface-sunken: #f0ede7;
+
+  /* Deep indigo — structure & identity (~15–20%) */
+  --color-indigo-700: #2e3d6b;
+  --color-indigo-800: #243056;
+  --color-indigo-900: #1b2444;
+  --color-indigo-950: #131a33;
+  --color-oni: #f5f3ee; /* on-indigo text (warm white) */
+  --color-oni-muted: #9aa3bf; /* on-indigo secondary */
+
+  /* Sapphire — the action color (~5–8%) */
+  --color-sapphire-50: #edf1fc;
+  --color-sapphire-100: #dce4f9;
+  --color-sapphire-300: #8fa8ea;
+  --color-sapphire-500: #3d63d9;
+  --color-sapphire-600: #2950c8;
+  --color-sapphire-700: #1e3fa8;
+
+  /* Brushed gold — the signature accent (<5%) */
+  --color-gold-50: #faf4e8;
+  --color-gold-100: #f3e8d3;
+  --color-gold-400: #d9ac5c;
+  --color-gold-500: #c9943a;
+  --color-gold-600: #b07d2e;
+
+  /* Ink — text on light surfaces */
+  --color-ink-300: #b4b9c7;
+  --color-ink-400: #8e94a6;
+  --color-ink-500: #6b7186;
+  --color-ink-700: #3d4458;
+  --color-ink-800: #2a3142;
+  --color-ink-900: #1f2433;
+
+  /* Borders — warm hairlines */
+  --color-line-subtle: #efece4;
+  --color-line: #e5e1d8;
+  --color-line-strong: #d8d3c9;
+
+  /* Status — traffic-light discipline, each with a soft companion */
+  --color-success: #1a7f5c;
+  --color-success-text: #15694c;
+  --color-success-soft: #e5f3ed;
+  --color-warning: #b45309;
+  --color-warning-text: #92450b;
+  --color-warning-soft: #fcf1e3;
+  --color-error: #be3d3d;
+  --color-error-text: #9e3030;
+  --color-error-soft: #fae9e9;
+  --color-info: #2950c8;
+  --color-info-soft: #edf1fc;
+
+  /* Lead tiers */
+  --color-tier-1: #2950c8;
+  --color-tier-1-soft: #edf1fc;
+  --color-tier-2: #5b7fd9;
+  --color-tier-2-soft: #eff3fc;
+  --color-tier-3: #6b7186;
+  --color-tier-3-soft: #f0f1f4;
+  --color-tier-4: #a39b8b;
+  --color-tier-4-soft: #f4f2ed;
+
+  /* 6th chart series (shadcn maps chart-1..5; this adds the 6th) */
+  --color-chart-6: #4a93a8;
+
+  /* Elevation — warm umber, never gray-blue */
+  --shadow-1: 0 1px 2px rgba(46, 38, 23, 0.05), 0 1px 3px rgba(46, 38, 23, 0.07);
+  --shadow-2: 0 4px 12px rgba(46, 38, 23, 0.08), 0 2px 4px rgba(46, 38, 23, 0.05);
+  --shadow-3: 0 12px 32px rgba(46, 38, 23, 0.12), 0 4px 8px rgba(46, 38, 23, 0.06);
+  --shadow-gold: 0 0 0 1px rgba(201, 148, 58, 0.25), 0 2px 8px rgba(201, 148, 58, 0.12);
+
+  /* Radius (Atelier scale; overrides shadcn's calc scale) */
+  --radius-sm: 6px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
+  --radius-pill: 999px;
+
+  /* Typography — compact dashboard scale */
+  --text-micro: 0.6875rem; /* 11px — uppercase labels */
+  --text-caption: 0.75rem; /* 12px */
+  --text-sec: 0.8125rem; /* 13px — renamed from --text-secondary to avoid
+                            collision with shadcn's --color-secondary in the
+                            shared text-* utility namespace */
+  --text-body: 0.875rem; /* 14px — dashboard body */
+  --text-card-title: 0.875rem; /* 14px / 600 */
+  --text-section: 1rem; /* 16px / 600 */
+  --text-page-title: 1.25rem; /* 20px / 600 — biggest non-data text */
+  --text-kpi: 1.5rem; /* 24px — only large element allowed */
+  --text-kpi-hero: 1.875rem; /* 30px — max one per page */
+
+  /* Motion */
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* Layout, durations, and shadcn semantic tokens (mapped to Atelier Indigo). */
+:root {
+  --sidebar-width: 240px;
+  --sidebar-width-collapsed: 64px;
+  --topbar-height: 56px;
+
+  --dur-fast: 120ms;
+  --dur-base: 200ms;
+  --dur-slow: 320ms;
+
+  --tracking-micro: 0.06em;
+  --tracking-eyebrow: 0.1em;
+
+  /* shadcn semantic tokens → Atelier Indigo */
+  --background: #faf8f5; /* canvas */
+  --foreground: #1f2433; /* ink-900 */
+  --card: #ffffff; /* surface */
+  --card-foreground: #1f2433;
+  --popover: #ffffff;
+  --popover-foreground: #1f2433;
+  --primary: #2950c8; /* sapphire-600 */
+  --primary-foreground: #ffffff;
+  --secondary: #f0ede7; /* surface-sunken */
+  --secondary-foreground: #3d4458; /* ink-700 */
+  --muted: #f0ede7;
+  --muted-foreground: #6b7186; /* ink-500 */
+  --accent: #edf1fc; /* sapphire-50 — hover wash */
+  --accent-foreground: #1e3fa8; /* sapphire-700 */
+  --destructive: #be3d3d; /* error */
+  --border: #e5e1d8; /* line */
+  --input: #d8d3c9; /* line-strong */
+  --ring: #2950c8; /* sapphire-600 */
+
+  --chart-1: #2950c8; /* sapphire */
+  --chart-2: #c9943a; /* gold */
+  --chart-3: #1a7f5c; /* emerald */
+  --chart-4: #7c5cbf; /* plum */
+  --chart-5: #c46a4a; /* terracotta */
+
+  --radius: 0.5rem;
+
+  /* Sidebar (deep indigo frame) */
+  --sidebar: #131a33; /* indigo-950 */
+  --sidebar-foreground: #f5f3ee; /* oni */
+  --sidebar-primary: #2950c8; /* sapphire-600 */
+  --sidebar-primary-foreground: #ffffff;
+  --sidebar-accent: #243056; /* indigo-800 (active item fill) */
+  --sidebar-accent-foreground: #f5f3ee; /* oni */
+  --sidebar-border: #2e3d6b; /* indigo-700 */
+  --sidebar-ring: #c9943a; /* gold-500 (active indicator) */
+}
+
+/* Map next/font CSS vars + shadcn semantic colors onto Tailwind utilities. */
+@theme inline {
+  --font-sans: var(--font-sans), ui-sans-serif, system-ui, sans-serif;
+  --font-mono: var(--font-mono), ui-monospace, "JetBrains Mono", monospace;
+
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-chart-1: var(--chart-1);
+  --color-chart-2: var(--chart-2);
+  --color-chart-3: var(--chart-3);
+  --color-chart-4: var(--chart-4);
+  --color-chart-5: var(--chart-5);
+  --color-sidebar: var(--sidebar);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-ring: var(--sidebar-ring);
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  html {
+    @apply font-sans;
+  }
+  body {
+    @apply bg-background text-foreground;
+    font-size: var(--text-body);
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+  }
+}
+
+/* Numerals in tables / KPIs align */
+.tabular-nums {
+  font-variant-numeric: tabular-nums;
+}
+
+/*
+ * Sleek nav scrollbar: a thin, rounded, theme-matched track that stays
+ * invisible until the sidebar is hovered — no chunky OS scrollbar over the
+ * deep-indigo sidebar, no layout shift (the 6px gutter is always reserved).
+ */
+.nav-scroll {
+  scrollbar-width: thin;
+  scrollbar-color: transparent transparent;
+}
+.nav-scroll:hover,
+.nav-scroll:focus-within {
+  scrollbar-color: var(--sidebar-border) transparent;
+}
+.nav-scroll::-webkit-scrollbar {
+  width: 6px;
+}
+.nav-scroll::-webkit-scrollbar-track {
+  background: transparent;
+}
+.nav-scroll::-webkit-scrollbar-thumb {
+  background: transparent;
+  border-radius: 9999px;
+}
+.nav-scroll:hover::-webkit-scrollbar-thumb,
+.nav-scroll:focus-within::-webkit-scrollbar-thumb {
+  background: var(--sidebar-border);
+}
