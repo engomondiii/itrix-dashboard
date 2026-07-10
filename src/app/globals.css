@@ -1,11 +1,15 @@
+/* Korean face (Brand Bible §4.1). Space Grotesk + Inter + IBM Plex Mono load via
+   next/font in layout.tsx; Pretendard is CDN-hosted here.
+
+   This MUST come first: `@import "tailwindcss"` is expanded inline by the Tailwind
+   plugin, so any url() import placed after it lands thousands of lines into the
+   generated CSS — where `@import` is illegal ("@import rules must precede all
+   rules") and the whole stylesheet fails to compile. */
+@import url("https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css");
+
 @import "tailwindcss";
 @import "tw-animate-css";
 @import "shadcn/tailwind.css";
-
-/* Korean face (Brand Bible §4.1). Space Grotesk + Inter + IBM Plex Mono load via
-   next/font in layout.tsx; Pretendard is CDN-hosted here. @import rules must
-   precede all other statements. */
-@import url("https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css");
 
 /* Dark only ever applies under an explicit .dark ancestor (never set) —
    keeps OS dark-mode from leaking into this single light-majority system. */
@@ -153,6 +157,10 @@
 :root {
   --sidebar-width: 240px;
   --sidebar-width-collapsed: 64px;
+  /* The sidebar primitive reads --sidebar-width-icon for its collapsed rail. Without
+     it the width resolves to nothing, the rail never shrinks, and the nav labels and
+     tooltips spill over the page content. Keep it in sync with -collapsed above. */
+  --sidebar-width-icon: 64px;
   --topbar-height: 72px; /* v1.2 nav height */
 
   --dur-fast: 160ms;

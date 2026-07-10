@@ -20,6 +20,14 @@ function formatAt(iso: string): string {
     : d.toLocaleString(undefined, { dateStyle: "medium", timeStyle: "short" });
 }
 
+/** Runs take seconds, not milliseconds — show a figure a human can read. */
+function formatDuration(ms: number): string {
+  if (!ms || ms < 0) return "—";
+  if (ms < 1000) return `${ms} ms`;
+  const s = ms / 1000;
+  return s < 60 ? `${s.toFixed(1)} s` : `${Math.floor(s / 60)}m ${Math.round(s % 60)}s`;
+}
+
 export function AgentRunLogTable() {
   const { data, isLoading, isError } = useAgentRuns();
 
@@ -66,11 +74,11 @@ export function AgentRunLogTable() {
                 href={ROUTES.lead(r.leadId)}
                 className="text-micro text-sapphire-600 hover:underline"
               >
-                lead
+                View lead
               </Link>
             )}
             <span className="ml-auto text-micro text-ink-400">
-              {r.durationMs}ms · {formatAt(r.at)}
+              {formatDuration(r.durationMs)} · {formatAt(r.at)}
             </span>
           </div>
         </div>
