@@ -1,5 +1,12 @@
 import Link from "next/link";
-import { BellIcon, ClockIcon, UserIcon, UsersIcon, type LucideIcon } from "lucide-react";
+import {
+  BellIcon,
+  ClockIcon,
+  ShieldCheckIcon,
+  UserIcon,
+  UsersIcon,
+  type LucideIcon,
+} from "lucide-react";
 
 import { PageHeader } from "@/components/layout/PageHeader";
 import { ROUTES } from "@/constants/routes";
@@ -8,13 +15,22 @@ const ITEMS: { href: string; title: string; desc: string; icon: LucideIcon }[] =
   { href: ROUTES.settingsTeam, title: "Team", desc: "Members and roles", icon: UsersIcon },
   { href: ROUTES.settingsSla, title: "SLA", desc: "Response thresholds", icon: ClockIcon },
   { href: ROUTES.settingsNotifications, title: "Notifications", desc: "Alert preferences", icon: BellIcon },
+  {
+    href: ROUTES.settingsGovernance,
+    title: "Governance",
+    desc: "Approval thresholds and routing",
+    icon: ShieldCheckIcon,
+  },
   { href: ROUTES.settingsProfile, title: "Profile", desc: "Your account", icon: UserIcon },
 ];
 
 export default function SettingsPage() {
   return (
     <>
-      <PageHeader title="Settings" description="Team, SLA, notifications, and profile." />
+      <PageHeader
+        title="Settings"
+        description="Team, SLA, notifications, governance, and profile."
+      />
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
         {ITEMS.map(({ href, title, desc, icon: Icon }) => (
           <Link

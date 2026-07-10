@@ -3,12 +3,14 @@
 import { ClipboardCheckIcon } from "lucide-react";
 
 import { EvaluationCard } from "@/components/evaluations/EvaluationCard";
+import { TriangleAlertIcon } from "lucide-react";
+
 import { EmptyState } from "@/components/ui/empty-state";
 import { Spinner } from "@/components/ui/spinner";
 import { useEvaluations } from "@/hooks/useDeals";
 
 export function EvaluationList() {
-  const { data, isLoading } = useEvaluations();
+  const { data, isLoading, isError } = useEvaluations();
   const rows = data?.results ?? [];
 
   if (isLoading) {
@@ -16,6 +18,16 @@ export function EvaluationList() {
       <div className="flex justify-center py-16">
         <Spinner className="size-5" />
       </div>
+    );
+  }
+
+  if (isError) {
+    return (
+      <EmptyState
+        icon={TriangleAlertIcon}
+        title="Couldn’t load the evaluations"
+        description="The request failed. Refresh the page, or try again in a moment."
+      />
     );
   }
   if (rows.length === 0) {

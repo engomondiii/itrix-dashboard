@@ -6,7 +6,7 @@ import { DownloadIcon } from "lucide-react";
 import { PageHeader } from "@/components/layout/PageHeader";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Spinner } from "@/components/ui/spinner";
+import { QueryState } from "@/components/ui/query-state";
 import { DateRangeControl } from "@/components/analytics/DateRangeControl";
 import { TierDistributionChart } from "@/components/overview/TierDistributionChart";
 import { ProductRouteDistribution } from "@/components/overview/ProductRouteDistribution";
@@ -15,7 +15,7 @@ import { useOverview } from "@/hooks/useAnalytics";
 
 export default function LeadsAnalyticsPage() {
   const [days, setDays] = useState(30);
-  const { data, isLoading } = useOverview(days);
+  const { data, isLoading, isError } = useOverview(days);
 
   return (
     <>
@@ -37,10 +37,13 @@ export default function LeadsAnalyticsPage() {
           </div>
         }
       />
-      {isLoading || !data ? (
-        <div className="flex justify-center py-24">
-          <Spinner className="size-5" />
-        </div>
+      {!data ? (
+        <QueryState
+          isLoading={isLoading}
+          isError={isError}
+          hasData={false}
+          label="this report"
+        />
       ) : (
         <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
           <Card>

@@ -3,12 +3,14 @@
 import { FlaskConicalIcon } from "lucide-react";
 
 import { PoCCard } from "@/components/pocs/PoCCard";
+import { TriangleAlertIcon } from "lucide-react";
+
 import { EmptyState } from "@/components/ui/empty-state";
 import { Spinner } from "@/components/ui/spinner";
 import { usePoCs } from "@/hooks/useDeals";
 
 export function PoCList() {
-  const { data, isLoading } = usePoCs();
+  const { data, isLoading, isError } = usePoCs();
   const rows = data?.results ?? [];
 
   if (isLoading) {
@@ -16,6 +18,16 @@ export function PoCList() {
       <div className="flex justify-center py-16">
         <Spinner className="size-5" />
       </div>
+    );
+  }
+
+  if (isError) {
+    return (
+      <EmptyState
+        icon={TriangleAlertIcon}
+        title="Couldn’t load the PoCs"
+        description="The request failed. Refresh the page, or try again in a moment."
+      />
     );
   }
   if (rows.length === 0) {

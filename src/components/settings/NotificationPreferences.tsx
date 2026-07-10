@@ -1,7 +1,7 @@
 "use client";
 
 import { Label } from "@/components/ui/label";
-import { Spinner } from "@/components/ui/spinner";
+import { QueryState } from "@/components/ui/query-state";
 import { Switch } from "@/components/ui/switch";
 import {
   useNotificationPrefs,
@@ -17,11 +17,18 @@ const PREFS = [
 ] as const satisfies ReadonlyArray<{ key: keyof NotificationPrefs; label: string }>;
 
 export function NotificationPreferences() {
-  const { data, isLoading } = useNotificationPrefs();
+  const { data, isLoading, isError } = useNotificationPrefs();
   const update = useUpdateNotificationPrefs();
 
-  if (isLoading || !data) {
-    return <Spinner />;
+  if (!data) {
+    return (
+      <QueryState
+        isLoading={isLoading}
+        isError={isError}
+        hasData={false}
+        label="your notification preferences"
+      />
+    );
   }
 
   const prefs = data;

@@ -4,19 +4,25 @@ import { useState } from "react";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Spinner } from "@/components/ui/spinner";
+import { QueryState } from "@/components/ui/query-state";
 import { TIER_DEFS, TIERS, type Tier } from "@/constants/tiers";
 import { useSlaConfig, useUpdateSlaConfig } from "@/hooks/useSettings";
 import type { SlaConfig } from "@/types/settings";
 
 export function SLAConfigForm() {
-  const { data, isLoading } = useSlaConfig();
+  const { data, isLoading, isError } = useSlaConfig();
   const update = useUpdateSlaConfig();
   const [draft, setDraft] = useState<SlaConfig | null>(null);
 
-  if (isLoading || !data) {
-    return <Spinner />;
-  }
+  const gate = (
+    <QueryState
+      isLoading={isLoading}
+      isError={isError}
+      hasData={!!data}
+      label="the SLA settings"
+    />
+  );
+  if (!data) return gate;
 
   const value: SlaConfig = draft ?? data;
   const dirty = draft != null && JSON.stringify(draft) !== JSON.stringify(data);

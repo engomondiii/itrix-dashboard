@@ -17,9 +17,23 @@ import type { ProductRoute } from "@/constants/products";
 import type { Tier } from "@/constants/tiers";
 
 const HOUR = 3600_000;
+const DAY = 24 * HOUR;
 
-function overdueCount(): number {
-  return MOCK_LEADS.filter(
+/** Default reporting window, matching the DateRangeControl's default. */
+export const DEFAULT_DAYS = 30;
+
+/**
+ * Leads submitted within the last `days`. Every analytics function windows on this,
+ * so the 7d / 30d / 90d control actually changes the numbers instead of returning
+ * the same static data for every range.
+ */
+function leadsWithin(days: number): typeof MOCK_LEADS {
+  const cutoff = Date.now() - Math.max(1, days) * DAY;
+  return MOCK_LEADS.filter((l) => +new Date(l.submittedAt) >= cutoff);
+}
+
+function overdueCount(rows: typeof MOCK_LEADS): number {
+  return rows.filter(
     (l) =>
       l.tier <= 2 &&
       (l.status === "New" || l.status === "Contacted") &&
@@ -27,46 +41,49 @@ function overdueCount(): number {
   ).length;
 }
 
-export function overview(): OverviewMetrics {
+export function overview(days: number = DEFAULT_DAYS): OverviewMetrics {
+  const rows = leadsWithin(days);
+
   const tierDistribution = Object.fromEntries(
-    TIERS.map((t) => [t, MOCK_LEADS.filter((l) => l.tier === t).length]),
+    TIERS.map((t) => [t, rows.filter((l) => l.tier === t).length]),
   ) as Record<Tier, number>;
 
   const routeDistribution = Object.fromEntries(
-    PRODUCT_ROUTES.map((r) => [r, MOCK_LEADS.filter((l) => l.productRoute === r).length]),
+    PRODUCT_ROUTES.map((r) => [r, rows.filter((l) => l.productRoute === r).length]),
   ) as Record<ProductRoute, number>;
 
-  // Submissions per day for the last 7 days.
+  // Submissions per day for the last 7 days (the chart is always a week).
   const now = Date.now();
   const weeklySubmissions = Array.from({ length: 7 }).map((_, i) => {
-    const day = new Date(now - (6 - i) * 24 * HOUR);
+    const day = new Date(now - (6 - i) * DAY);
     const key = day.toISOString().slice(0, 10);
     const count = MOCK_LEADS.filter((l) => l.submittedAt.slice(0, 10) === key).length;
     return { date: key.slice(5), count };
   });
 
   return {
-    newLeads: MOCK_LEADS.filter((l) => l.status === "New").length,
+    newLeads: rows.filter((l) => l.status === "New").length,
     tier1Count: tierDistribution[1],
     tier2Count: tierDistribution[2],
-    overdueFollowUps: overdueCount(),
+    overdueFollowUps: overdueCount(rows),
     tierDistribution,
     routeDistribution,
     weeklySubmissions,
   };
 }
 
-export function funnel(): FunnelStage[] {
+export function funnel(days: number = DEFAULT_DAYS): FunnelStage[] {
+  const rows = leadsWithin(days);
   // Count of leads that reached at least each stage (cumulative down the funnel).
   return LEAD_STATUSES.filter((s) => s !== "Closed").map((status, i, arr) => {
     const reachedIdx = (st: string) => LEAD_STATUSES.indexOf(st as never);
-    const count = MOCK_LEADS.filter(
+    const count = rows.filter(
       (l) => l.status !== "Closed" && reachedIdx(l.status) >= LEAD_STATUSES.indexOf(status),
     ).length;
     const prev =
       i === 0
         ? count
-        : MOCK_LEADS.filter(
+        : rows.filter(
             (l) =>
               l.status !== "Closed" &&
               reachedIdx(l.status) >= LEAD_STATUSES.indexOf(arr[i - 1]),
@@ -75,9 +92,10 @@ export function funnel(): FunnelStage[] {
   });
 }
 
-export function responseTime(): ResponseTimeMetrics {
-  const t1 = MOCK_LEADS.filter((l) => l.tier === 1);
-  const t2 = MOCK_LEADS.filter((l) => l.tier === 2);
+export function responseTime(days: number = DEFAULT_DAYS): ResponseTimeMetrics {
+  const rows = leadsWithin(days);
+  const t1 = rows.filter((l) => l.tier === 1);
+  const t2 = rows.filter((l) => l.tier === 2);
   const breaches = (rows: typeof MOCK_LEADS) =>
     rows.filter(
       (l) =>
@@ -104,9 +122,9 @@ export function responseTime(): ResponseTimeMetrics {
   };
 }
 
-export function bottlenecks(): BottleneckPattern[] {
+export function bottlenecks(days: number = DEFAULT_DAYS): BottleneckPattern[] {
   const counts = new Map<string, number>();
-  for (const l of MOCK_LEADS) {
+  for (const l of leadsWithin(days)) {
     counts.set(l.computeBottleneck, (counts.get(l.computeBottleneck) ?? 0) + 1);
   }
   return [...counts.entries()]
@@ -114,9 +132,9 @@ export function bottlenecks(): BottleneckPattern[] {
     .sort((a, b) => b.count - a.count);
 }
 
-export function industries(): IndustryBreakdown[] {
+export function industries(days: number = DEFAULT_DAYS): IndustryBreakdown[] {
   const counts = new Map<string, number>();
-  for (const l of MOCK_LEADS) {
+  for (const l of leadsWithin(days)) {
     counts.set(l.industry, (counts.get(l.industry) ?? 0) + 1);
   }
   return [...counts.entries()]

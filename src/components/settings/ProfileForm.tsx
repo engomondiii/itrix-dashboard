@@ -6,18 +6,25 @@ import { RoleBadge } from "@/components/settings/RoleBadge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Spinner } from "@/components/ui/spinner";
+import { QueryState } from "@/components/ui/query-state";
 import { ROLE_DEFS } from "@/constants/roles";
 import { useProfile, useUpdateProfile } from "@/hooks/useSettings";
 
 export function ProfileForm() {
-  const { data: user, isLoading } = useProfile();
+  const { data: user, isLoading, isError } = useProfile();
   const update = useUpdateProfile();
   // null until the operator edits; falls back to the server value otherwise.
   const [draft, setDraft] = useState<string | null>(null);
 
-  if (isLoading || !user) {
-    return <Spinner />;
+  if (!user) {
+    return (
+      <QueryState
+        isLoading={isLoading}
+        isError={isError}
+        hasData={false}
+        label="your profile"
+      />
+    );
   }
 
   const name = draft ?? user.name;

@@ -17,5 +17,5 @@ export async function GET(req: Request) {
     const d = await r.json();
     return NextResponse.json(d.sla_compliance ?? {});
   }
-  return NextResponse.json(responseTime());
+  return NextResponse.json(responseTime(Number(days)));
 }

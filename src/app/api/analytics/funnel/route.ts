@@ -17,5 +17,5 @@ export async function GET(req: Request) {
     const d = await r.json();
     return NextResponse.json({ stages: d.funnel ?? [] });
   }
-  return NextResponse.json({ stages: funnel() });
+  return NextResponse.json({ stages: funnel(Number(days)) });
 }

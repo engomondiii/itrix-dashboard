@@ -5,7 +5,7 @@ import { DownloadIcon } from "lucide-react";
 
 import { PageHeader } from "@/components/layout/PageHeader";
 import { Button } from "@/components/ui/button";
-import { Spinner } from "@/components/ui/spinner";
+import { QueryState } from "@/components/ui/query-state";
 import { DateRangeControl } from "@/components/analytics/DateRangeControl";
 import { SLAComplianceChart } from "@/components/analytics/SLAComplianceChart";
 import { exportResponseTimeCsv } from "@/lib/export/analytics";
@@ -13,7 +13,7 @@ import { useResponseTime } from "@/hooks/useAnalytics";
 
 export default function ResponseTimeAnalyticsPage() {
   const [days, setDays] = useState(30);
-  const { data, isLoading } = useResponseTime(days);
+  const { data, isLoading, isError } = useResponseTime(days);
 
   return (
     <>
@@ -35,10 +35,13 @@ export default function ResponseTimeAnalyticsPage() {
           </div>
         }
       />
-      {isLoading || !data ? (
-        <div className="flex justify-center py-24">
-          <Spinner className="size-5" />
-        </div>
+      {!data ? (
+        <QueryState
+          isLoading={isLoading}
+          isError={isError}
+          hasData={false}
+          label="this report"
+        />
       ) : (
         <SLAComplianceChart metrics={data} />
       )}

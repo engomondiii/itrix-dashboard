@@ -1,6 +1,7 @@
 "use client";
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useRouter } from "next/navigation";
 
 import {
   addPoCRisk,
@@ -18,6 +19,7 @@ import {
   type RiskInput,
 } from "@/lib/api/dealsApi";
 import { markLeadPoC } from "@/lib/api/leadsApi";
+import { ROUTES } from "@/constants/routes";
 import { useToast } from "@/hooks/useToast";
 import type { Evaluation, EvaluationStatus } from "@/types/evaluation";
 import type { MilestoneStatus, PoC, PoCStatus } from "@/types/poc";
@@ -42,6 +44,7 @@ export function usePoC(id: string) {
 /** Evaluation write actions: status + KPI edits. */
 export function useEvaluationActions(id: string) {
   const qc = useQueryClient();
+  const router = useRouter();
   const { toast } = useToast();
   const onError = (e: unknown) => toast.error((e as Error).message);
   const write = (ev: Evaluation) => {
@@ -73,14 +76,18 @@ export function useEvaluationActions(id: string) {
       onError,
     }),
     // A won evaluation graduates to a PoC: creates the PoC record and moves
-    // the lead into the PoC stage.
+    // the lead into the PoC stage. The API returns the lead, not the new PoC id,
+    // so we land the operator on the PoC list where it now appears — otherwise
+    // the action looks like it did nothing.
     convertToPoC: useMutation({
       mutationFn: (leadId: string) => markLeadPoC(leadId),
       onSuccess: (lead) => {
         qc.invalidateQueries({ queryKey: ["pocs"] });
         qc.invalidateQueries({ queryKey: ["leads"] });
+        qc.invalidateQueries({ queryKey: ["evaluations"] });
         qc.setQueryData(["lead", lead.id], lead);
         toast.success("PoC created");
+        router.push(ROUTES.pocs);
       },
       onError,
     }),

@@ -86,7 +86,9 @@ export function EvaluationDetailPanel({ evaluation }: { evaluation: Evaluation }
             <Button
               size="sm"
               className="mt-2"
-              disabled={convertToPoC.isPending}
+              // Stays disabled after it succeeds: the button remains rendered while
+              // we navigate away, and a second click would create a duplicate PoC.
+              disabled={convertToPoC.isPending || convertToPoC.isSuccess}
               onClick={() => convertToPoC.mutate(evaluation.leadId)}
             >
               <FlaskConicalIcon />

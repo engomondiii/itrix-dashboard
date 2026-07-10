@@ -22,5 +22,5 @@ export async function GET(req: Request) {
       weeklySubmissions: d.submission_trend ?? d.overview?.weeklySubmissions,
     });
   }
-  return NextResponse.json(overview());
+  return NextResponse.json(overview(Number(days)));
 }

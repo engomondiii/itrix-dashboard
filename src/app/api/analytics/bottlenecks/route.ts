@@ -20,5 +20,8 @@ export async function GET(req: Request) {
       industries: d.industry_breakdown ?? [],
     });
   }
-  return NextResponse.json({ bottlenecks: bottlenecks(), industries: industries() });
+  return NextResponse.json({
+    bottlenecks: bottlenecks(Number(days)),
+    industries: industries(Number(days)),
+  });
 }
