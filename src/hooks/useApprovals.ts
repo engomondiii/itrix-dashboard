@@ -26,6 +26,12 @@ export function useApprovalActions() {
 
   function done(msg: string) {
     qc.invalidateQueries({ queryKey: ["approvals"] });
+    // An approved draft is delivered into its thread and recorded in the run log,
+    // so refresh those surfaces too.
+    qc.invalidateQueries({ queryKey: ["conversations"] });
+    qc.invalidateQueries({ queryKey: ["conversation"] });
+    qc.invalidateQueries({ queryKey: ["agent-runs"] });
+    qc.invalidateQueries({ queryKey: ["governance-audit"] });
     toast.success(msg);
   }
   function fail(e: unknown) {
@@ -38,8 +44,8 @@ export function useApprovalActions() {
       onSuccess: (r: ApprovalRequest) =>
         done(
           r.status === "awaiting_second"
-            ? "Approved — awaiting a second approver"
-            : "Approved & delivered",
+            ? "Approval 1 of 2 recorded — a different approver must confirm"
+            : "Approved & delivered to the thread",
         ),
       onError: fail,
     }),

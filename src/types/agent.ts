@@ -15,6 +15,12 @@ export type ApprovalStatus = (typeof APPROVAL_STATUSES)[number];
 export interface ApprovalRequest {
   id: string;
   leadId: string | null;
+  /**
+   * The conversation this draft will be delivered into, when it originates from
+   * a thread. Optional: the backend serializer doesn't expose it yet, so the
+   * console link only renders when present.
+   */
+  conversationId?: string | null;
   agentKey: AgentKey;
   claimLevel: ClaimLevel;
   draftBody: string;

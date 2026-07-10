@@ -6,6 +6,7 @@ import { Spinner } from "@/components/ui/spinner";
 import { useCockpit, useNextAction } from "@/hooks/useCockpit";
 import { nextActionLabel } from "@/constants/cockpit";
 
+import { NextActionButton } from "./NextActionButton";
 import { PitchEngagementCard } from "./PitchEngagementCard";
 
 function SectionLabel({ children }: { children: string }) {
@@ -62,6 +63,11 @@ export function CockpitPanel({ leadId }: { leadId: string }) {
                   {nextActionLabel(nba.nextAction)}
                 </p>
                 <p className="text-caption text-ink-500">{nba.reason}</p>
+                <NextActionButton
+                  leadId={leadId}
+                  state={cockpit.journeyState}
+                  nextAction={nba.nextAction}
+                />
               </div>
             )}
 

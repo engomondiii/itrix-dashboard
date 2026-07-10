@@ -4,7 +4,7 @@ import { siteConfig } from "@/config/site.config";
 import { getSessionUser } from "@/lib/server/session";
 import { djangoFetch, djangoJson } from "@/lib/server/proxy";
 import { canAdminGovernance } from "@/constants/permissions";
-import { createClaimCard, listClaimCards } from "@/mocks/claimCardsDb";
+import { claimCardKeyExists, createClaimCard, listClaimCards } from "@/mocks/claimCardsDb";
 
 export async function GET(req: Request) {
   if (!(await getSessionUser())) {
@@ -44,6 +44,12 @@ export async function POST(req: Request) {
 
   if (!body?.key || !body?.title || !body?.approvedWording) {
     return NextResponse.json({ detail: "key, title and approvedWording are required." }, { status: 400 });
+  }
+  if (claimCardKeyExists(body.key)) {
+    return NextResponse.json(
+      { detail: `A claim card with key "${body.key}" already exists.` },
+      { status: 409 },
+    );
   }
   const card = createClaimCard(
     {

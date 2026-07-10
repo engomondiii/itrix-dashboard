@@ -1,8 +1,10 @@
 "use client";
 
+import Link from "next/link";
 import { ScrollTextIcon } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
+import { ROUTES } from "@/constants/routes";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Spinner } from "@/components/ui/spinner";
 import { ClaimLevelBadge } from "@/components/agents/ClaimLevelBadge";
@@ -63,8 +65,29 @@ export function AuditTrailTable() {
             {a.firstApprover && (
               <span className="text-caption text-ink-500">by {a.firstApprover}</span>
             )}
-            <span className="ml-auto text-micro text-ink-400">{formatAt(a.at)}</span>
+            <div className="ml-auto flex items-center gap-3">
+              {a.conversationId && (
+                <Link
+                  href={ROUTES.consoleThread(a.conversationId)}
+                  className="text-micro text-sapphire-600 hover:underline"
+                >
+                  Thread
+                </Link>
+              )}
+              {a.leadId && (
+                <Link
+                  href={ROUTES.lead(a.leadId)}
+                  className="text-micro text-sapphire-600 hover:underline"
+                >
+                  Lead
+                </Link>
+              )}
+              <span className="text-micro text-ink-400">{formatAt(a.at)}</span>
+            </div>
           </div>
+          {a.reason && (
+            <p className="mt-1 text-caption text-ink-500">Reason: {a.reason}</p>
+          )}
         </div>
       ))}
     </div>

@@ -69,6 +69,11 @@ export function getClaimCard(id: string): ClaimCard | null {
   return cards.find((c) => c.id === id) ?? null;
 }
 
+/** Claim-card keys are the governing identifier — they must be unique. */
+export function claimCardKeyExists(key: string, exceptId?: string): boolean {
+  return cards.some((c) => c.key === key && c.id !== exceptId);
+}
+
 export function createClaimCard(input: ClaimCardInput, ownerName: string): ClaimCard {
   const now = new Date().toISOString();
   const card: ClaimCard = {

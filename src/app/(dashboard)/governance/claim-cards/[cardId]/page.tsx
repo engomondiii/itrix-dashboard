@@ -2,6 +2,7 @@
 
 import { use } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { ArrowLeftIcon } from "lucide-react";
 
 import { EmptyState } from "@/components/ui/empty-state";
@@ -16,6 +17,7 @@ export default function ClaimCardEditPage({
   params: Promise<{ cardId: string }>;
 }) {
   const { cardId } = use(params);
+  const router = useRouter();
   const { data, isLoading, isError } = useClaimCard(cardId);
 
   return (
@@ -34,7 +36,12 @@ export default function ClaimCardEditPage({
       {(isError || (!isLoading && !data)) && (
         <EmptyState title="Claim card not found" description="It may have been removed." />
       )}
-      {data && <ClaimCardEditor card={data} />}
+      {data && (
+        <ClaimCardEditor
+          card={data}
+          onDone={() => router.push(ROUTES.governanceClaimCards)}
+        />
+      )}
     </>
   );
 }

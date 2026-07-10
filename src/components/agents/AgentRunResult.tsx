@@ -1,5 +1,8 @@
+import Link from "next/link";
+
 import { Badge } from "@/components/ui/badge";
 import { AGENT_LABEL } from "@/constants/agentKeys";
+import { ROUTES } from "@/constants/routes";
 import type { AgentRunResult as AgentRunResultType } from "@/types/agent";
 
 import { ClaimLevelBadge } from "./ClaimLevelBadge";
@@ -19,9 +22,21 @@ export function AgentRunResult({ result }: { result: AgentRunResultType }) {
         <GovernanceStatusPill status={result.governanceStatus} />
       </div>
       <p className="text-sec text-ink-700">{summary}</p>
-      {queued && (
+      {queued ? (
         <p className="text-caption text-warning-text">
-          Queued for approval — clear it in the approvals queue before it reaches the client.
+          Queued for approval — it reaches the client only once cleared in the{" "}
+          <Link href={ROUTES.agentApprovals} className="font-medium underline">
+            approvals queue
+          </Link>
+          .
+        </p>
+      ) : (
+        <p className="text-caption text-ink-500">
+          Auto-approved — delivered without human review. See the{" "}
+          <Link href={ROUTES.agentRuns} className="font-medium underline">
+            agent run log
+          </Link>
+          .
         </p>
       )}
     </div>

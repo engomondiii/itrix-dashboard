@@ -32,6 +32,11 @@ export function useAdvanceJourney(leadId: string) {
       qc.invalidateQueries({ queryKey: ["journey", leadId] });
       qc.invalidateQueries({ queryKey: ["lead", leadId] });
       qc.invalidateQueries({ queryKey: ["leads"] });
+      // The cockpit's state + next-best-action are derived from the journey, and
+      // the overview distribution counts it — refresh all three.
+      qc.invalidateQueries({ queryKey: ["cockpit", leadId] });
+      qc.invalidateQueries({ queryKey: ["cockpit-nba", leadId] });
+      qc.invalidateQueries({ queryKey: ["journey-overview"] });
       toast.success(
         res.changed
           ? `Advanced to ${JOURNEY_STATE_LABEL[res.toState]}`

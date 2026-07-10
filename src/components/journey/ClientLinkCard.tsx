@@ -12,8 +12,10 @@ import type { Lead } from "@/types/lead";
 export function ClientLinkCard({ lead }: { lead: Lead }) {
   const { data: journey } = useJourney(lead.id);
   const state = journey?.state ?? lead.journeyState;
-  const hasAccount =
-    lead.client != null || state === "CLIENT" || state === "ENGAGED";
+  // The journey reaching CLIENT/ENGAGED means an account *should* exist; only a
+  // real `client` record proves it does. Don't claim "Linked" without one.
+  const expectsAccount = state === "CLIENT" || state === "ENGAGED";
+  const linked = lead.client != null;
 
   return (
     <Card>
@@ -21,16 +23,23 @@ export function ClientLinkCard({ lead }: { lead: Lead }) {
         <CardTitle>Client account</CardTitle>
       </CardHeader>
       <CardContent className="space-y-2">
-        {hasAccount ? (
+        {linked ? (
           <>
             <div className="flex items-center gap-2">
               <Badge variant="success">Linked</Badge>
-              {lead.client && (
-                <span className="text-sec text-ink-600">{lead.client.status}</span>
-              )}
+              <span className="text-sec text-ink-600">{lead.client!.status}</span>
             </div>
             <p className="text-caption text-ink-500">
-              Promoted to a portal client account (Surface 3).
+              Promoted to a portal client account (Surface 3) — the client works in the
+              portal; the team works this lead.
+            </p>
+          </>
+        ) : expectsAccount ? (
+          <>
+            <Badge variant="warning">Not linked</Badge>
+            <p className="text-caption text-ink-500">
+              The journey has reached {state === "ENGAGED" ? "Engaged" : "Client"}, but no
+              portal account is linked to this lead yet.
             </p>
           </>
         ) : (

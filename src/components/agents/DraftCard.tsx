@@ -36,10 +36,19 @@ export function DraftCard({ request }: { request: ApprovalRequest }) {
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState(request.finalBody || request.draftBody);
 
+  const [rejecting, setRejecting] = useState(false);
+  const [reason, setReason] = useState("");
+
   const canAct = canAdminGovernance(user?.role);
   const busy =
     actions.approve.isPending || actions.edit.isPending || actions.reject.isPending;
   const awaiting = request.status === "awaiting_second";
+  // A two-approver draft isn't delivered by the first approval — don't claim it is.
+  const approveLabel = awaiting
+    ? "Second approve & deliver"
+    : request.requiresSecondApprover
+      ? "Approve (1 of 2)"
+      : "Approve & deliver";
 
   return (
     <div className="space-y-3 rounded-lg border border-line bg-surface p-4">
@@ -48,14 +57,24 @@ export function DraftCard({ request }: { request: ApprovalRequest }) {
         <ClaimLevelBadge level={request.claimLevel} />
         <Badge variant={STATUS_INTENT[request.status]}>{STATUS_LABEL[request.status]}</Badge>
         {request.requiresSecondApprover && <Badge variant="warning">2 approvers</Badge>}
-        {request.leadId && (
-          <Link
-            href={ROUTES.lead(request.leadId)}
-            className="ml-auto text-micro text-sapphire-600 hover:underline"
-          >
-            View lead
-          </Link>
-        )}
+        <div className="ml-auto flex items-center gap-3">
+          {request.conversationId && (
+            <Link
+              href={ROUTES.consoleThread(request.conversationId)}
+              className="text-micro text-sapphire-600 hover:underline"
+            >
+              Open thread
+            </Link>
+          )}
+          {request.leadId && (
+            <Link
+              href={ROUTES.lead(request.leadId)}
+              className="text-micro text-sapphire-600 hover:underline"
+            >
+              View lead
+            </Link>
+          )}
+        </div>
       </div>
 
       {editing ? (
@@ -120,7 +139,7 @@ export function DraftCard({ request }: { request: ApprovalRequest }) {
                 disabled={busy}
                 onClick={() => actions.approve.mutate({ id: request.id })}
               >
-                {awaiting ? "Second approve" : "Approve & deliver"}
+                {approveLabel}
               </Button>
               <Button
                 size="sm"
@@ -134,7 +153,7 @@ export function DraftCard({ request }: { request: ApprovalRequest }) {
                 size="sm"
                 variant="destructive"
                 disabled={busy}
-                onClick={() => actions.reject.mutate({ id: request.id })}
+                onClick={() => setRejecting(true)}
               >
                 Reject
               </Button>
@@ -145,6 +164,39 @@ export function DraftCard({ request }: { request: ApprovalRequest }) {
         <p className="text-caption text-ink-400">
           Approval actions require Admin / Assessment Team.
         </p>
+      )}
+
+      {rejecting && canAct && (
+        <div className="space-y-2 rounded-md border border-line bg-surface-sunken p-3">
+          <label htmlFor={`reason-${request.id}`} className="text-micro text-ink-500">
+            Why is this draft rejected? (recorded in the governance audit)
+          </label>
+          <input
+            id={`reason-${request.id}`}
+            value={reason}
+            onChange={(e) => setReason(e.target.value)}
+            placeholder="e.g. unapproved benchmark figure"
+            className="w-full rounded-md border border-line bg-surface p-2 text-sec text-ink-800 outline-none focus:border-sapphire-500"
+          />
+          <div className="flex gap-2">
+            <Button
+              size="sm"
+              variant="destructive"
+              disabled={busy || !reason.trim()}
+              onClick={() =>
+                actions.reject.mutate(
+                  { id: request.id, reason },
+                  { onSuccess: () => setRejecting(false) },
+                )
+              }
+            >
+              Confirm reject
+            </Button>
+            <Button size="sm" variant="ghost" disabled={busy} onClick={() => setRejecting(false)}>
+              Cancel
+            </Button>
+          </div>
+        </div>
       )}
     </div>
   );

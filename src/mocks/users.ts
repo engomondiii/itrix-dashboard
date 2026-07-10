@@ -22,6 +22,14 @@ export const MOCK_USERS: Record<string, SessionUser> = {
     email: "benjamin@itrix.example",
     role: "Technical Review Team",
   },
+  // A second elevated account: L4/L5 drafts need two *distinct* approvers, so
+  // without this the two-approver rule is unsatisfiable in mock mode.
+  "kang@itrix.example": {
+    id: "u4",
+    name: "Kang",
+    email: "kang@itrix.example",
+    role: "Assessment Team",
+  },
   "fidel@itrix.example": {
     id: "u3",
     name: "Fidel",

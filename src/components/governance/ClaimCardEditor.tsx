@@ -26,13 +26,15 @@ export function ClaimCardEditor({
   const [isActive, setIsActive] = useState(card?.isActive ?? true);
   const [notes, setNotes] = useState(card?.notes ?? "");
   const busy = actions.create.isPending || actions.update.isPending;
+  // Required on both create and edit — a blank approved wording would be governing copy.
+  const invalid = !key.trim() || !title.trim() || !approvedWording.trim();
 
   function save() {
+    if (invalid) return;
     const payload = { key, title, approvedWording, claimLevel, isActive, notes };
     if (card) {
       actions.update.mutate({ id: card.id, patch: payload }, { onSuccess: () => onDone?.() });
     } else {
-      if (!key || !title || !approvedWording) return;
       actions.create.mutate(payload, { onSuccess: () => onDone?.() });
     }
   }
@@ -96,8 +98,13 @@ export function ClaimCardEditor({
           className={FIELD}
         />
       </label>
+      {invalid && (
+        <p className="text-caption text-warning-text">
+          Key, title and approved wording are required.
+        </p>
+      )}
       <div className="flex gap-2">
-        <Button size="sm" disabled={busy} onClick={save}>
+        <Button size="sm" disabled={busy || invalid} onClick={save}>
           {card ? "Save changes" : "Create card"}
         </Button>
         {onDone && (

@@ -1,6 +1,9 @@
 "use client";
 
+import Link from "next/link";
+
 import { Badge } from "@/components/ui/badge";
+import { ROUTES } from "@/constants/routes";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Spinner } from "@/components/ui/spinner";
 import { useConversation } from "@/hooks/useConsole";
@@ -34,9 +37,19 @@ export function LiveThread({ conversationId }: { conversationId: string }) {
       <div className="flex items-center gap-2">
         <h2 className="text-section font-semibold text-ink-900">{data.title}</h2>
         <Badge variant="neutral">{CONVERSATION_CONTEXT_LABEL[data.context]}</Badge>
-        <span className="ml-auto text-micro text-ink-400">
-          {REALTIME_ENABLED ? "Live" : "Polling"}
-        </span>
+        <div className="ml-auto flex items-center gap-3">
+          {data.leadId && (
+            <Link
+              href={ROUTES.lead(data.leadId)}
+              className="text-micro text-sapphire-600 hover:underline"
+            >
+              View lead
+            </Link>
+          )}
+          <span className="text-micro text-ink-400">
+            {REALTIME_ENABLED ? "Live" : "Polling"}
+          </span>
+        </div>
       </div>
       <div className="space-y-2">
         {data.messages.map((m) => (

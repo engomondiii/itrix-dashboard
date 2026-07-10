@@ -15,6 +15,8 @@ export interface ConversationSummary {
   id: string;
   context: ConversationContext;
   title: string;
+  /** The lead this thread belongs to, when known — enables the back-link to context. */
+  leadId?: string | null;
   lastMessageAt: string;
   unreadCount: number;
   lastPreview: string;
@@ -37,6 +39,8 @@ export interface ConversationThread {
   id: string;
   context: ConversationContext;
   title: string;
+  /** The lead this thread belongs to, when known. */
+  leadId?: string | null;
   messages: Message[];
 }
 

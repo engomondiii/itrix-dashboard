@@ -1,18 +1,25 @@
 import "server-only";
 
+import { AGENT_AUTO_APPROVE_MAX_LEVEL, type ClaimLevel } from "@/constants/claimLevels";
+import type { AgentKey } from "@/constants/agentKeys";
 import type { ApprovalRequest } from "@/types/agent";
+import { deliverApprovedMessage } from "@/mocks/conversationsDb";
 
 /**
  * Mock approval-queue store. Agent/team drafts above the auto-approve threshold
  * (claim level > 2) land here for a human. L4/L5 require a second, distinct
  * approver — the real governance rule, enforced here in mock mode too.
+ *
+ * Lead ids match `mocks/leads.ts` (`l001`…) so the "View lead" links resolve, and
+ * `conversationId` ties a draft back to the thread it will be delivered into.
  */
 
 function seed(): ApprovalRequest[] {
   return [
     {
       id: "apr-1",
-      leadId: "lead-1",
+      leadId: "l001",
+      conversationId: "conv-1",
       agentKey: "proof",
       claimLevel: 3,
       draftBody:
@@ -27,7 +34,8 @@ function seed(): ApprovalRequest[] {
     },
     {
       id: "apr-2",
-      leadId: "lead-2",
+      leadId: "l002",
+      conversationId: "conv-2",
       agentKey: "proposal",
       claimLevel: 5,
       draftBody:
@@ -42,7 +50,8 @@ function seed(): ApprovalRequest[] {
     },
     {
       id: "apr-3",
-      leadId: "lead-3",
+      leadId: "l003",
+      conversationId: "conv-1",
       agentKey: "objection",
       claimLevel: 4,
       draftBody:
@@ -94,12 +103,16 @@ export function actOnApproval(
     return { ok: true, request: a };
   }
 
+  // Editing revises the draft in place — it never delivers. The operator still
+  // has to approve it (and an L4/L5 draft still needs its second approver).
   if (action === "edit") {
     if (!body) return { ok: false, status: 409, detail: "Edit requires a body." };
     a.finalBody = body;
-  } else {
-    a.finalBody = a.finalBody || a.draftBody;
+    approvals[idx] = a;
+    return { ok: true, request: a };
   }
+
+  a.finalBody = a.finalBody || a.draftBody;
 
   // Two-approver rule for L4/L5.
   if (a.requiresSecondApprover) {
@@ -119,6 +132,45 @@ export function actOnApproval(
     a.status = "approved";
   }
 
+  // Final approval delivers the governed message into its conversation.
+  if (a.status === "approved" && a.conversationId) {
+    deliverApprovedMessage(a.conversationId, a.finalBody, a.agentKey, a.citedChunkIds);
+  }
+
   approvals[idx] = a;
   return { ok: true, request: a };
+}
+
+/**
+ * Queue a freshly produced agent draft for approval (claim level above the
+ * auto-approve threshold). Returns the created request, or null when the draft
+ * auto-delivers and never needs a human.
+ */
+export function queueDraft(input: {
+  leadId: string | null;
+  conversationId?: string | null;
+  agentKey: AgentKey;
+  claimLevel: ClaimLevel;
+  draftBody: string;
+  citedChunkIds?: string[];
+}): ApprovalRequest | null {
+  if (input.claimLevel <= AGENT_AUTO_APPROVE_MAX_LEVEL) return null;
+
+  const request: ApprovalRequest = {
+    id: `apr-${approvals.length + 1}-${input.agentKey}`,
+    leadId: input.leadId,
+    conversationId: input.conversationId ?? null,
+    agentKey: input.agentKey,
+    claimLevel: input.claimLevel,
+    draftBody: input.draftBody,
+    finalBody: "",
+    citedChunkIds: input.citedChunkIds ?? [],
+    status: "pending",
+    reason: "",
+    requiresSecondApprover: input.claimLevel >= 4,
+    firstApprover: null,
+    at: new Date().toISOString(),
+  };
+  approvals = [request, ...approvals];
+  return request;
 }

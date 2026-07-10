@@ -1,7 +1,7 @@
 import "server-only";
 
-import type { AgentKey } from "@/constants/agentKeys";
-import type { ClaimLevel } from "@/constants/claimLevels";
+import { AGENT_LABEL, type AgentKey } from "@/constants/agentKeys";
+import { AGENT_AUTO_APPROVE_MAX_LEVEL, type ClaimLevel } from "@/constants/claimLevels";
 import type { JourneyState } from "@/constants/journeyStates";
 import type { LadderStage } from "@/constants/cockpit";
 import type { LeadStatus } from "@/constants/statuses";
@@ -9,6 +9,15 @@ import type { AgentRunResult } from "@/types/agent";
 import type { CockpitLead, CockpitNextAction, PitchAnalytics } from "@/types/cockpit";
 import { getLead } from "@/mocks/leadsDb";
 import { getJourney } from "@/mocks/journeyDb";
+import { queueDraft } from "@/mocks/approvalsDb";
+import { recordAgentRun } from "@/mocks/agentRunsDb";
+import { listConversations } from "@/mocks/conversationsDb";
+
+/** The conversation belonging to a lead, if one exists (so drafts deliver into it). */
+function conversationForLead(leadId: string): string | null {
+  if (!leadId) return null;
+  return listConversations().find((c) => c.leadId === leadId)?.id ?? null;
+}
 
 const clamp = (n: number) => Math.max(0, Math.min(100, Math.round(n)));
 
@@ -129,15 +138,44 @@ export function getPitchAnalytics(windowDays = 30): PitchAnalytics {
 
 export function runAgent(key: AgentKey, leadId: string): AgentRunResult {
   const level = AGENT_CLAIM[key] ?? 2;
-  const held = level > 2;
+  const held = level > AGENT_AUTO_APPROVE_MAX_LEVEL;
+  const governanceStatus = held ? "under_review" : "auto_approved";
+  const lead = leadId ? getLead(leadId) : null;
+  const company = lead?.company ?? "this lead";
+  const draftBody = `${AGENT_LABEL[key]} draft for ${company}: prepared from approved Knowledge Core content, pending governance.`;
+
+  // A held draft really lands in the approval queue, so the toast tells the truth.
+  const approval = held
+    ? queueDraft({
+        leadId: leadId || null,
+        conversationId: conversationForLead(leadId),
+        agentKey: key,
+        claimLevel: level,
+        draftBody,
+        citedChunkIds: [],
+      })
+    : null;
+
+  // Every invocation is recorded in the agent-run audit log.
+  recordAgentRun({
+    agentKey: key,
+    leadId: leadId || null,
+    claimLevel: level,
+    governanceStatus,
+    usedAi: false,
+  });
+
   return {
     agentKey: key,
     usedAi: false,
-    governanceStatus: held ? "under_review" : "auto_approved",
+    governanceStatus,
     claimLevel: level,
     output: {
-      summary: `${key} draft prepared for lead ${leadId}.`,
+      summary: held
+        ? `${AGENT_LABEL[key]} draft prepared and queued for approval.`
+        : `${AGENT_LABEL[key]} draft prepared and auto-delivered.`,
       held,
+      approvalId: approval?.id ?? null,
     },
     chunkIds: [],
   };
