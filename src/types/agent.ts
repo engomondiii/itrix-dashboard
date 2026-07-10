@@ -2,10 +2,12 @@ import type { AgentKey } from "@/constants/agentKeys";
 import type { ClaimLevel } from "@/constants/claimLevels";
 import type { GovernanceStatus } from "@/constants/governance";
 
+/** Mirrors the backend `ApprovalStatus` — `edited` is "approved with edits". */
 export const APPROVAL_STATUSES = [
   "pending",
   "awaiting_second",
   "approved",
+  "edited",
   "rejected",
   "blocked",
 ] as const;

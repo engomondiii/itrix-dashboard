@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 
 import { siteConfig } from "@/config/site.config";
 import { getSessionUser } from "@/lib/server/session";
-import { JOURNEY_STATES } from "@/constants/journeyStates";
+import { djangoFetch, djangoJson } from "@/lib/server/proxy";
 import { getStateDistribution } from "@/mocks/journeyDb";
 
 export async function GET() {
@@ -11,10 +11,9 @@ export async function GET() {
   }
 
   if (!siteConfig.useMocks) {
-    // v3: no backend journey-distribution endpoint yet — return an empty shape so
-    // the widget degrades gracefully until one exists.
-    const distribution = Object.fromEntries(JOURNEY_STATES.map((s) => [s, 0]));
-    return NextResponse.json({ distribution, total: 0 });
+    // Journey-state distribution across all leads — GET journey/overview/
+    const r = await djangoFetch(`/journey/overview/`);
+    return djangoJson(r);
   }
 
   return NextResponse.json(getStateDistribution());

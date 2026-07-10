@@ -12,18 +12,25 @@ function formatAt(iso: string): string {
     : d.toLocaleString(undefined, { dateStyle: "medium", timeStyle: "short" });
 }
 
-/** Sender washes — client neutral, agent sapphire, team gold (Theme §21). */
+/** Sender washes — visitor/client neutral, agent sapphire, team gold (Theme §21). */
 const WASH: Record<SenderKind, string> = {
+  visitor: "bg-surface border-line",
   client: "bg-surface border-line",
   agent: "border-sapphire-100 bg-sapphire-50",
   team: "border-gold-100 bg-gold-50",
+  system: "border-line bg-surface-sunken",
 };
 
 const DELIVERED = new Set(["auto_approved", "approved"]);
 
 export function MessageRow({ message }: { message: Message }) {
   return (
-    <div className={cn("rounded-md border p-3", WASH[message.senderKind])}>
+    <div
+      className={cn(
+        "rounded-md border p-3",
+        WASH[message.senderKind] ?? "bg-surface border-line",
+      )}
+    >
       <div className="mb-1 flex items-center gap-2">
         <SenderKindBadge kind={message.senderKind} />
         {!DELIVERED.has(message.governanceStatus) && (

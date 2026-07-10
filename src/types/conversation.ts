@@ -7,7 +7,12 @@ export const CONVERSATION_CONTEXT_LABEL: Record<ConversationContext, string> = {
   portal: "Portal",
 };
 
-export const SENDER_KINDS = ["client", "agent", "team"] as const;
+/**
+ * Mirrors the backend `SenderKind`. `visitor` is an anonymous review-surface
+ * participant (before they become a client) and `system` is a machine notice —
+ * both appear in real console threads, so neither may be omitted.
+ */
+export const SENDER_KINDS = ["visitor", "client", "agent", "team", "system"] as const;
 export type SenderKind = (typeof SENDER_KINDS)[number];
 
 /** A conversation row in the console list (backend `ConversationSummarySerializer`). */

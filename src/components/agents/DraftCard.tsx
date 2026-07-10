@@ -18,6 +18,7 @@ const STATUS_INTENT: Record<ApprovalStatus, "warning" | "success" | "error" | "n
   pending: "warning",
   awaiting_second: "warning",
   approved: "success",
+  edited: "success",
   rejected: "error",
   blocked: "error",
 };
@@ -25,6 +26,7 @@ const STATUS_LABEL: Record<ApprovalStatus, string> = {
   pending: "Pending",
   awaiting_second: "Awaiting 2nd approver",
   approved: "Approved",
+  edited: "Approved with edits",
   rejected: "Rejected",
   blocked: "Blocked",
 };
@@ -55,7 +57,9 @@ export function DraftCard({ request }: { request: ApprovalRequest }) {
       <div className="flex flex-wrap items-center gap-2">
         <Badge variant="neutral">{AGENT_LABEL[request.agentKey]}</Badge>
         <ClaimLevelBadge level={request.claimLevel} />
-        <Badge variant={STATUS_INTENT[request.status]}>{STATUS_LABEL[request.status]}</Badge>
+        <Badge variant={STATUS_INTENT[request.status] ?? "neutral"}>
+          {STATUS_LABEL[request.status] ?? request.status}
+        </Badge>
         {request.requiresSecondApprover && <Badge variant="warning">2 approvers</Badge>}
         <div className="ml-auto flex items-center gap-3">
           {request.conversationId && (

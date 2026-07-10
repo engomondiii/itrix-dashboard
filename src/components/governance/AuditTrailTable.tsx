@@ -19,7 +19,7 @@ function formatAt(iso: string): string {
 }
 
 function statusVariant(status: string): "success" | "error" | "warning" {
-  if (status === "approved") return "success";
+  if (status === "approved" || status === "edited") return "success";
   if (status === "rejected" || status === "blocked") return "error";
   return "warning";
 }
