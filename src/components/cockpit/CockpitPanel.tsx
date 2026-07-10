@@ -71,45 +71,48 @@ export function CockpitPanel({ leadId }: { leadId: string }) {
               </div>
             )}
 
-            <div className="space-y-1.5">
-              <SectionLabel>Visitor read</SectionLabel>
-              {cockpit.visitorType && (
-                <p className="text-sec text-ink-700">
-                  <span className="text-ink-400">Type:</span> {cockpit.visitorType}
-                </p>
-              )}
-              {cockpit.pain && (
-                <p className="text-sec text-ink-700">
-                  <span className="text-ink-400">Pain:</span> {cockpit.pain}
-                </p>
-              )}
-              {cockpit.gain && (
-                <p className="text-sec text-ink-700">
-                  <span className="text-ink-400">Gain:</span> {cockpit.gain}
-                </p>
-              )}
-              {cockpit.buyerPsychology && (
-                <p className="text-caption text-ink-500">{cockpit.buyerPsychology}</p>
-              )}
-              {cockpit.objectionSignals && cockpit.objectionSignals.length > 0 && (
-                <div className="flex flex-wrap gap-1 pt-1">
-                  {cockpit.objectionSignals.map((o) => (
-                    <Badge key={o} variant="warning">
-                      {o}
-                    </Badge>
-                  ))}
+            {/* Two readable columns once the card is wide; stacked on narrow. */}
+            <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+              <div className="space-y-1.5">
+                <SectionLabel>Visitor read</SectionLabel>
+                {cockpit.visitorType && (
+                  <p className="text-sec text-ink-700">
+                    <span className="text-ink-400">Type:</span> {cockpit.visitorType}
+                  </p>
+                )}
+                {cockpit.pain && (
+                  <p className="text-sec text-ink-700">
+                    <span className="text-ink-400">Pain:</span> {cockpit.pain}
+                  </p>
+                )}
+                {cockpit.gain && (
+                  <p className="text-sec text-ink-700">
+                    <span className="text-ink-400">Gain:</span> {cockpit.gain}
+                  </p>
+                )}
+                {cockpit.buyerPsychology && (
+                  <p className="text-caption text-ink-500">{cockpit.buyerPsychology}</p>
+                )}
+                {cockpit.objectionSignals && cockpit.objectionSignals.length > 0 && (
+                  <div className="flex flex-wrap gap-1 pt-1">
+                    {cockpit.objectionSignals.map((o) => (
+                      <Badge key={o} variant="warning">
+                        {o}
+                      </Badge>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              {cockpit.readiness && (
+                <div className="space-y-2">
+                  <SectionLabel>Readiness</SectionLabel>
+                  <Meter label="NDA" value={cockpit.readiness.nda} />
+                  <Meter label="Assessment" value={cockpit.readiness.assessment} />
+                  <Meter label="PoC" value={cockpit.readiness.poc} />
                 </div>
               )}
             </div>
-
-            {cockpit.readiness && (
-              <div className="space-y-2">
-                <SectionLabel>Readiness</SectionLabel>
-                <Meter label="NDA" value={cockpit.readiness.nda} />
-                <Meter label="Assessment" value={cockpit.readiness.assessment} />
-                <Meter label="PoC" value={cockpit.readiness.poc} />
-              </div>
-            )}
 
             <div className="space-y-2">
               <SectionLabel>Pitch engagement</SectionLabel>

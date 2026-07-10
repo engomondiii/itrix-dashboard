@@ -70,8 +70,14 @@ Recommended next step: ${lead.recommendedNextStep || "—"}`;
     <>
       <LeadDetailHeader lead={lead} />
 
-      <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
-        {/* Main column */}
+      {/*
+        Two columns, balanced by content weight rather than by card count. The wide,
+        dense panels (cockpit, qualification, the email draft) live in the roomy main
+        column; the narrow controls and status cards stay in the rail. `items-start`
+        stops the shorter column from stretching to match the taller one.
+      */}
+      <div className="grid grid-cols-1 items-start gap-6 lg:grid-cols-3">
+        {/* Main column — wide content */}
         <div className="space-y-6 lg:col-span-2">
           <Card>
             <CardHeader>
@@ -89,6 +95,8 @@ Recommended next step: ${lead.recommendedNextStep || "—"}`;
             </CardContent>
           </Card>
 
+          <CockpitPanel leadId={lead.id} />
+
           <Card>
             <CardHeader>
               <CardTitle>Qualification</CardTitle>
@@ -97,6 +105,51 @@ Recommended next step: ${lead.recommendedNextStep || "—"}`;
               {lead.qualification && (
                 <LeadQualificationAnswers answers={lead.qualification} />
               )}
+            </CardContent>
+          </Card>
+
+          {/* Compact status pair — side by side once there's room. */}
+          <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
+            <Card>
+              <CardHeader>
+                <CardTitle>Ownership</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                <div className="space-y-1">
+                  <div className="text-micro font-semibold uppercase tracking-[0.06em] text-ink-400">
+                    Status
+                  </div>
+                  <LeadStatusControl leadId={lead.id} status={lead.status} />
+                </div>
+                <div className="space-y-1">
+                  <div className="text-micro font-semibold uppercase tracking-[0.06em] text-ink-400">
+                    Owner
+                  </div>
+                  <LeadOwnerControl leadId={lead.id} owner={lead.owner} />
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle>Route & score</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="flex flex-wrap items-center gap-2">
+                  <LeadProductRouteBadge route={lead.productRoute} />
+                  <Badge variant="neutral">{lead.commercialPath}</Badge>
+                </div>
+                <LeadScoreBreakdown breakdown={lead.scoreBreakdown} />
+              </CardContent>
+            </Card>
+          </div>
+
+          <Card>
+            <CardHeader>
+              <CardTitle>Follow-up email</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <FollowUpEmailDraft lead={lead} />
             </CardContent>
           </Card>
 
@@ -119,7 +172,8 @@ Recommended next step: ${lead.recommendedNextStep || "—"}`;
           </Card>
         </div>
 
-        {/* Side column */}
+        {/* Rail — controls and status. Not sticky: it can exceed the viewport height,
+            and pinning it would make its lower cards unreachable. */}
         <div className="space-y-6">
           <Card>
             <CardHeader>
@@ -129,8 +183,6 @@ Recommended next step: ${lead.recommendedNextStep || "—"}`;
               <LeadActions lead={lead} />
             </CardContent>
           </Card>
-
-          <CockpitPanel leadId={lead.id} />
 
           <JourneyPanel leadId={lead.id} />
 
@@ -155,48 +207,6 @@ Recommended next step: ${lead.recommendedNextStep || "—"}`;
               </CardContent>
             </Card>
           )}
-
-          <Card>
-            <CardHeader>
-              <CardTitle>Ownership</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-3">
-              <div className="space-y-1">
-                <div className="text-micro font-semibold uppercase tracking-[0.06em] text-ink-400">
-                  Status
-                </div>
-                <LeadStatusControl leadId={lead.id} status={lead.status} />
-              </div>
-              <div className="space-y-1">
-                <div className="text-micro font-semibold uppercase tracking-[0.06em] text-ink-400">
-                  Owner
-                </div>
-                <LeadOwnerControl leadId={lead.id} owner={lead.owner} />
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader>
-              <CardTitle>Route & score</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="flex flex-wrap items-center gap-2">
-                <LeadProductRouteBadge route={lead.productRoute} />
-                <Badge variant="neutral">{lead.commercialPath}</Badge>
-              </div>
-              <LeadScoreBreakdown breakdown={lead.scoreBreakdown} />
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader>
-              <CardTitle>Follow-up email</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <FollowUpEmailDraft lead={lead} />
-            </CardContent>
-          </Card>
 
           <Card>
             <CardHeader>

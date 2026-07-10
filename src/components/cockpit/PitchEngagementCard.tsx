@@ -15,7 +15,7 @@ export function PitchEngagementCard({ pitch }: { pitch: Partial<PitchEngagement>
     return <p className="text-sec text-ink-400">No pitch engagement yet.</p>;
   }
   return (
-    <div className="grid grid-cols-3 gap-2">
+    <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
       <Stat label="Opened" value={pitch.opened ? "Yes" : "No"} />
       <Stat label="Slides" value={pitch.slidesViewed ?? 0} />
       <Stat label="Dwell (s)" value={pitch.totalDwellSeconds ?? 0} />
