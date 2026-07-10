@@ -88,20 +88,39 @@ approves anything that carries a claim. That's why we can move fast without over
 ---
 
 ## Known gaps — do NOT demo these
+> The deployed dashboard runs against the **real Django backend** (`NEXT_PUBLIC_USE_MOCKS=false`),
+> so these are what an audience would actually hit.
+
 1. **Realtime is off.** Console/approvals poll instead of streaming. The WebSocket auth
    handshake isn't wired (team-JWT is httpOnly, so the browser can't put it in the
    subprotocol). Don't promise "live".
-2. **Two cross-links vanish against the real backend.** `conversationId` on approvals and
-   `leadId` on conversations aren't in the Django serializers yet, so "Open thread" /
-   "View lead" only appear in mock mode.
-3. **Journey distribution is empty in production** — there's no `journey/overview`
-   endpoint; the widget hides itself.
+2. **Two cross-links don't appear.** `conversationId` on approvals and `leadId` on
+   conversations aren't in the Django serializers yet, so "Open thread" and the thread's
+   "View lead" render only when the field is present. Needs a small backend change.
+3. **Journey distribution is empty** — there's no `journey/overview` endpoint, so the
+   Overview widget hides itself. Don't point at it.
 4. **Read-only users** still see an editable Claim-Card form that 403s on save.
 5. **Client-page preview** — RevealLog ticks "① Client page" but there's no way to view
    what the visitor sees (Surface 1 owns that route).
+6. **Evaluations and PoCs lists have no search/filter/pagination.** Fine with a handful of
+   records; with real volume there's no way to find a specific one. NDA has all three.
+7. **Analytics date range**: works against the real backend (the route forwards `days`).
+   In local mock mode 30d and 90d look identical because the seeded leads only span ~30 days.
 
 ## Fixed just before this pass
 - Stylesheet was failing to compile (a Pretendard `@import` placed after `@import "tailwindcss"`)
   — every page 500'd in dev.
 - Collapsed sidebar spilled its labels over the page (`--sidebar-width-icon` was never defined).
 - Agent runs showed an empty `L0 ·` badge (claim level 0 = "no claim") and raw `43198ms`.
+- A failed request used to spin forever (settings forms, analytics views) or show a
+  reassuring "nothing here yet" (evaluations, PoCs). Both now say the request failed.
+- "Create PoC" toasted but went nowhere, and could be clicked twice → duplicate PoCs.
+- Overview KPI tiles weren't clickable; follow-up sub-views had no way back; the Settings
+  landing page was missing its Governance card.
+
+## Demo-day checklist
+- [ ] **Deploy** — production is still serving a build from before the sidebar/CSS fixes.
+- [ ] Confirm you're logged in as **Admin or Assessment Team**, or the approve/advance/run
+      buttons will (correctly) show "restricted" instead of acting.
+- [ ] Have one **Tier 1 lead** open in a tab — that's the strongest single screen.
+- [ ] Queue one draft before you start, so Approvals isn't empty.
