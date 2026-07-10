@@ -22,6 +22,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useLeadActions } from "@/hooks/useLeadActions";
+import { leadSalutation } from "@/lib/formatting";
 import type { Lead } from "@/types/lead";
 
 const DURATIONS = [
@@ -43,7 +44,7 @@ export function BookMeetingDialog({
   const [date, setDate] = useState("");
   const [time, setTime] = useState("");
   const [duration, setDuration] = useState("30");
-  const [attendee, setAttendee] = useState(lead.visitorName ?? lead.email);
+  const [attendee, setAttendee] = useState(leadSalutation(lead, lead.email));
   const [location, setLocation] = useState("");
   const [notes, setNotes] = useState("");
 

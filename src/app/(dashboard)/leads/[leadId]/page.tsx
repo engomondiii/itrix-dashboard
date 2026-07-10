@@ -25,6 +25,7 @@ import { RunAgentMenu } from "@/components/agents/RunAgentMenu";
 import { LeadProductRouteBadge } from "@/components/leads/LeadProductRouteBadge";
 import { Badge } from "@/components/ui/badge";
 import { ROUTES } from "@/constants/routes";
+import { leadDisplayName } from "@/lib/formatting";
 import { useLeadDetail } from "@/hooks/useLeadDetail";
 
 export default function LeadDetailPage({
@@ -58,7 +59,7 @@ export default function LeadDetailPage({
     );
   }
 
-  const handoffMemo = `LEAD HANDOFF — ${lead.company ?? lead.visitorName ?? lead.email}
+  const handoffMemo = `LEAD HANDOFF — ${leadDisplayName(lead)}
 Tier ${lead.tier} · Score ${lead.score} · ${lead.productRoute} · ${lead.commercialPath}
 Bottleneck: ${lead.computeBottleneck || "—"}
 Primary pain: ${lead.primaryPain || "—"} | Workload: ${lead.workloadType || "—"}

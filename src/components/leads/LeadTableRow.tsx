@@ -10,7 +10,7 @@ import { LeadStatusBadge } from "@/components/leads/LeadStatusBadge";
 import { LeadProductRouteBadge } from "@/components/leads/LeadProductRouteBadge";
 import { LeadOwnerAvatar } from "@/components/leads/LeadOwnerAvatar";
 import { ROUTES } from "@/constants/routes";
-import { formatDate } from "@/lib/formatting";
+import { formatDate, leadDisplayName, leadSubtitle } from "@/lib/formatting";
 import type { LeadListItem } from "@/types/lead";
 
 export function LeadTableRow({
@@ -22,23 +22,33 @@ export function LeadTableRow({
   selected: boolean;
   onToggle: () => void;
 }) {
+  // A lead from an anonymous review has no company or name — never render an empty,
+  // unclickable link. `leadDisplayName` always yields something to click.
+  const name = leadDisplayName(lead);
+  const subtitle = leadSubtitle(lead);
+  const anonymous = !lead.company?.trim() && !lead.visitorName?.trim();
+
   return (
     <TableRow data-selected={selected} className="data-[selected=true]:bg-sapphire-100">
       <TableCell>
         <Checkbox
           checked={selected}
           onCheckedChange={onToggle}
-          aria-label={`Select ${lead.company ?? lead.id}`}
+          aria-label={`Select ${name}`}
         />
       </TableCell>
       <TableCell>
         <Link
           href={ROUTES.lead(lead.id)}
-          className="font-medium text-ink-900 hover:text-sapphire-600"
+          className={
+            anonymous
+              ? "font-medium text-ink-500 italic hover:text-sapphire-600"
+              : "font-medium text-ink-900 hover:text-sapphire-600"
+          }
         >
-          {lead.company ?? "—"}
+          {name}
         </Link>
-        <div className="text-caption text-ink-400">{lead.visitorName ?? lead.role}</div>
+        {subtitle && <div className="text-caption text-ink-400">{subtitle}</div>}
       </TableCell>
       <TableCell className="hidden text-ink-500 lg:table-cell">{lead.industry}</TableCell>
       <TableCell className="hidden md:table-cell">

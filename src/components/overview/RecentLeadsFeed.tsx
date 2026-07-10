@@ -5,7 +5,7 @@ import Link from "next/link";
 import { LeadTierBadge } from "@/components/leads/LeadTierBadge";
 import { Spinner } from "@/components/ui/spinner";
 import { ROUTES } from "@/constants/routes";
-import { formatTimeAgo } from "@/lib/formatting";
+import { formatTimeAgo, leadDisplayName } from "@/lib/formatting";
 import { useLeads } from "@/hooks/useLeads";
 
 export function RecentLeadsFeed() {
@@ -34,7 +34,7 @@ export function RecentLeadsFeed() {
           >
             <LeadTierBadge tier={l.tier} />
             <span className="truncate text-sec font-medium text-ink-800">
-              {l.company ?? l.visitorName ?? "—"}
+              {leadDisplayName(l)}
             </span>
             <span className="ml-auto shrink-0 text-caption text-ink-400">
               {formatTimeAgo(l.submittedAt)}

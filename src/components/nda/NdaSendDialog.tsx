@@ -52,7 +52,7 @@ export function NdaSendDialog({
             <DialogTitle>Send NDA</DialogTitle>
             <DialogDescription>
               Send the {nda.docType === "mutual" ? "mutual" : "one-way"} NDA to{" "}
-              {nda.company ?? "the counterparty"} for signature.
+              {nda.company?.trim() || "the counterparty"} for signature.
             </DialogDescription>
           </DialogHeader>
 

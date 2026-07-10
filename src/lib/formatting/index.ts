@@ -6,3 +6,4 @@ export * from "./formatTier";
 export * from "./formatStatus";
 export * from "./formatRoute";
 export * from "./formatSLATime";
+export * from "./leadName";

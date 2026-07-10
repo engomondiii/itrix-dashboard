@@ -15,6 +15,7 @@ import {
 import { LEAD_STATUSES, type LeadStatus } from "@/constants/statuses";
 import { ROUTES } from "@/constants/routes";
 import { useMoveLead } from "@/hooks/usePipeline";
+import { leadDisplayName } from "@/lib/formatting";
 import { cn } from "@/lib/utils";
 import type { PipelineCardData } from "@/types/pipeline";
 
@@ -40,13 +41,13 @@ export function PipelineCard({
       {/* Stretched link: clicks on non-interactive areas open the lead. */}
       <Link
         href={ROUTES.lead(card.id)}
-        aria-label={`Open ${card.company ?? "lead"}`}
+        aria-label={`Open ${leadDisplayName(card)}`}
         className="absolute inset-0 rounded-md"
       />
       <div className="pointer-events-none relative">
         <div className="flex items-start justify-between gap-2">
           <span className="text-sec font-medium text-ink-900">
-            {card.company ?? "—"}
+            {leadDisplayName(card)}
           </span>
           <LeadTierBadge tier={card.tier} />
         </div>

@@ -26,15 +26,16 @@ import {
   renderTemplate,
   splitSubject,
 } from "@/lib/templates/render";
+import { leadCompany, leadSalutation } from "@/lib/formatting";
 import type { Lead } from "@/types/lead";
 import type { Template } from "@/types/template";
 
 /** Default AI-drafted follow-up (Master Architecture §9.5), used until a template is applied. */
 function defaultDraft(lead: Lead) {
-  const subject = `Your ALPHA Compute / Core Assessment — ${lead.company ?? "your team"}`;
+  const subject = `Your ALPHA Compute / Core Assessment — ${leadCompany(lead)}`;
   const pain = (lead.primaryPain || "compute").toLowerCase();
   const sector = lead.industry || "your sector";
-  const body = `Dear ${lead.visitorName ?? "there"},
+  const body = `Dear ${leadSalutation(lead)},
 
 Thank you for sharing your compute bottleneck with iTrix.
 

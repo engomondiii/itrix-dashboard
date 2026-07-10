@@ -5,6 +5,7 @@ import { LeadTierBadge } from "@/components/leads/LeadTierBadge";
 import { LeadScoreBadge } from "@/components/leads/LeadScoreBadge";
 import { LeadSpecialRightsBadge } from "@/components/leads/LeadSpecialRightsBadge";
 import { ROUTES } from "@/constants/routes";
+import { leadDisplayName } from "@/lib/formatting";
 import type { Lead } from "@/types/lead";
 
 export function LeadDetailHeader({ lead }: { lead: Lead }) {
@@ -19,7 +20,7 @@ export function LeadDetailHeader({ lead }: { lead: Lead }) {
       </Link>
       <div className="mt-2 flex flex-wrap items-center gap-3">
         <h1 className="text-page-title font-semibold text-ink-900">
-          {lead.company ?? lead.email}
+          {leadDisplayName(lead)}
         </h1>
         <LeadTierBadge tier={lead.tier} />
         <span className="text-sec text-ink-500">
