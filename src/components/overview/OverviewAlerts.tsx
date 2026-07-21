@@ -17,7 +17,7 @@ export function OverviewAlerts({
       {newLeads > 0 && (
         <Link
           href={ROUTES.leads}
-          className="flex flex-1 items-center gap-2 rounded-md border border-sapphire-100 bg-sapphire-50 px-3 py-2 text-sec text-sapphire-700"
+          className="flex flex-1 items-center gap-2 rounded-md border border-tint bg-soft px-3 py-2 text-sec text-ink-primary"
         >
           <SparklesIcon className="size-4" />
           {newLeads} new lead{newLeads === 1 ? "" : "s"} awaiting review

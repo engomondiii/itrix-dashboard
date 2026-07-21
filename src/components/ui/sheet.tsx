@@ -40,12 +40,12 @@ const sheetVariants = cva(
   {
     variants: {
       side: {
-        left: "inset-y-0 left-0 h-full w-3/4 max-w-sm border-r border-line data-[ending-style]:-translate-x-full data-[starting-style]:-translate-x-full",
+        left: "inset-y-0 left-0 h-full w-3/4 max-w-sm border-r border-border-soft data-[ending-style]:-translate-x-full data-[starting-style]:-translate-x-full",
         right:
-          "inset-y-0 right-0 h-full w-3/4 max-w-sm border-l border-line data-[ending-style]:translate-x-full data-[starting-style]:translate-x-full",
-        top: "inset-x-0 top-0 h-auto border-b border-line data-[ending-style]:-translate-y-full data-[starting-style]:-translate-y-full",
+          "inset-y-0 right-0 h-full w-3/4 max-w-sm border-l border-border-soft data-[ending-style]:translate-x-full data-[starting-style]:translate-x-full",
+        top: "inset-x-0 top-0 h-auto border-b border-border-soft data-[ending-style]:-translate-y-full data-[starting-style]:-translate-y-full",
         bottom:
-          "inset-x-0 bottom-0 h-auto border-t border-line data-[ending-style]:translate-y-full data-[starting-style]:translate-y-full",
+          "inset-x-0 bottom-0 h-auto border-t border-border-soft data-[ending-style]:translate-y-full data-[starting-style]:translate-y-full",
       },
     },
     defaultVariants: { side: "right" },

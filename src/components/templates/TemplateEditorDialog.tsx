@@ -116,7 +116,7 @@ export function TemplateEditorDialog({
               placeholder="Wrap variables in {{double braces}}…"
               className="min-h-56 font-mono text-sec"
             />
-            <p className="text-caption text-ink-400">
+            <p className="text-caption text-ink-secondary">
               Variables are detected automatically from {"{{double braces}}"}.
             </p>
           </div>

@@ -55,7 +55,7 @@ export function AuditTrailTable() {
   return (
     <div className="space-y-2">
       {data.map((a) => (
-        <div key={a.id} className="rounded-md border border-line bg-surface p-3">
+        <div key={a.id} className="rounded-md border border-border-soft bg-surface p-3">
           <div className="flex flex-wrap items-center gap-2">
             <Badge variant="neutral">
               {AGENT_LABEL[a.agentKey as AgentKey] ?? a.agentKey}
@@ -63,13 +63,13 @@ export function AuditTrailTable() {
             <ClaimLevelBadge level={a.claimLevel} />
             <Badge variant={statusVariant(a.status)}>{a.status}</Badge>
             {a.firstApprover && (
-              <span className="text-caption text-ink-500">by {a.firstApprover}</span>
+              <span className="text-caption text-ink-secondary">by {a.firstApprover}</span>
             )}
             <div className="ml-auto flex items-center gap-3">
               {a.conversationId && (
                 <Link
                   href={ROUTES.consoleThread(a.conversationId)}
-                  className="text-micro text-sapphire-600 hover:underline"
+                  className="text-micro text-ink-primary hover:underline"
                 >
                   Thread
                 </Link>
@@ -77,16 +77,16 @@ export function AuditTrailTable() {
               {a.leadId && (
                 <Link
                   href={ROUTES.lead(a.leadId)}
-                  className="text-micro text-sapphire-600 hover:underline"
+                  className="text-micro text-ink-primary hover:underline"
                 >
                   Lead
                 </Link>
               )}
-              <span className="text-micro text-ink-400">{formatAt(a.at)}</span>
+              <span className="text-micro text-ink-secondary">{formatAt(a.at)}</span>
             </div>
           </div>
           {a.reason && (
-            <p className="mt-1 text-caption text-ink-500">Reason: {a.reason}</p>
+            <p className="mt-1 text-caption text-ink-secondary">Reason: {a.reason}</p>
           )}
         </div>
       ))}

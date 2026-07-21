@@ -26,18 +26,18 @@ function formatDue(dueAt: string): string {
 
 export function FollowUpTaskCard({ task }: { task: FollowUpTask }) {
   return (
-    <div className="rounded-md border border-line bg-surface p-3 shadow-1">
+    <div className="rounded-md border border-border-soft bg-surface p-3 shadow-1">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
         <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
           <LeadTierBadge tier={task.tier} />
           <Link
             href={ROUTES.lead(task.leadId)}
-            className="text-sec font-medium text-ink-900 hover:text-sapphire-600"
+            className="text-sec font-medium text-ink-primary hover:text-ink-primary"
           >
             {task.leadName}
           </Link>
           {task.status === "snoozed" && <Badge variant="neutral">Snoozed</Badge>}
-          <span className="text-caption text-ink-400">Due {formatDue(task.dueAt)}</span>
+          <span className="text-caption text-ink-secondary">Due {formatDue(task.dueAt)}</span>
         </div>
         <div className="flex flex-wrap items-center gap-3 sm:ml-auto">
           <FollowUpSLATimer dueAt={task.dueAt} />
@@ -51,7 +51,7 @@ export function FollowUpTaskCard({ task }: { task: FollowUpTask }) {
         </div>
       </div>
       {task.note && (
-        <p className="mt-2 border-t border-line pt-2 text-caption text-ink-500">
+        <p className="mt-2 border-t border-border-soft pt-2 text-caption text-ink-secondary">
           {task.note}
         </p>
       )}

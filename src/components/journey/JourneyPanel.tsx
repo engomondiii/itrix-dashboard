@@ -13,7 +13,7 @@ import { StateBadge } from "./StateBadge";
 
 function SectionLabel({ children }: { children: string }) {
   return (
-    <div className="text-micro font-semibold uppercase tracking-[0.06em] text-ink-400">
+    <div className="text-micro font-semibold uppercase tracking-[0.06em] text-ink-secondary">
       {children}
     </div>
   );
@@ -35,7 +35,7 @@ export function JourneyPanel({ leadId }: { leadId: string }) {
           </div>
         )}
         {isError && !isLoading && (
-          <p className="text-sec text-ink-400">Journey data isn’t available yet.</p>
+          <p className="text-sec text-ink-secondary">Journey data isn’t available yet.</p>
         )}
         {journey && (
           <>
@@ -46,7 +46,7 @@ export function JourneyPanel({ leadId }: { leadId: string }) {
                 <Badge variant="info">Invite-eligible</Badge>
               )}
             </div>
-            <p className="text-sec text-ink-600">
+            <p className="text-sec text-ink-secondary">
               {JOURNEY_STATE_DESCRIPTION[journey.state]}
             </p>
 

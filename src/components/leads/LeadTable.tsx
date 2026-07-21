@@ -19,7 +19,7 @@ export function LeadTable({
   const allOnPage = rows.length > 0 && rows.every((r) => selected.has(r.id));
 
   return (
-    <div className="overflow-x-auto rounded-md border border-line bg-surface">
+    <div className="overflow-x-auto rounded-md border border-border-soft bg-surface">
       <Table>
         <TableHeader>
           <TableRow>

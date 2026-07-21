@@ -54,24 +54,24 @@ export function EvaluationDetailPanel({ evaluation }: { evaluation: Evaluation }
       </CardHeader>
       <CardContent className="space-y-4">
         {(evaluation.scope || evaluation.fee || evaluation.timeline) && (
-          <div className="space-y-2 rounded-md border border-line bg-surface-sunken p-3">
+          <div className="space-y-2 rounded-md border border-border-soft bg-soft p-3">
             {evaluation.scope && (
               <div>
-                <div className="text-micro font-semibold uppercase tracking-[0.06em] text-ink-400">
+                <div className="text-micro font-semibold uppercase tracking-[0.06em] text-ink-secondary">
                   Scope
                 </div>
-                <p className="text-sec text-ink-700">{evaluation.scope}</p>
+                <p className="text-sec text-ink-secondary">{evaluation.scope}</p>
               </div>
             )}
-            <div className="flex flex-wrap gap-x-6 gap-y-1 text-sec text-ink-700">
+            <div className="flex flex-wrap gap-x-6 gap-y-1 text-sec text-ink-secondary">
               {evaluation.fee && (
                 <span>
-                  <span className="text-ink-400">Fee:</span> {evaluation.fee}
+                  <span className="text-ink-secondary">Fee:</span> {evaluation.fee}
                 </span>
               )}
               {evaluation.timeline && (
                 <span>
-                  <span className="text-ink-400">Timeline:</span> {evaluation.timeline}
+                  <span className="text-ink-secondary">Timeline:</span> {evaluation.timeline}
                 </span>
               )}
             </div>
@@ -79,8 +79,8 @@ export function EvaluationDetailPanel({ evaluation }: { evaluation: Evaluation }
         )}
         <EvaluationKPIList evaluationId={evaluation.id} kpis={evaluation.kpis} />
         {evaluation.status === "won" && (
-          <div className="rounded-md border border-line bg-surface-sunken p-3">
-            <p className="text-sec text-ink-700">
+          <div className="rounded-md border border-border-soft bg-soft p-3">
+            <p className="text-sec text-ink-secondary">
               This evaluation was won. Graduate the lead to a proof-of-concept.
             </p>
             <Button
@@ -98,7 +98,7 @@ export function EvaluationDetailPanel({ evaluation }: { evaluation: Evaluation }
         )}
         <Link
           href={ROUTES.lead(evaluation.leadId)}
-          className="inline-block text-sec font-medium text-sapphire-600"
+          className="inline-block text-sec font-medium text-ink-primary"
         >
           Open lead →
         </Link>

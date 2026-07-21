@@ -228,7 +228,7 @@ function SidebarTrigger({
       data-sidebar="trigger"
       variant="ghost"
       size="icon-sm"
-      className={cn("text-ink-500", className)}
+      className={cn("text-ink-secondary", className)}
       onClick={(event) => {
         onClick?.(event)
         toggleSidebar()
@@ -345,7 +345,7 @@ function SidebarGroupLabel({
       data-slot="sidebar-group-label"
       data-sidebar="group-label"
       className={cn(
-        "flex h-7 shrink-0 items-center rounded-md px-3 text-micro font-semibold uppercase tracking-[0.08em] text-oni-muted/70 outline-none transition-[margin,opacity] duration-200 ease-linear",
+        "flex h-7 shrink-0 items-center rounded-md px-3 text-micro font-semibold uppercase tracking-[0.08em] text-ink-muted/70 outline-none transition-[margin,opacity] duration-200 ease-linear",
         "group-data-[collapsible=icon]:-mt-7 group-data-[collapsible=icon]:opacity-0",
         className
       )}
@@ -377,7 +377,7 @@ function SidebarMenuItem({ className, ...props }: React.ComponentProps<"li">) {
 }
 
 const sidebarMenuButtonVariants = cva(
-  "group/menu-button peer/menu-button relative flex w-full items-center gap-2.5 overflow-hidden rounded-md p-2 text-left text-sec text-oni-muted outline-none ring-sidebar-ring transition-[width,height,padding,colors] hover:bg-indigo-900 hover:text-sidebar-foreground focus-visible:ring-2 active:bg-sidebar-accent disabled:pointer-events-none disabled:opacity-50 data-[active=true]:bg-sidebar-accent data-[active=true]:font-medium data-[active=true]:text-sidebar-foreground data-[panel-open]:hover:bg-indigo-900 group-data-[collapsible=icon]:size-9! group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:p-2! [&>span:last-child]:truncate [&>svg]:size-4 [&>svg]:shrink-0 [&>svg]:text-oni-muted hover:[&>svg]:text-sidebar-foreground data-[active=true]:[&>svg]:text-sapphire-300 data-[active=true]:before:absolute data-[active=true]:before:inset-y-1 data-[active=true]:before:left-0 data-[active=true]:before:w-[3px] data-[active=true]:before:rounded-full data-[active=true]:before:bg-sidebar-ring",
+  "group/menu-button peer/menu-button relative flex w-full items-center gap-2.5 overflow-hidden rounded-md p-2 text-left text-sec text-ink-muted outline-none ring-sidebar-ring transition-[width,height,padding,colors] hover:bg-structure-800 hover:text-sidebar-foreground focus-visible:ring-2 active:bg-sidebar-accent disabled:pointer-events-none disabled:opacity-50 data-[active=true]:bg-sidebar-accent data-[active=true]:font-medium data-[active=true]:text-sidebar-foreground data-[panel-open]:hover:bg-structure-800 group-data-[collapsible=icon]:size-9! group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:p-2! [&>span:last-child]:truncate [&>svg]:size-4 [&>svg]:shrink-0 [&>svg]:text-ink-muted hover:[&>svg]:text-sidebar-foreground data-[active=true]:[&>svg]:text-signature-soft data-[active=true]:before:absolute data-[active=true]:before:inset-y-1 data-[active=true]:before:left-0 data-[active=true]:before:w-[3px] data-[active=true]:before:rounded-full data-[active=true]:before:bg-sidebar-ring",
   {
     variants: {
       size: {
@@ -438,7 +438,7 @@ function SidebarMenuBadge({ className, ...props }: React.ComponentProps<"div">) 
       data-slot="sidebar-menu-badge"
       data-sidebar="menu-badge"
       className={cn(
-        "pointer-events-none absolute right-1.5 top-1/2 flex h-4 min-w-4 -translate-y-1/2 select-none items-center justify-center rounded-pill bg-sidebar-ring/90 px-1 text-[10px] font-semibold tabular-nums text-indigo-950",
+        "pointer-events-none absolute right-1.5 top-1/2 flex h-4 min-w-4 -translate-y-1/2 select-none items-center justify-center rounded-pill bg-sidebar-ring/90 px-1 text-[10px] font-semibold tabular-nums text-ink-primary",
         "group-data-[collapsible=icon]:hidden",
         className
       )}
@@ -460,9 +460,9 @@ function SidebarMenuSkeleton({
       {...props}
     >
       {showIcon && (
-        <Skeleton className="size-4 rounded-md bg-oni-muted/20" />
+        <Skeleton className="size-4 rounded-md bg-ink-muted/20" />
       )}
-      <Skeleton className="h-4 max-w-[var(--sidebar-skeleton-width)] flex-1 bg-oni-muted/20" />
+      <Skeleton className="h-4 max-w-[var(--sidebar-skeleton-width)] flex-1 bg-ink-muted/20" />
     </div>
   )
 }
@@ -514,7 +514,7 @@ function SidebarMenuSubButton({
       "data-sidebar": "menu-sub-button",
       "data-active": isActive || undefined,
       className: cn(
-        "flex h-8 min-w-0 items-center gap-2.5 overflow-hidden rounded-md px-2.5 text-sec text-oni-muted outline-none ring-sidebar-ring transition-colors hover:bg-indigo-900 hover:text-sidebar-foreground focus-visible:ring-2 data-[active=true]:bg-sidebar-accent data-[active=true]:font-medium data-[active=true]:text-sidebar-foreground [&>span:last-child]:truncate [&>svg]:size-3.5 [&>svg]:shrink-0 [&>svg]:text-oni-muted hover:[&>svg]:text-sidebar-foreground data-[active=true]:[&>svg]:text-sapphire-300",
+        "flex h-8 min-w-0 items-center gap-2.5 overflow-hidden rounded-md px-2.5 text-sec text-ink-muted outline-none ring-sidebar-ring transition-colors hover:bg-structure-800 hover:text-sidebar-foreground focus-visible:ring-2 data-[active=true]:bg-sidebar-accent data-[active=true]:font-medium data-[active=true]:text-sidebar-foreground [&>span:last-child]:truncate [&>svg]:size-3.5 [&>svg]:shrink-0 [&>svg]:text-ink-muted hover:[&>svg]:text-sidebar-foreground data-[active=true]:[&>svg]:text-signature-soft",
         className
       ),
       ...props,

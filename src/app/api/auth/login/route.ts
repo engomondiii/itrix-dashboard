@@ -15,8 +15,19 @@ export async function POST(req: Request) {
   const body = await req.json().catch(() => ({}));
   const email = String(body?.email ?? "").toLowerCase();
 
-  // Mock mode: accept any credentials; resolve to a known mock user.
-  if (siteConfig.useMocks) {
+  /**
+   * MOCK BRANCH — accepts ANY credentials and mints an ADMIN session.
+   *
+   * `siteConfig.useMocks` is already opt-in-by-exact-value AND force-disabled in
+   * production builds. The second `NODE_ENV` test here is deliberate belt-and-
+   * braces on the one route where getting it wrong means "a junk login is
+   * accepted in production": if the config guard is ever loosened by a future
+   * edit, this branch still cannot execute in a production build.
+   *
+   * Surface 2 v5.0 §06 Phase 1 / §10 — acceptance: "A junk login is rejected in
+   * a production build. Setting the mock flag at runtime does not re-enable it."
+   */
+  if (siteConfig.useMocks && process.env.NODE_ENV !== "production") {
     const user = MOCK_USERS[email] ?? MOCK_USERS[DEFAULT_USER_EMAIL];
     const res = NextResponse.json({ user, ok: true });
     res.cookies.set(SESSION_COOKIE, `mock:${user.email}`, cookieOpts);

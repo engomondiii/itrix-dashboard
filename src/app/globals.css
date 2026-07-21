@@ -16,81 +16,81 @@
 @custom-variant dark (&:is(.dark *));
 
 /* ============================================================
-   itriX — Mathematical Glass Intelligence  (Brand Bible v1.2)
-   Tailwind v4, CSS-first.
-   Cool blue-white paper + #1F2937 structural ink + soft-blue
-   glass accents + holographic highlight.
+   itriX · Brand Manual v1.5 EN — token layer
+   Tailwind v4, CSS-first.  Surface 2 v5.0 §06 Phase 1.
 
-   MIGRATION (Atelier Indigo v2.0 → Brand Bible v1.2):
-   The architecture, component markup, and token NAMES are all
-   unchanged. Only token VALUES are re-pointed to the v1.2
-   palette, so the whole surface reskins without touching any
-   component file (a scan found 0 hardcoded brand hexes in the
-   components). Every --color-* token still generates the same
-   bg-/text-/border- utilities; shadcn semantic tokens
-   (--background, --primary, --sidebar, …) are remapped onto the
-   new palette so shadcn components wear the theme too.
+   ATELIER INDIGO IS RETIRED BY NAME AS WELL AS BY VALUE.
+   The previous migration re-pointed the VALUES to Brand Bible
+   v1.2 but kept the old NAMES, which left the codebase saying
+   "gold" while rendering soft-blue and "sapphire" while
+   rendering a blue-to-ink ramp. That works and is actively
+   misleading, so the names are gone. The `itrix/no-atelier-tokens`
+   ESLint rule fails the build if one reappears.
 
-   Role mapping (old Atelier name → v1.2 role/value):
-     canvas (warm paper)        → #F8FAFC   background-main
-     canvas-deep / sunken       → #EAF0FF   background-soft
-     indigo-950…700 (structure) → #1F2937 ink ramp (dark sections/sidebar)
-     sapphire (action)          → cool blue-white → ink scale
-     gold (signature)           → holographic soft-blue (v1.2 has no gold)
-     ink (text)                 → #1F2937 / #4B5563 / #94A3B8
-     line (warm hairline)       → slate glass borders
-     status                     → v1.2 semantic feedback family
+   Vocabulary (shared with itrix-web / Surface 1 v5.0):
+     canvas · soft · tint · surface(+glass variants)
+     ink-primary / ink-secondary / ink-muted / ink-inverse
+     border-glass / border-soft / border-medium / border-strong
+     structure-600..900   (restrained dark ramp: sidebar, dark sections)
+     signature(+soft/line) — see the naming note below
+
+   TWO DELIBERATE DEVIATIONS FROM itrix-web
+   ---------------------------------------------------------------
+   1. `signature`, not `accent`. The Brand Manual calls the
+      holographic soft-blue highlight "accent", and itrix-web uses
+      that name. This repo cannot: shadcn already owns
+      --color-accent as its hover/selected wash (#D6E6FF), and the
+      colour-utility namespace is shared between them, so a second
+      `accent` would silently shadow it. Same rule as --text-sec vs
+      --text-secondary. The family is therefore signature /
+      signature-soft / signature-line, matching --shadow-signature.
+   2. line-strong → border-medium, not border-strong. The mapping
+      here follows the rendered VALUE: the old --color-line-strong
+      was rgba(148,163,184,0.56), which is border-medium. Brand
+      Manual border-strong is a much darker rgba(31,41,55,0.72) and
+      would visibly thicken every hairline it touched.
+
+   ACCESSIBILITY CONTRACT (Brand Manual §3.3)
+   ---------------------------------------------------------------
+   On the canvas (#F8FAFC):
+     ink-primary   #1F2937  ~14.0:1  AAA — titles, key sentences
+     ink-secondary #4B5563  ~7.6:1   AAA — body, captions, nav, labels
+     ink-muted     #94A3B8  ~2.5:1   FAILS — placeholders / disabled /
+                                     dividers ONLY
+   ink-muted must never carry information-bearing text on a light
+   surface. On the dark ground (#1F2937) it reaches ~5.7:1 and may
+   carry quiet supporting text — the only place it is permitted.
    ============================================================ */
 @theme {
-  /* Foundations — cool paper canvas (Brand Bible §3.2) */
-  --color-canvas: #f8fafc;         /* --color-background-main */
-  --color-canvas-deep: #eaf0ff;    /* --color-background-soft */
-  --color-surface: #ffffff;
-  --color-surface-warm: #fdfeff;   /* near-white elevated glass */
-  --color-surface-sunken: #eaf0ff; /* soft-blue rest surface */
+  /* Foundations */
+  --color-canvas: #f8fafc;         /* Soft Signal White — dominant ground */
+  --color-soft: #eaf0ff;           /* Holographic Mist — rails, rest surfaces */
+  --color-tint: #d6e6ff;           /* Ice Blue — glass panels, selected */
+  --color-surface: #ffffff;        /* Cards, documents, elevated content */
 
-  /* Structure & identity — dark ink ramp (was deep indigo).
-     #1F2937 is the v1.2 structural/dark color; the ramp lightens toward it so
-     anything that used indigo-700..950 still reads as "structure". */
-  --color-indigo-700: #3c4a5e;
-  --color-indigo-800: #313e50;
-  --color-indigo-900: #273343;
-  --color-indigo-950: #1f2937;
-  --color-oni: #f8fafc;            /* on-dark text (text-inverse) */
-  --color-oni-muted: #94a3b8;      /* on-dark secondary */
+  /* Structure — the restrained dark ramp for the sidebar and dark sections */
+  --color-structure-600: #3c4a5e;
+  --color-structure-700: #313e50;
+  --color-structure-800: #273343;
+  --color-structure-900: #1f2937;
 
-  /* Action color — cool blue-white accent scale (was sapphire).
-     v1.2 avoids a saturated royal blue; emphasis is carried by the light-blue
-     (#D6E6FF) ↔ dark ink (#1F2937) contrast. Names kept; values express that
-     restrained cool-blue → ink ramp. */
-  --color-sapphire-50: #eaf0ff;
-  --color-sapphire-100: #d6e6ff;
-  --color-sapphire-300: #a9c2ee;
-  --color-sapphire-500: #5b6b82;
-  --color-sapphire-600: #2c3a4e;
-  --color-sapphire-700: #1f2937;
+  /* Ink */
+  --color-ink-primary: #1f2937;    /* Deep Navy Slate */
+  --color-ink-secondary: #4b5563;  /* Graphite Blue Gray — ALL readable support */
+  --color-ink-muted: #94a3b8;      /* Steel Blue Gray — NON-informational only */
+  --color-ink-inverse: #f8fafc;    /* Reversed text on the dark ground */
 
-  /* Signature accent — holographic soft-blue (was brushed gold).
-     v1.2 has no gold; the signature highlight is a faint holographic blue
-     (§3.5). Kept under the gold-* names so accent hooks light up in-brand. */
-  --color-gold-50: #f2f6ff;
-  --color-gold-100: #e3ecff;
-  --color-gold-400: #b7cbf4;
-  --color-gold-500: #8fa8ea;
-  --color-gold-600: #6e7ca8;
+  /* Signature — restrained holographic soft-blue. Under 5% of a screen.
+     Never a full holographic button, never a rainbow gradient. */
+  --color-signature: #8fa8ea;
+  --color-signature-soft: #b7cbf4;
+  --color-signature-line: rgba(148, 163, 184, 0.48);
 
-  /* Ink — text on light surfaces (Brand Bible §3.3) */
-  --color-ink-300: #94a3b8;        /* text-muted (non-informational only) */
-  --color-ink-400: #64748b;        /* quiet text (AA on #F8FAFC) */
-  --color-ink-500: #4b5563;        /* text-secondary */
-  --color-ink-700: #374151;        /* strong body */
-  --color-ink-800: #273343;
-  --color-ink-900: #1f2937;        /* text-primary */
-
-  /* Borders — slate glass hairlines (Brand Bible §3.4, §8.1) */
-  --color-line-subtle: rgba(148, 163, 184, 0.24);
-  --color-line: rgba(148, 163, 184, 0.32);
-  --color-line-strong: rgba(148, 163, 184, 0.56);
+  /* Borders — slate glass hairlines */
+  --color-border-glass: rgba(214, 230, 255, 0.88);
+  --color-border-soft: rgba(148, 163, 184, 0.32);
+  --color-border-medium: rgba(148, 163, 184, 0.56);
+  --color-border-strong: rgba(31, 41, 55, 0.72);
 
   /* Status — v1.2 semantic feedback (lines/icons/short text only, §8.6) */
   --color-success: #067647;
@@ -118,12 +118,12 @@
   /* 6th chart series (shadcn maps chart-1..5; this adds the 6th) */
   --color-chart-6: #4a93a8;
 
-  /* Elevation — cool ink-tinted glass shadows (was warm umber, §8.1) */
+  /* Elevation — cool ink-tinted glass shadows (§8.1) */
   --shadow-1: 0 18px 48px rgba(31, 41, 55, 0.08);
   --shadow-2: 0 24px 72px rgba(31, 41, 55, 0.12);
   --shadow-3: 0 28px 80px rgba(31, 41, 55, 0.16);
-  /* Signature ring — soft-blue holographic (replaces gold) */
-  --shadow-gold: 0 0 0 1px rgba(143, 168, 234, 0.35), 0 2px 12px rgba(143, 168, 234, 0.18);
+  /* Signature ring — the holographic soft-blue highlight */
+  --shadow-signature: 0 0 0 1px rgba(143, 168, 234, 0.35), 0 2px 12px rgba(143, 168, 234, 0.18);
 
   /* Radius — v1.2 softer geometry (was 6/8/12) */
   --radius-sm: 10px;
@@ -170,53 +170,56 @@
   --tracking-micro: 0.04em;
   --tracking-eyebrow: 0.04em;
 
-  /* v1.2 raw glass/border/text tokens (available for glass work, §8.1) */
+  /* Raw glass + interaction tokens, for inline styles and charts that need a
+     literal rather than a utility class (§8.1). The border/glass colour itself
+     lives in @theme above as --color-border-glass. */
   --color-surface-glass: rgba(248, 250, 252, 0.72);
   --color-surface-glass-strong: rgba(248, 250, 252, 0.88);
   --color-surface-glass-soft: rgba(234, 240, 255, 0.56);
   --color-surface-dark-glass: rgba(31, 41, 55, 0.72);
-  --color-border-glass: rgba(214, 230, 255, 0.88);
-  --color-accent-blue-soft: #d6e6ff;
   --color-focus-ring: rgba(148, 163, 184, 0.72);
   --color-hover-glow: rgba(214, 230, 255, 0.64);
 
-  /* shadcn semantic tokens → Mathematical Glass v1.2 */
+  /* shadcn semantic tokens → Brand Manual v1.5.
+     These keep their shadcn names because shadcn primitives reference them
+     directly; the comments name the Brand Manual role each one carries. */
   --background: #f8fafc; /* canvas */
-  --foreground: #1f2937; /* ink-900 / text-primary */
+  --foreground: #1f2937; /* ink-primary */
   --card: #ffffff; /* surface */
   --card-foreground: #1f2937;
   --popover: #ffffff;
   --popover-foreground: #1f2937;
-  --primary: #1f2937; /* structural ink — v1.2 primary action fill (§8.5) */
-  --primary-foreground: #f8fafc; /* text-inverse */
-  --secondary: #eaf0ff; /* background-soft */
-  --secondary-foreground: #374151; /* ink-700 */
-  --muted: #eaf0ff;
-  --muted-foreground: #4b5563; /* ink-500 / text-secondary */
-  --accent: #d6e6ff; /* accent-blue-soft — hover/selected wash */
-  --accent-foreground: #1f2937; /* ink on light-blue */
+  --primary: #1f2937; /* structural ink — primary action fill (§8.5) */
+  --primary-foreground: #f8fafc; /* ink-inverse */
+  --secondary: #eaf0ff; /* soft */
+  --secondary-foreground: #374151;
+  --muted: #eaf0ff; /* soft */
+  --muted-foreground: #4b5563; /* ink-secondary */
+  --accent: #d6e6ff; /* tint — shadcn's hover/selected wash. NOT the Brand
+                        Manual signature accent; see the naming note above. */
+  --accent-foreground: #1f2937; /* ink on tint */
   --destructive: #d92d20; /* error */
-  --border: rgba(148, 163, 184, 0.32); /* line (slate glass) */
-  --input: rgba(148, 163, 184, 0.56); /* line-strong */
+  --border: rgba(148, 163, 184, 0.32); /* border-soft */
+  --input: rgba(148, 163, 184, 0.56); /* border-medium */
   --ring: rgba(148, 163, 184, 0.72); /* focus ring (§8.5) */
 
   --chart-1: #2c3a4e; /* deep slate-ink */
-  --chart-2: #8fa8ea; /* holographic blue */
+  --chart-2: #8fa8ea; /* signature soft-blue */
   --chart-3: #067647; /* emerald */
-  --chart-4: #6e7ca8; /* muted indigo */
+  --chart-4: #6e7ca8; /* muted slate-blue */
   --chart-5: #b54708; /* amber */
 
-  --radius: 0.875rem; /* 14px — v1.2 button/input radius */
+  --radius: 0.875rem; /* 14px — button/input radius */
 
-  /* Sidebar (deep structural-ink frame — was deep indigo) */
-  --sidebar: #1f2937; /* indigo-950 → structural ink */
-  --sidebar-foreground: #f8fafc; /* oni / text-inverse */
-  --sidebar-primary: #d6e6ff; /* accent-blue-soft (active accent) */
+  /* Sidebar — the structural dark frame */
+  --sidebar: #1f2937; /* structure-900 */
+  --sidebar-foreground: #f8fafc; /* ink-inverse */
+  --sidebar-primary: #d6e6ff; /* tint (active accent) */
   --sidebar-primary-foreground: #1f2937;
-  --sidebar-accent: #313e50; /* indigo-800 (active item fill) */
-  --sidebar-accent-foreground: #f8fafc; /* oni */
-  --sidebar-border: #3c4a5e; /* indigo-700 */
-  --sidebar-ring: #8fa8ea; /* holographic soft-blue (active indicator, was gold) */
+  --sidebar-accent: #313e50; /* structure-700 (active item fill) */
+  --sidebar-accent-foreground: #f8fafc; /* ink-inverse */
+  --sidebar-border: #3c4a5e; /* structure-600 */
+  --sidebar-ring: #8fa8ea; /* signature soft-blue (active indicator) */
 }
 
 /* Map next/font CSS vars + shadcn semantic colors onto Tailwind utilities.

@@ -12,7 +12,7 @@ export default function FollowUpPage() {
         description="Tier 1 (24h) and Tier 2 (48h) response SLAs."
         actions={
           <div className="flex items-center gap-3 text-sec">
-            <Link href={ROUTES.followUpToday} className="text-ink-500 hover:text-ink-700">
+            <Link href={ROUTES.followUpToday} className="text-ink-secondary hover:text-ink-secondary">
               Today
             </Link>
             <Link href={ROUTES.followUpOverdue} className="font-medium text-error-text">

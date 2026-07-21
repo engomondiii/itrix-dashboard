@@ -25,18 +25,18 @@ export function RecentLeadsFeed() {
   }
 
   return (
-    <ul className="divide-y divide-line-subtle">
+    <ul className="divide-y divide-border-soft">
       {(data?.results ?? []).map((l) => (
         <li key={l.id}>
           <Link
             href={ROUTES.lead(l.id)}
-            className="flex items-center gap-3 py-2 transition-colors hover:text-sapphire-600"
+            className="flex items-center gap-3 py-2 transition-colors hover:text-ink-primary"
           >
             <LeadTierBadge tier={l.tier} />
-            <span className="truncate text-sec font-medium text-ink-800">
+            <span className="truncate text-sec font-medium text-ink-primary">
               {leadDisplayName(l)}
             </span>
-            <span className="ml-auto shrink-0 text-caption text-ink-400">
+            <span className="ml-auto shrink-0 text-caption text-ink-secondary">
               {formatTimeAgo(l.submittedAt)}
             </span>
           </Link>

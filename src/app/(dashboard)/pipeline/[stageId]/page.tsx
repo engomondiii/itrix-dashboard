@@ -27,7 +27,7 @@ export default function PipelineStagePage({
         icon={KanbanSquareIcon}
         title="Unknown pipeline stage"
         action={
-          <Link href={ROUTES.pipeline} className="text-sec font-medium text-sapphire-600">
+          <Link href={ROUTES.pipeline} className="text-sec font-medium text-ink-primary">
             Back to pipeline
           </Link>
         }
@@ -52,7 +52,7 @@ export default function PipelineStagePage({
         title={status}
         description={`${leads.length} lead${leads.length === 1 ? "" : "s"} in this stage.`}
         actions={
-          <Link href={ROUTES.pipeline} className="text-sec font-medium text-sapphire-600">
+          <Link href={ROUTES.pipeline} className="text-sec font-medium text-ink-primary">
             All stages
           </Link>
         }

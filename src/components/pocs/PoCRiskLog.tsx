@@ -44,19 +44,19 @@ export function PoCRiskLog({
       </div>
 
       {risks.length === 0 ? (
-        <p className="text-caption text-ink-400">No risks logged.</p>
+        <p className="text-caption text-ink-secondary">No risks logged.</p>
       ) : (
         <ul className="space-y-2">
           {risks.map((r) => (
-            <li key={r.id} className="rounded-md bg-surface-sunken p-3">
+            <li key={r.id} className="rounded-md bg-soft p-3">
               <div className="flex items-center justify-between gap-2">
-                <span className="text-sec text-ink-800">{r.description}</span>
+                <span className="text-sec text-ink-primary">{r.description}</span>
                 <div className="flex shrink-0 items-center gap-1.5">
                   <Badge variant={SEVERITY[r.severity]}>{r.severity}</Badge>
                   <DropdownMenu>
                     <DropdownMenuTrigger
                       aria-label="Risk actions"
-                      className="inline-flex size-6 items-center justify-center rounded-md text-ink-400 outline-none hover:bg-muted hover:text-ink-700 focus-visible:ring-2 focus-visible:ring-ring"
+                      className="inline-flex size-6 items-center justify-center rounded-md text-ink-secondary outline-none hover:bg-muted hover:text-ink-secondary focus-visible:ring-2 focus-visible:ring-ring"
                     >
                       <MoreVerticalIcon className="size-4" />
                     </DropdownMenuTrigger>
@@ -77,7 +77,7 @@ export function PoCRiskLog({
                 </div>
               </div>
               {r.mitigation && (
-                <div className="mt-1 text-caption text-ink-500">
+                <div className="mt-1 text-caption text-ink-secondary">
                   Mitigation: {r.mitigation}
                 </div>
               )}

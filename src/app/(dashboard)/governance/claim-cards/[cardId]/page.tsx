@@ -24,7 +24,7 @@ export default function ClaimCardEditPage({
     <>
       <Link
         href={ROUTES.governanceClaimCards}
-        className="mb-4 inline-flex items-center gap-1 text-sec text-sapphire-600 hover:underline"
+        className="mb-4 inline-flex items-center gap-1 text-sec text-ink-primary hover:underline"
       >
         <ArrowLeftIcon className="size-4" /> Back to claim cards
       </Link>

@@ -39,12 +39,12 @@ export function LeadNotes({ leadId, notes }: { leadId: string; notes: LeadNote[]
 
       <ul className="space-y-2">
         {notes.length === 0 ? (
-          <li className="text-caption text-ink-400">No notes yet.</li>
+          <li className="text-caption text-ink-secondary">No notes yet.</li>
         ) : (
           notes.map((n) => (
-            <li key={n.id} className="rounded-md bg-surface-sunken p-3">
-              <div className="text-sec text-ink-800">{n.body}</div>
-              <div className="mt-1 text-caption text-ink-400">
+            <li key={n.id} className="rounded-md bg-soft p-3">
+              <div className="text-sec text-ink-primary">{n.body}</div>
+              <div className="mt-1 text-caption text-ink-secondary">
                 {n.author} · {formatTimeAgo(n.createdAt)}
               </div>
             </li>

@@ -38,7 +38,7 @@ export default function ReportDetailPage({
         icon={FileTextIcon}
         title="Report not found"
         action={
-          <Link href={ROUTES.reporting} className="text-sec font-medium text-sapphire-600">
+          <Link href={ROUTES.reporting} className="text-sec font-medium text-ink-primary">
             Back to reporting
           </Link>
         }
@@ -52,7 +52,7 @@ export default function ReportDetailPage({
         title={`Report · ${data.month}`}
         actions={
           <div className="flex items-center gap-3">
-            <Link href={ROUTES.reporting} className="text-sec font-medium text-sapphire-600">
+            <Link href={ROUTES.reporting} className="text-sec font-medium text-ink-primary">
               All reports
             </Link>
             <Button

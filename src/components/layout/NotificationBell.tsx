@@ -30,7 +30,7 @@ export function NotificationBell() {
         aria-label="Notifications"
         className="relative inline-flex size-7 items-center justify-center rounded-md outline-none hover:bg-muted focus-visible:ring-2 focus-visible:ring-ring"
       >
-        <BellIcon className="size-4 text-ink-500" />
+        <BellIcon className="size-4 text-ink-secondary" />
         {unread > 0 && (
           <span className="absolute top-0.5 right-0.5 flex size-3.5 items-center justify-center rounded-full bg-error text-[9px] font-semibold text-white tabular-nums">
             {unread > 9 ? "9+" : unread}
@@ -47,7 +47,7 @@ export function NotificationBell() {
               type="button"
               onClick={() => markAllRead.mutate()}
               disabled={markAllRead.isPending}
-              className="inline-flex items-center gap-1 text-[11px] font-medium text-sapphire-600 transition-colors hover:text-sapphire-700 disabled:opacity-50"
+              className="inline-flex items-center gap-1 text-[11px] font-medium text-ink-primary transition-colors hover:text-ink-primary disabled:opacity-50"
             >
               <CheckCheckIcon className="size-3" />
               Mark all read
@@ -56,7 +56,7 @@ export function NotificationBell() {
         </div>
         <DropdownMenuSeparator />
         {items.length === 0 ? (
-          <div className="px-2 py-4 text-center text-caption text-ink-400">
+          <div className="px-2 py-4 text-center text-caption text-ink-secondary">
             Nothing new.
           </div>
         ) : (
@@ -74,14 +74,14 @@ export function NotificationBell() {
                 <span
                   className={
                     n.read
-                      ? "truncate text-ink-600"
-                      : "truncate font-medium text-ink-800"
+                      ? "truncate text-ink-secondary"
+                      : "truncate font-medium text-ink-primary"
                   }
                 >
                   {n.title}
                 </span>
               </div>
-              <span className="text-caption text-ink-400">
+              <span className="text-caption text-ink-secondary">
                 {formatTimeAgo(n.createdAt)}
               </span>
             </DropdownMenuItem>

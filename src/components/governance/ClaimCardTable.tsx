@@ -61,15 +61,15 @@ export function ClaimCardTable() {
             <Link
               key={c.id}
               href={ROUTES.governanceClaimCard(c.id)}
-              className="block rounded-md border border-line bg-surface p-3 transition-colors hover:border-sapphire-300"
+              className="block rounded-md border border-border-soft bg-surface p-3 transition-colors hover:border-signature-soft"
             >
               <div className="flex flex-wrap items-center gap-2">
-                <span className="text-sec font-medium text-ink-900">{c.title}</span>
+                <span className="text-sec font-medium text-ink-primary">{c.title}</span>
                 <ClaimLevelBadge level={c.claimLevel} />
                 {!c.isActive && <Badge variant="neutral">Inactive</Badge>}
-                <span className="ml-auto font-mono text-micro text-ink-400">{c.key}</span>
+                <span className="ml-auto font-mono text-micro text-ink-secondary">{c.key}</span>
               </div>
-              <p className="mt-1 line-clamp-2 text-caption text-ink-500">
+              <p className="mt-1 line-clamp-2 text-caption text-ink-secondary">
                 {c.approvedWording}
               </p>
             </Link>

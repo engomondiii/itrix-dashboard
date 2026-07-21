@@ -13,11 +13,11 @@ export interface DataCardProps {
 const DELTA_COLOR: Record<NonNullable<DataCardProps["delta"]>["direction"], string> = {
   up: "text-success",
   down: "text-error",
-  neutral: "text-ink-400",
+  neutral: "text-ink-secondary",
 };
 
 /** Compact KPI card — micro label + large tabular numeral. The value is the
- *  only element allowed to be large (Atelier type discipline). */
+ *  only element allowed to be large (Brand Manual type discipline). */
 export function DataCard({
   label,
   value,
@@ -27,14 +27,14 @@ export function DataCard({
   valueClassName,
 }: DataCardProps) {
   return (
-    <div className={cn("rounded-md border border-line bg-surface p-4 shadow-1", className)}>
-      <div className="text-micro font-semibold uppercase tracking-[0.06em] text-ink-400">
+    <div className={cn("rounded-md border border-border-soft bg-surface p-4 shadow-1", className)}>
+      <div className="text-micro font-semibold uppercase tracking-[0.06em] text-ink-secondary">
         {label}
       </div>
       <div className="mt-1 flex items-baseline gap-2">
         <span
           className={cn(
-            "text-kpi font-semibold tabular-nums text-ink-900",
+            "text-kpi font-semibold tabular-nums text-ink-primary",
             valueClassName,
           )}
         >
@@ -46,7 +46,7 @@ export function DataCard({
           </span>
         )}
       </div>
-      {hint && <div className="mt-1 text-caption text-ink-400">{hint}</div>}
+      {hint && <div className="mt-1 text-caption text-ink-secondary">{hint}</div>}
     </div>
   );
 }

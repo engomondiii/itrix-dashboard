@@ -7,7 +7,7 @@ const DOT: Record<StatusIntent, string> = {
   warning: "bg-warning",
   error: "bg-error",
   info: "bg-info",
-  neutral: "bg-ink-300",
+  neutral: "bg-ink-muted",
 };
 
 /** Small traffic-light status indicator. */

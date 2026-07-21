@@ -20,18 +20,18 @@ export function WeeklySubmissionChart({
       <AreaChart data={data} margin={{ top: 8, right: 8, bottom: 0, left: -16 }}>
         <defs>
           <linearGradient id="subFill" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0%" stopColor="var(--color-sapphire-600)" stopOpacity={0.3} />
-            <stop offset="100%" stopColor="var(--color-sapphire-600)" stopOpacity={0} />
+            <stop offset="0%" stopColor="var(--color-ink-primary)" stopOpacity={0.3} />
+            <stop offset="100%" stopColor="var(--color-ink-primary)" stopOpacity={0} />
           </linearGradient>
         </defs>
-        <CartesianGrid vertical={false} stroke="var(--color-line-subtle)" />
-        <XAxis dataKey="date" tick={{ fontSize: 12, fill: "var(--color-ink-400)" }} axisLine={false} tickLine={false} />
-        <YAxis tick={{ fontSize: 12, fill: "var(--color-ink-400)" }} axisLine={false} tickLine={false} allowDecimals={false} />
+        <CartesianGrid vertical={false} stroke="var(--color-border-soft)" />
+        <XAxis dataKey="date" tick={{ fontSize: 12, fill: "var(--color-ink-secondary)" }} axisLine={false} tickLine={false} />
+        <YAxis tick={{ fontSize: 12, fill: "var(--color-ink-secondary)" }} axisLine={false} tickLine={false} allowDecimals={false} />
         <Tooltip />
         <Area
           type="monotone"
           dataKey="count"
-          stroke="var(--color-sapphire-600)"
+          stroke="var(--color-ink-primary)"
           strokeWidth={2}
           fill="url(#subFill)"
         />

@@ -53,7 +53,7 @@ export function DraftCard({ request }: { request: ApprovalRequest }) {
       : "Approve & deliver";
 
   return (
-    <div className="space-y-3 rounded-lg border border-line bg-surface p-4">
+    <div className="space-y-3 rounded-lg border border-border-soft bg-surface p-4">
       <div className="flex flex-wrap items-center gap-2">
         <Badge variant="neutral">{AGENT_LABEL[request.agentKey]}</Badge>
         <ClaimLevelBadge level={request.claimLevel} />
@@ -65,7 +65,7 @@ export function DraftCard({ request }: { request: ApprovalRequest }) {
           {request.conversationId && (
             <Link
               href={ROUTES.consoleThread(request.conversationId)}
-              className="text-micro text-sapphire-600 hover:underline"
+              className="text-micro text-ink-primary hover:underline"
             >
               Open thread
             </Link>
@@ -73,7 +73,7 @@ export function DraftCard({ request }: { request: ApprovalRequest }) {
           {request.leadId && (
             <Link
               href={ROUTES.lead(request.leadId)}
-              className="text-micro text-sapphire-600 hover:underline"
+              className="text-micro text-ink-primary hover:underline"
             >
               View lead
             </Link>
@@ -86,10 +86,10 @@ export function DraftCard({ request }: { request: ApprovalRequest }) {
           value={draft}
           onChange={(e) => setDraft(e.target.value)}
           rows={5}
-          className="w-full rounded-md border border-line bg-surface p-3 text-sec text-ink-800 outline-none focus:border-sapphire-500"
+          className="w-full rounded-md border border-border-soft bg-surface p-3 text-sec text-ink-primary outline-none focus:border-structure-600"
         />
       ) : (
-        <p className="text-sec whitespace-pre-wrap text-ink-800">
+        <p className="text-sec whitespace-pre-wrap text-ink-primary">
           {request.finalBody || request.draftBody}
         </p>
       )}
@@ -105,7 +105,7 @@ export function DraftCard({ request }: { request: ApprovalRequest }) {
       )}
 
       {awaiting && (
-        <p className="text-caption text-ink-500">
+        <p className="text-caption text-ink-secondary">
           First approved by {request.firstApprover ?? "—"} — needs a different second
           approver.
         </p>
@@ -165,14 +165,14 @@ export function DraftCard({ request }: { request: ApprovalRequest }) {
           )}
         </div>
       ) : (
-        <p className="text-caption text-ink-400">
+        <p className="text-caption text-ink-secondary">
           Approval actions require Admin / Assessment Team.
         </p>
       )}
 
       {rejecting && canAct && (
-        <div className="space-y-2 rounded-md border border-line bg-surface-sunken p-3">
-          <label htmlFor={`reason-${request.id}`} className="text-micro text-ink-500">
+        <div className="space-y-2 rounded-md border border-border-soft bg-soft p-3">
+          <label htmlFor={`reason-${request.id}`} className="text-micro text-ink-secondary">
             Why is this draft rejected? (recorded in the governance audit)
           </label>
           <input
@@ -180,7 +180,7 @@ export function DraftCard({ request }: { request: ApprovalRequest }) {
             value={reason}
             onChange={(e) => setReason(e.target.value)}
             placeholder="e.g. unapproved benchmark figure"
-            className="w-full rounded-md border border-line bg-surface p-2 text-sec text-ink-800 outline-none focus:border-sapphire-500"
+            className="w-full rounded-md border border-border-soft bg-surface p-2 text-sec text-ink-primary outline-none focus:border-structure-600"
           />
           <div className="flex gap-2">
             <Button

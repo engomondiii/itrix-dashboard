@@ -31,7 +31,7 @@ export function NextActionButton({
 
   if (!canControlJourney(user?.role)) {
     return (
-      <p className="mt-2 text-micro text-ink-400">
+      <p className="mt-2 text-micro text-ink-secondary">
         Admin / Assessment Team can perform this action.
       </p>
     );

@@ -24,16 +24,16 @@ const PENDING_STATUSES: NDAStatus[] = ["required", "sent"];
 
 export function NDAStatusCard({ nda }: { nda: NDAListItem }) {
   return (
-    <div className="rounded-md border border-line bg-surface p-4 shadow-1">
+    <div className="rounded-md border border-border-soft bg-surface p-4 shadow-1">
       <div className="flex flex-wrap items-center gap-3">
         <Link
           href={ROUTES.ndaLead(nda.leadId)}
-          className="text-sec font-medium text-ink-900 hover:text-sapphire-600"
+          className="text-sec font-medium text-ink-primary hover:text-ink-primary"
         >
           {nda.leadName}
         </Link>
         <Badge variant={STATUS_VARIANT[nda.status]}>{nda.status}</Badge>
-        <span className="ml-auto text-caption text-ink-400">
+        <span className="ml-auto text-caption text-ink-secondary">
           {nda.signedAt ? `Signed ${formatDate(nda.signedAt)}` : `Requested ${formatDate(nda.requestedAt)}`}
         </span>
       </div>

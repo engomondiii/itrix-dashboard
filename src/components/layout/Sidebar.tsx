@@ -18,14 +18,14 @@ export function Sidebar() {
           href={ROUTES.overview}
           className="flex h-9 items-center gap-2 rounded-md px-1.5 outline-none ring-sidebar-ring focus-visible:ring-2"
         >
-          <span className="flex size-7 shrink-0 items-center justify-center rounded-md bg-sapphire-600 text-card-title font-bold text-white">
+          <span className="flex size-7 shrink-0 items-center justify-center rounded-md bg-ink-primary text-card-title font-bold text-white">
             X
           </span>
           <span className="flex items-baseline gap-1 group-data-[collapsible=icon]:hidden">
             <span className="text-section font-semibold tracking-tight">
               itriX
             </span>
-            <span className="text-micro font-medium uppercase tracking-[0.1em] text-oni-muted">
+            <span className="text-micro font-medium uppercase tracking-[0.1em] text-ink-muted">
               Ops
             </span>
           </span>

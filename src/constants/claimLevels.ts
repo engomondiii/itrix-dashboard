@@ -24,7 +24,7 @@ export const CLAIM_LEVEL_DESCRIPTION: Record<ClaimLevel, string> = {
   5: "Patent scope, exclusivity, valuation, terms — executive approval, never auto.",
 };
 
-type BadgeIntent = "info" | "warning" | "success" | "neutral" | "gold" | "error";
+type BadgeIntent = "info" | "warning" | "success" | "neutral" | "signature" | "error";
 
 export const CLAIM_LEVEL_INTENT: Record<ClaimLevel, BadgeIntent> = {
   1: "neutral",

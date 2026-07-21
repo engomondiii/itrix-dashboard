@@ -53,11 +53,11 @@ export function ProfileForm() {
         <Label htmlFor="profile-email">Email</Label>
         <Input id="profile-email" value={user.email} readOnly disabled />
       </div>
-      <div className="flex items-center justify-between rounded-md border border-line bg-surface px-3 py-2">
-        <span className="text-sec text-ink-500">Role</span>
+      <div className="flex items-center justify-between rounded-md border border-border-soft bg-surface px-3 py-2">
+        <span className="text-sec text-ink-secondary">Role</span>
         <RoleBadge role={user.role} />
       </div>
-      <p className="text-caption text-ink-400">{ROLE_DEFS[user.role].handles}</p>
+      <p className="text-caption text-ink-secondary">{ROLE_DEFS[user.role].handles}</p>
       <Button type="submit" disabled={!dirty || update.isPending}>
         {update.isPending ? "Saving…" : "Save changes"}
       </Button>

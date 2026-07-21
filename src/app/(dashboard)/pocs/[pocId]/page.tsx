@@ -32,7 +32,7 @@ export default function PoCDetailPage({
         icon={FlaskConicalIcon}
         title="PoC not found"
         action={
-          <Link href={ROUTES.pocs} className="text-sec font-medium text-sapphire-600">
+          <Link href={ROUTES.pocs} className="text-sec font-medium text-ink-primary">
             Back to PoCs
           </Link>
         }
@@ -46,7 +46,7 @@ export default function PoCDetailPage({
         title={poc.leadName}
         description="Proof-of-concept tracker."
         actions={
-          <Link href={ROUTES.pocs} className="text-sec font-medium text-sapphire-600">
+          <Link href={ROUTES.pocs} className="text-sec font-medium text-ink-primary">
             All PoCs
           </Link>
         }

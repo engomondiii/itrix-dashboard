@@ -37,6 +37,34 @@ export const ROUTES = {
   analyticsResponseTime: "/analytics/response-time",
   analyticsBottlenecks: "/analytics/bottlenecks",
   analyticsPitch: "/analytics/pitch",
+  // Surface 2 v5.0 — conversation, attachment, streaming and customer analytics
+  analyticsConversations: "/analytics/conversations",
+  analyticsAttachments: "/analytics/attachments",
+  analyticsStreaming: "/analytics/streaming",
+  analyticsCustomers: "/analytics/customers",
+  analyticsSupport: "/analytics/support",
+  analyticsOutcomes: "/analytics/outcomes",
+
+  // Surface 2 v5.0 — live conversation oversight
+  threads: "/threads",
+  thread: (id: string) => `/threads/${id}`,
+  threadsCoverage: "/threads/coverage",
+
+  // Surface 2 v5.0 — attachment review
+  attachments: "/attachments",
+  attachment: (id: string) => `/attachments/${id}`,
+
+  // Surface 2 v5.0 — customer success and support
+  customers: "/customers",
+  customer: (id: string) => `/customers/${id}`,
+  customersOutcomes: "/customers/outcomes",
+  customersReviews: "/customers/reviews",
+  support: "/support",
+  supportRequest: (id: string) => `/support/${id}`,
+
+  // Surface 2 v5.0 — persona registry
+  personas: "/personas",
+  persona: (id: string) => `/personas/${id}`,
 
   // Surface 2 v3.0 — agentic operator core
   console: "/console",
@@ -48,6 +76,7 @@ export const ROUTES = {
   governanceClaimCards: "/governance/claim-cards",
   governanceClaimCard: (id: string) => `/governance/claim-cards/${id}`,
   governanceAudit: "/governance/audit",
+  governanceStreaming: "/governance/streaming",
   settingsGovernance: "/settings/governance",
 
   templates: "/templates",
@@ -102,6 +131,8 @@ export const API = {
   journeyLead: (id: string) => `/api/journey/leads/${id}`,
   journeyAdvance: (id: string) => `/api/journey/leads/${id}/advance`,
   journeyOverview: "/api/journey/overview",
+  // Surface 2 v5.0 — ten-state migration dry run
+  journeyMigrationReport: "/api/journey/migration-report",
   // Surface 2 v3.0 — agent oversight
   agentApprovalQueue: "/api/agents/approval-queue",
   agentApprovalAction: (id: string, action: "approve" | "edit" | "reject") =>
@@ -111,6 +142,30 @@ export const API = {
   // Surface 2 v3.0 — cockpit
   cockpitLead: (id: string) => `/api/cockpit/leads/${id}`,
   cockpitNextAction: (id: string) => `/api/cockpit/leads/${id}/next-action`,
+  // Surface 2 v5.0 — persona registry (team plane only)
+  personas: "/api/personas",
+  persona: (id: string) => `/api/personas/${id}`,
+  cockpitPersona: (id: string) => `/api/cockpit/leads/${id}/persona`,
+  // Surface 2 v5.0 — live conversation oversight
+  cockpitThreads: "/api/cockpit/threads",
+  cockpitThread: (id: string) => `/api/cockpit/threads/${id}`,
+  cockpitThreadsCoverage: "/api/cockpit/threads/coverage",
+  // Surface 2 v5.0 — attachment review
+  cockpitAttachmentQueue: "/api/cockpit/attachments/queue",
+  cockpitAttachment: (id: string) => `/api/cockpit/attachments/${id}`,
+  cockpitAttachmentAction: (id: string, action: "quarantine" | "release") =>
+    `/api/cockpit/attachments/${id}/${action}`,
+  // Surface 2 v5.0 — customer success and support
+  cockpitCustomers: "/api/cockpit/customers",
+  cockpitCustomer: (id: string) => `/api/cockpit/customers/${id}`,
+  cockpitCustomerNextAction: (id: string) => `/api/cockpit/customers/${id}/next-action`,
+  supportQueue: "/api/support/queue",
+  supportRequest: (id: string) => `/api/support/queue/${id}`,
+  supportRequestAction: (id: string, action: "assign" | "resolve" | "escalate") =>
+    `/api/support/queue/${id}/${action}`,
+  successReviews: "/api/success/reviews",
+  // Surface 2 v5.0 — streaming governance
+  cockpitGuardHits: "/api/cockpit/streaming/guard-hits",
   analyticsPitch: "/api/analytics/pitch",
   // Surface 2 v3.0 — console
   consoleConversations: "/api/console/conversations",

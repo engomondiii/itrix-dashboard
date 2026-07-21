@@ -20,16 +20,16 @@ export function LoginForm() {
     login.mutate({ email, password });
   }
 
-  // Shared field styling — translucent indigo wells that brighten on focus.
+  // Shared field styling - translucent structural wells that brighten on focus.
   const fieldClass =
-    "border-oni/15 bg-indigo-950/40 text-oni placeholder:text-oni-muted/50 " +
-    "focus-visible:border-sapphire-300 focus-visible:ring-sapphire-500/40 " +
-    "selection:bg-sapphire-500/30";
+    "border-ink-inverse/15 bg-structure-900/40 text-ink-inverse placeholder:text-ink-muted/50 " +
+    "focus-visible:border-signature-soft focus-visible:ring-structure-600/40 " +
+    "selection:bg-structure-600/30";
 
   return (
     <form onSubmit={onSubmit} className="space-y-4">
       <div className="space-y-1.5">
-        <Label htmlFor="email" className="text-oni-muted">
+        <Label htmlFor="email" className="text-ink-muted">
           Work email
         </Label>
         <Input
@@ -43,7 +43,7 @@ export function LoginForm() {
         />
       </div>
       <div className="space-y-1.5">
-        <Label htmlFor="password" className="text-oni-muted">
+        <Label htmlFor="password" className="text-ink-muted">
           Password
         </Label>
         <Input
@@ -61,7 +61,7 @@ export function LoginForm() {
 
       <Button
         type="submit"
-        className="w-full bg-sapphire-600 text-white shadow-2 hover:bg-sapphire-500 focus-visible:ring-sapphire-500/50"
+        className="w-full bg-ink-primary text-white shadow-2 hover:bg-structure-600 focus-visible:ring-structure-600/50"
         disabled={login.isPending}
       >
         {login.isPending && <Spinner className="text-current" />}
@@ -69,9 +69,9 @@ export function LoginForm() {
       </Button>
 
       {siteConfig.useMocks && (
-        <p className="rounded-md border border-gold-500/25 bg-gold-500/10 px-3 py-2 text-caption text-gold-100">
+        <p className="rounded-md border border-signature/25 bg-signature/10 px-3 py-2 text-caption text-tint">
           Mock mode — any credentials sign you in. Try{" "}
-          <span className="font-mono text-gold-50">admin@itrix.example</span>.
+          <span className="font-mono text-soft">admin@itrix.example</span>.
         </p>
       )}
     </form>

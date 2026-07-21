@@ -15,13 +15,13 @@ export function AgentRunResult({ result }: { result: AgentRunResultType }) {
     result.governanceStatus === "under_review" || result.governanceStatus === "pending";
 
   return (
-    <div className="space-y-2 rounded-md border border-line bg-surface p-3">
+    <div className="space-y-2 rounded-md border border-border-soft bg-surface p-3">
       <div className="flex flex-wrap items-center gap-2">
         <Badge variant="neutral">{AGENT_LABEL[result.agentKey]}</Badge>
         <ClaimLevelBadge level={result.claimLevel} />
         <GovernanceStatusPill status={result.governanceStatus} />
       </div>
-      <p className="text-sec text-ink-700">{summary}</p>
+      <p className="text-sec text-ink-secondary">{summary}</p>
       {queued ? (
         <p className="text-caption text-warning-text">
           Queued for approval — it reaches the client only once cleared in the{" "}
@@ -31,7 +31,7 @@ export function AgentRunResult({ result }: { result: AgentRunResultType }) {
           .
         </p>
       ) : (
-        <p className="text-caption text-ink-500">
+        <p className="text-caption text-ink-secondary">
           Auto-approved — delivered without human review. See the{" "}
           <Link href={ROUTES.agentRuns} className="font-medium underline">
             agent run log

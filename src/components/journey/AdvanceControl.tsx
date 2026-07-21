@@ -27,7 +27,7 @@ export function AdvanceControl({
 
   if (!canControlJourney(user?.role)) {
     return (
-      <p className="text-caption text-ink-400">
+      <p className="text-caption text-ink-secondary">
         Advancing a journey is restricted to Admin / Assessment Team.
       </p>
     );
@@ -36,7 +36,7 @@ export function AdvanceControl({
   const events = eventsFromState(state);
   if (events.length === 0) {
     return (
-      <p className="text-caption text-ink-400">No further transitions from this state.</p>
+      <p className="text-caption text-ink-secondary">No further transitions from this state.</p>
     );
   }
 

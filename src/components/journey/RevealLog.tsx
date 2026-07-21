@@ -8,7 +8,12 @@ import {
 import type { JourneyTransition } from "@/types/journey";
 import { cn } from "@/lib/utils";
 
-/** The four reveals ①–④, marked achieved where a transition unlocked them. */
+/**
+ * The six reveals ①–⑥, marked achieved where a transition unlocked them.
+ *
+ * v5.0 added ⑤ success overlay (fires at the FIRST PAYMENT, not at license-out)
+ * and ⑥ customer-success home (contract executed).
+ */
 export function RevealLog({ transitions }: { transitions: JourneyTransition[] }) {
   const achieved = new Set(transitions.map((t) => t.reveal).filter(Boolean));
 
@@ -21,13 +26,13 @@ export function RevealLog({ transitions }: { transitions: JourneyTransition[] })
             <span
               className={cn(
                 "flex size-5 shrink-0 items-center justify-center rounded-full",
-                done ? "bg-success-soft text-success-text" : "bg-muted text-ink-400",
+                done ? "bg-success-soft text-success-text" : "bg-muted text-ink-secondary",
               )}
             >
               {done ? <CheckIcon className="size-3" /> : <LockIcon className="size-3" />}
             </span>
-            <span className="tabular-nums text-ink-400">{REVEAL_ORDINAL[surface]}</span>
-            <span className={done ? "text-ink-800" : "text-ink-400"}>
+            <span className="tabular-nums text-ink-secondary">{REVEAL_ORDINAL[surface]}</span>
+            <span className={done ? "text-ink-primary" : "text-ink-secondary"}>
               {REVEAL_SURFACE_LABEL[surface]}
             </span>
           </li>

@@ -23,7 +23,7 @@ export function NDAActionsMenu({ leadId }: { leadId: string }) {
         <DropdownMenuTrigger
           aria-label="NDA actions"
           disabled={expire.isPending}
-          className="inline-flex size-7 items-center justify-center rounded-md text-ink-400 outline-none hover:bg-muted hover:text-ink-700 focus-visible:ring-2 focus-visible:ring-ring disabled:opacity-50"
+          className="inline-flex size-7 items-center justify-center rounded-md text-ink-secondary outline-none hover:bg-muted hover:text-ink-secondary focus-visible:ring-2 focus-visible:ring-ring disabled:opacity-50"
         >
           <MoreVerticalIcon className="size-4" />
         </DropdownMenuTrigger>

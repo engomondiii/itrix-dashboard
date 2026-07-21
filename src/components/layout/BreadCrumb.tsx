@@ -33,11 +33,11 @@ export function BreadCrumb() {
         const label = isIdSegment(seg) ? "Detail" : titleize(seg);
         return (
           <Fragment key={href}>
-            {i > 0 && <ChevronRightIcon className="size-3.5 text-ink-300" />}
+            {i > 0 && <ChevronRightIcon className="size-3.5 text-ink-muted" />}
             {last ? (
-              <span className="font-medium text-ink-700">{label}</span>
+              <span className="font-medium text-ink-secondary">{label}</span>
             ) : (
-              <Link href={href} className="text-ink-500 hover:text-ink-700">
+              <Link href={href} className="text-ink-secondary hover:text-ink-secondary">
                 {label}
               </Link>
             )}

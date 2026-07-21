@@ -35,18 +35,18 @@ export function LiveThread({ conversationId }: { conversationId: string }) {
   return (
     <div className="space-y-4">
       <div className="flex items-center gap-2">
-        <h2 className="text-section font-semibold text-ink-900">{data.title}</h2>
+        <h2 className="text-section font-semibold text-ink-primary">{data.title}</h2>
         <Badge variant="neutral">{CONVERSATION_CONTEXT_LABEL[data.context]}</Badge>
         <div className="ml-auto flex items-center gap-3">
           {data.leadId && (
             <Link
               href={ROUTES.lead(data.leadId)}
-              className="text-micro text-sapphire-600 hover:underline"
+              className="text-micro text-ink-primary hover:underline"
             >
               View lead
             </Link>
           )}
-          <span className="text-micro text-ink-400">
+          <span className="text-micro text-ink-secondary">
             {REALTIME_ENABLED ? "Live" : "Polling"}
           </span>
         </div>

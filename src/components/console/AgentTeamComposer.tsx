@@ -18,23 +18,23 @@ export function AgentTeamComposer({ conversationId }: { conversationId: string }
   }
 
   return (
-    <div className="space-y-2 rounded-md border border-line bg-surface p-3">
+    <div className="space-y-2 rounded-md border border-border-soft bg-surface p-3">
       <textarea
         value={body}
         onChange={(e) => setBody(e.target.value)}
         rows={3}
         placeholder="Reply as the itriX team…"
-        className="w-full resize-y rounded-md border border-line bg-surface p-2 text-sec text-ink-800 outline-none focus:border-sapphire-500"
+        className="w-full resize-y rounded-md border border-border-soft bg-surface p-2 text-sec text-ink-primary outline-none focus:border-structure-600"
       />
       <div className="flex items-center gap-2">
-        <label htmlFor="claim-level" className="text-micro text-ink-400">
+        <label htmlFor="claim-level" className="text-micro text-ink-secondary">
           Claim level
         </label>
         <select
           id="claim-level"
           value={claimLevel}
           onChange={(e) => setClaimLevel(Number(e.target.value))}
-          className="rounded-md border border-line bg-surface px-2 py-1 text-sec text-ink-800"
+          className="rounded-md border border-border-soft bg-surface px-2 py-1 text-sec text-ink-primary"
         >
           {CLAIM_LEVELS.map((l) => (
             <option key={l} value={l}>
@@ -51,7 +51,7 @@ export function AgentTeamComposer({ conversationId }: { conversationId: string }
           Send (governed)
         </Button>
       </div>
-      <p className="text-micro text-ink-400">
+      <p className="text-micro text-ink-secondary">
         Every team message passes the same governance pass as the agents. Level 3+ is held
         for approval.
       </p>

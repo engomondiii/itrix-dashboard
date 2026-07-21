@@ -36,6 +36,43 @@ function seed(): Notification[] {
       read: true,
       createdAt: new Date(now - 6 * 3600_000).toISOString(),
     },
+    // v5.0 — the events that only exist now that Surface 1 is a live conversation.
+    {
+      id: "n4",
+      kind: "support_sla_breach",
+      title: "Support SLA breached — production inference stalling",
+      body: "Blocking request. Commercial actions are suppressed for this customer.",
+      href: ROUTES.support,
+      read: false,
+      createdAt: new Date(now - 12 * 60_000).toISOString(),
+    },
+    {
+      id: "n5",
+      kind: "attachment_quarantine",
+      title: "Attachment quarantined — legacy-sim.dat",
+      body: "Malware signature matched. Release requires a logged reason.",
+      href: ROUTES.attachments,
+      read: false,
+      createdAt: new Date(now - 40 * 60_000).toISOString(),
+    },
+    {
+      id: "n6",
+      kind: "stream_guard_halt",
+      title: "Stream guard halted a turn",
+      body: "Matched a benchmark-figure pattern mid-stream. Partial text was discarded.",
+      href: ROUTES.governanceStreaming,
+      read: false,
+      createdAt: new Date(now - 55 * 60_000).toISOString(),
+    },
+    {
+      id: "n7",
+      kind: "feedback_risk",
+      title: "Trust signal — a customer asked for a follow-up",
+      body: "Private feedback scored 2/5. Visible to the success team only.",
+      href: ROUTES.customers,
+      read: true,
+      createdAt: new Date(now - 20 * 3600_000).toISOString(),
+    },
   ];
 }
 

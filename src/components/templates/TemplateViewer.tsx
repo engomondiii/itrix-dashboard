@@ -22,7 +22,7 @@ function renderBody(body: string) {
   const parts = body.split(/(\{\{[^}]+\}\})/g);
   return parts.map((p, i) =>
     /^\{\{[^}]+\}\}$/.test(p) ? (
-      <span key={i} className="rounded bg-gold-100 px-1 font-medium text-gold-600">
+      <span key={i} className="rounded bg-tint px-1 font-medium text-structure-600">
         {p}
       </span>
     ) : (
@@ -37,10 +37,10 @@ export function TemplateViewer({ template }: { template: Template }) {
   const [confirming, setConfirming] = useState(false);
 
   return (
-    <div className="rounded-md border border-line bg-surface p-4 shadow-1">
+    <div className="rounded-md border border-border-soft bg-surface p-4 shadow-1">
       <div className="flex items-center justify-between gap-2">
         <div className="flex items-center gap-2">
-          <span className="text-card-title font-semibold text-ink-900">
+          <span className="text-card-title font-semibold text-ink-primary">
             {template.name}
           </span>
           <Badge variant="neutral">{TEMPLATE_KIND_LABELS[template.kind]}</Badge>
@@ -50,7 +50,7 @@ export function TemplateViewer({ template }: { template: Template }) {
           <DropdownMenu>
             <DropdownMenuTrigger
               aria-label="Template actions"
-              className="inline-flex size-7 items-center justify-center rounded-md text-ink-400 outline-none hover:bg-muted hover:text-ink-700 focus-visible:ring-2 focus-visible:ring-ring"
+              className="inline-flex size-7 items-center justify-center rounded-md text-ink-secondary outline-none hover:bg-muted hover:text-ink-secondary focus-visible:ring-2 focus-visible:ring-ring"
             >
               <MoreVerticalIcon className="size-4" />
             </DropdownMenuTrigger>
@@ -70,10 +70,10 @@ export function TemplateViewer({ template }: { template: Template }) {
           </DropdownMenu>
         </div>
       </div>
-      <pre className="mt-3 overflow-x-auto rounded-md bg-surface-sunken p-3 font-sans text-sec whitespace-pre-wrap text-ink-700">
+      <pre className="mt-3 overflow-x-auto rounded-md bg-soft p-3 font-sans text-sec whitespace-pre-wrap text-ink-secondary">
         {renderBody(template.body)}
       </pre>
-      <div className="mt-2 text-caption text-ink-400">
+      <div className="mt-2 text-caption text-ink-secondary">
         {template.variables.length} variable
         {template.variables.length === 1 ? "" : "s"} · updated{" "}
         {formatDate(template.updatedAt)}

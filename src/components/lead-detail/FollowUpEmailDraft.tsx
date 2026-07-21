@@ -94,7 +94,7 @@ export function FollowUpEmailDraft({ lead }: { lead: Lead }) {
   return (
     <div className="space-y-2">
       <div className="flex items-center justify-between gap-2">
-        <div className="text-micro font-semibold uppercase tracking-[0.06em] text-ink-400">
+        <div className="text-micro font-semibold uppercase tracking-[0.06em] text-ink-secondary">
           Subject
         </div>
         <div className="flex items-center gap-1">
@@ -169,14 +169,14 @@ export function FollowUpEmailDraft({ lead }: { lead: Lead }) {
             {attachments.map((a, i) => (
               <li
                 key={`${a}-${i}`}
-                className="flex items-center gap-1.5 rounded-md bg-surface-sunken px-2 py-1 text-caption text-ink-700"
+                className="flex items-center gap-1.5 rounded-md bg-soft px-2 py-1 text-caption text-ink-secondary"
               >
-                <PaperclipIcon className="size-3.5 shrink-0 text-ink-400" />
+                <PaperclipIcon className="size-3.5 shrink-0 text-ink-secondary" />
                 <span className="truncate">{a}</span>
                 <button
                   type="button"
                   onClick={() => setAttachments((prev) => prev.filter((_, j) => j !== i))}
-                  className="ml-auto text-ink-400 hover:text-ink-700"
+                  className="ml-auto text-ink-secondary hover:text-ink-secondary"
                   aria-label={`Remove ${a}`}
                 >
                   <XIcon className="size-3.5" />
@@ -188,7 +188,7 @@ export function FollowUpEmailDraft({ lead }: { lead: Lead }) {
       </div>
 
       {/* Schedule for later */}
-      <label className="flex items-center gap-2 text-sec text-ink-700">
+      <label className="flex items-center gap-2 text-sec text-ink-secondary">
         <input
           type="checkbox"
           checked={scheduleLater}

@@ -19,7 +19,7 @@ export function LeadTierNav({ current }: { current?: Tier }) {
   ];
 
   return (
-    <nav className="flex items-center gap-1 border-b border-line" aria-label="Lead tiers">
+    <nav className="flex items-center gap-1 border-b border-border-soft" aria-label="Lead tiers">
       {tabs.map((t) => (
         <Link
           key={t.href}
@@ -27,12 +27,12 @@ export function LeadTierNav({ current }: { current?: Tier }) {
           aria-current={t.active ? "page" : undefined}
           className={cn(
             "relative px-3 py-2 text-sec font-medium transition-colors",
-            t.active ? "text-ink-900" : "text-ink-500 hover:text-ink-700",
+            t.active ? "text-ink-primary" : "text-ink-secondary hover:text-ink-secondary",
           )}
         >
           {t.label}
           {t.active && (
-            <span className="absolute inset-x-2 -bottom-px h-0.5 rounded-full bg-gold-500" />
+            <span className="absolute inset-x-2 -bottom-px h-0.5 rounded-full bg-signature" />
           )}
         </Link>
       ))}

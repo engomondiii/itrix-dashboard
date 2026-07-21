@@ -29,7 +29,7 @@ export function LeadTableRow({
   const anonymous = !lead.company?.trim() && !lead.visitorName?.trim();
 
   return (
-    <TableRow data-selected={selected} className="data-[selected=true]:bg-sapphire-100">
+    <TableRow data-selected={selected} className="data-[selected=true]:bg-tint">
       <TableCell>
         <Checkbox
           checked={selected}
@@ -42,19 +42,19 @@ export function LeadTableRow({
           href={ROUTES.lead(lead.id)}
           className={
             anonymous
-              ? "font-medium text-ink-500 italic hover:text-sapphire-600"
-              : "font-medium text-ink-900 hover:text-sapphire-600"
+              ? "font-medium text-ink-secondary italic hover:text-ink-primary"
+              : "font-medium text-ink-primary hover:text-ink-primary"
           }
         >
           {name}
         </Link>
-        {subtitle && <div className="text-caption text-ink-400">{subtitle}</div>}
+        {subtitle && <div className="text-caption text-ink-secondary">{subtitle}</div>}
       </TableCell>
-      <TableCell className="hidden text-ink-500 lg:table-cell">{lead.industry}</TableCell>
+      <TableCell className="hidden text-ink-secondary lg:table-cell">{lead.industry}</TableCell>
       <TableCell className="hidden md:table-cell">
         <LeadProductRouteBadge route={lead.productRoute} />
       </TableCell>
-      <TableCell className="hidden text-ink-500 xl:table-cell">{lead.primaryPain}</TableCell>
+      <TableCell className="hidden text-ink-secondary xl:table-cell">{lead.primaryPain}</TableCell>
       <TableCell>
         <LeadTierBadge tier={lead.tier} />
       </TableCell>
@@ -67,7 +67,7 @@ export function LeadTableRow({
       <TableCell className="hidden lg:table-cell">
         <LeadOwnerAvatar owner={lead.owner} />
       </TableCell>
-      <TableCell className="hidden text-right text-caption tabular-nums text-ink-400 sm:table-cell">
+      <TableCell className="hidden text-right text-caption tabular-nums text-ink-secondary sm:table-cell">
         {formatDate(lead.submittedAt)}
       </TableCell>
     </TableRow>

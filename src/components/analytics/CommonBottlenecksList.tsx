@@ -7,10 +7,10 @@ export function CommonBottlenecksList({ data }: { data: BottleneckPattern[] }) {
       {data.map((b) => (
         <li key={b.phrase}>
           <div className="flex items-center justify-between gap-3 text-sec">
-            <span className="text-ink-700">{b.phrase}</span>
-            <span className="shrink-0 tabular-nums text-ink-400">{b.count}</span>
+            <span className="text-ink-secondary">{b.phrase}</span>
+            <span className="shrink-0 tabular-nums text-ink-secondary">{b.count}</span>
           </div>
-          <div className="mt-1 h-1.5 overflow-hidden rounded-full bg-surface-sunken">
+          <div className="mt-1 h-1.5 overflow-hidden rounded-full bg-soft">
             <div
               className="h-full rounded-full bg-chart-2"
               style={{ width: `${(b.count / max) * 100}%` }}

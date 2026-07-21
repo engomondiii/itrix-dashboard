@@ -59,7 +59,7 @@ export function AgentRunLogTable() {
   return (
     <div className="space-y-2">
       {data.map((r) => (
-        <div key={r.id} className="rounded-md border border-line bg-surface p-3">
+        <div key={r.id} className="rounded-md border border-border-soft bg-surface p-3">
           <div className="flex flex-wrap items-center gap-2">
             <Badge variant="neutral">
               {AGENT_LABEL[r.agentKey as AgentKey] ?? r.agentKey}
@@ -72,12 +72,12 @@ export function AgentRunLogTable() {
             {r.leadId && (
               <Link
                 href={ROUTES.lead(r.leadId)}
-                className="text-micro text-sapphire-600 hover:underline"
+                className="text-micro text-ink-primary hover:underline"
               >
                 View lead
               </Link>
             )}
-            <span className="ml-auto text-micro text-ink-400">
+            <span className="ml-auto text-micro text-ink-secondary">
               {formatDuration(r.durationMs)} · {formatAt(r.at)}
             </span>
           </div>

@@ -17,9 +17,9 @@ export function PageHeader({ title, description, actions, className }: PageHeade
       )}
     >
       <div>
-        <h1 className="text-page-title font-semibold text-ink-900">{title}</h1>
+        <h1 className="text-page-title font-semibold text-ink-primary">{title}</h1>
         {description && (
-          <p className="mt-0.5 text-sec text-ink-500">{description}</p>
+          <p className="mt-0.5 text-sec text-ink-secondary">{description}</p>
         )}
       </div>
       {actions && (

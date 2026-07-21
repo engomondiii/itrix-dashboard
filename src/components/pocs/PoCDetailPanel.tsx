@@ -32,29 +32,29 @@ export function PoCDetailPanel({ poc }: { poc: PoC }) {
             <CardContent className="space-y-3">
               {poc.scope && (
                 <div>
-                  <div className="text-micro font-semibold uppercase tracking-[0.06em] text-ink-400">
+                  <div className="text-micro font-semibold uppercase tracking-[0.06em] text-ink-secondary">
                     Scope
                   </div>
-                  <p className="text-sec text-ink-700">{poc.scope}</p>
+                  <p className="text-sec text-ink-secondary">{poc.scope}</p>
                 </div>
               )}
               {poc.successMetrics && (
                 <div>
-                  <div className="text-micro font-semibold uppercase tracking-[0.06em] text-ink-400">
+                  <div className="text-micro font-semibold uppercase tracking-[0.06em] text-ink-secondary">
                     Success metrics
                   </div>
-                  <p className="text-sec text-ink-700">{poc.successMetrics}</p>
+                  <p className="text-sec text-ink-secondary">{poc.successMetrics}</p>
                 </div>
               )}
-              <div className="flex flex-wrap gap-x-6 gap-y-1 text-sec text-ink-700">
+              <div className="flex flex-wrap gap-x-6 gap-y-1 text-sec text-ink-secondary">
                 {poc.durationWeeks && (
                   <span>
-                    <span className="text-ink-400">Duration:</span> {poc.durationWeeks} weeks
+                    <span className="text-ink-secondary">Duration:</span> {poc.durationWeeks} weeks
                   </span>
                 )}
                 {poc.startDate && (
                   <span>
-                    <span className="text-ink-400">Starts:</span> {poc.startDate}
+                    <span className="text-ink-secondary">Starts:</span> {poc.startDate}
                   </span>
                 )}
               </div>
@@ -88,7 +88,7 @@ export function PoCDetailPanel({ poc }: { poc: PoC }) {
                 <DropdownMenu>
                   <DropdownMenuTrigger
                     aria-label="Change PoC status"
-                    className="inline-flex size-7 items-center justify-center rounded-md text-ink-400 outline-none hover:bg-muted hover:text-ink-700 focus-visible:ring-2 focus-visible:ring-ring"
+                    className="inline-flex size-7 items-center justify-center rounded-md text-ink-secondary outline-none hover:bg-muted hover:text-ink-secondary focus-visible:ring-2 focus-visible:ring-ring"
                   >
                     <ChevronDownIcon className="size-4" />
                   </DropdownMenuTrigger>
@@ -111,7 +111,7 @@ export function PoCDetailPanel({ poc }: { poc: PoC }) {
             <PoCMilestoneTracker pocId={poc.id} milestones={poc.milestones} />
             <Link
               href={ROUTES.lead(poc.leadId)}
-              className="inline-block text-sec font-medium text-sapphire-600"
+              className="inline-block text-sec font-medium text-ink-primary"
             >
               Open lead →
             </Link>

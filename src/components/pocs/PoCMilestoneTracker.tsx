@@ -25,7 +25,7 @@ import {
 const ICON: Record<MilestoneStatus, { Icon: typeof CircleIcon; cls: string }> = {
   done: { Icon: CheckCircle2Icon, cls: "text-success" },
   in_progress: { Icon: CircleDashedIcon, cls: "text-warning" },
-  pending: { Icon: CircleIcon, cls: "text-ink-300" },
+  pending: { Icon: CircleIcon, cls: "text-ink-muted" },
   missed: { Icon: XCircleIcon, cls: "text-error" },
 };
 
@@ -54,7 +54,7 @@ export function PoCMilestoneTracker({
             <Icon className={`size-4 shrink-0 ${cls}`} />
             <span
               className={
-                m.status === "pending" ? "text-ink-500" : "text-ink-800"
+                m.status === "pending" ? "text-ink-secondary" : "text-ink-primary"
               }
             >
               {m.label}
@@ -62,7 +62,7 @@ export function PoCMilestoneTracker({
             <DropdownMenu>
               <DropdownMenuTrigger
                 aria-label={`Set status for ${m.label}`}
-                className="ml-auto inline-flex items-center gap-0.5 rounded-md px-1.5 py-0.5 text-caption text-ink-400 outline-none hover:bg-muted hover:text-ink-700 focus-visible:ring-2 focus-visible:ring-ring"
+                className="ml-auto inline-flex items-center gap-0.5 rounded-md px-1.5 py-0.5 text-caption text-ink-secondary outline-none hover:bg-muted hover:text-ink-secondary focus-visible:ring-2 focus-visible:ring-ring"
               >
                 {LABELS[m.status]}
                 <ChevronDownIcon className="size-3" />

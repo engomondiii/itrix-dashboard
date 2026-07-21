@@ -1,4 +1,6 @@
 import type { JourneyState } from "@/constants/journeyStates";
+import type { StopReason } from "@/constants/listeningDimensions";
+import type { ScanVerdict } from "@/types/attachment";
 
 /** Pitch-room engagement telemetry (backend `pitch_engagement_for_lead`). Internal-only. */
 export interface PitchEngagement {
@@ -45,6 +47,32 @@ export interface CockpitLead {
   /** Internal directional signal ONLY — never shown to a visitor. */
   licenseOutProbability?: number;
   ladderStage?: string;
+
+  /**
+   * v5.0 reading fields (Surface 2 v5.0 §2.1).
+   *
+   * All four exist because Surface 1 became a live conversation: the cockpit now
+   * has to answer "what has this thread actually gathered, what did it ask, what
+   * did they upload, and are they in front of it right now?" — none of which the
+   * v3.0 field set could express.
+   *
+   * `coverage`, `loop.stopReason` and `riskFlags` are on the client-plane
+   * serializer deny-list and must never be echoed into a portal payload or an
+   * intervention (Architecture v2.6 §10.5, §7.4).
+   */
+  threadId?: string | null;
+  /** Whether the visitor is connected to their thread right now. */
+  live?: boolean;
+  coverage?: { covered: number; partial: number; unknown: number };
+  loop?: {
+    open: boolean;
+    questionsAsked: number;
+    budgetRemaining: number;
+    stopReason: StopReason | null;
+  };
+  attachments?: { count: number; worstScan: ScanVerdict | null };
+  /** Sensitivity alerts. Team plane only. */
+  riskFlags?: string[];
 }
 
 export interface CockpitNextAction {

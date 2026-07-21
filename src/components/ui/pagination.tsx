@@ -34,7 +34,7 @@ export function Pagination({
 
   return (
     <div className={cn("flex items-center justify-between gap-4", className)}>
-      <span className="text-caption tabular-nums text-ink-500">{summary}</span>
+      <span className="text-caption tabular-nums text-ink-secondary">{summary}</span>
       <div className="flex items-center gap-1">
         <Button
           variant="outline"

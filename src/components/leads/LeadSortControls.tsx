@@ -26,12 +26,12 @@ export function SortableHeader({
         type="button"
         onClick={() => toggleSort(sortKey)}
         className={cn(
-          "inline-flex items-center gap-1 transition-colors hover:text-ink-900",
-          activeSort ? "text-ink-900" : "text-ink-700",
+          "inline-flex items-center gap-1 transition-colors hover:text-ink-primary",
+          activeSort ? "text-ink-primary" : "text-ink-secondary",
         )}
       >
         {children}
-        <Icon className={cn("size-3.5", activeSort ? "text-sapphire-600" : "text-ink-400")} />
+        <Icon className={cn("size-3.5", activeSort ? "text-ink-primary" : "text-ink-secondary")} />
       </button>
     </TableHead>
   );

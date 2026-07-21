@@ -3,7 +3,7 @@
 import { Toaster as Sonner, type ToasterProps } from "sonner"
 import { CircleCheckIcon, InfoIcon, TriangleAlertIcon, OctagonXIcon, Loader2Icon } from "lucide-react"
 
-// Atelier Indigo is a single light system — pin sonner to light (no next-themes).
+// itriX is a single light system — pin sonner to light (no next-themes).
 const Toaster = ({ ...props }: ToasterProps) => {
   return (
     <Sonner

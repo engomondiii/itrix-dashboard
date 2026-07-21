@@ -23,7 +23,7 @@ export function PipelineSummaryCards({ m }: { m: OverviewMetrics }) {
         <DataCard label="New leads" value={m.newLeads} />
       </TileLink>
       <TileLink href={ROUTES.leadsTier(1)}>
-        <DataCard label="Tier 1" value={m.tier1Count} valueClassName="text-sapphire-600" />
+        <DataCard label="Tier 1" value={m.tier1Count} valueClassName="text-ink-primary" />
       </TileLink>
       <TileLink href={ROUTES.leadsTier(2)}>
         <DataCard label="Tier 2" value={m.tier2Count} />

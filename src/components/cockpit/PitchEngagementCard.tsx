@@ -2,9 +2,9 @@ import type { PitchEngagement } from "@/types/cockpit";
 
 function Stat({ label, value }: { label: string; value: string | number }) {
   return (
-    <div className="rounded-md bg-surface-sunken px-2.5 py-2">
-      <div className="text-micro text-ink-400">{label}</div>
-      <div className="text-sec font-semibold tabular-nums text-ink-800">{value}</div>
+    <div className="rounded-md bg-soft px-2.5 py-2">
+      <div className="text-micro text-ink-secondary">{label}</div>
+      <div className="text-sec font-semibold tabular-nums text-ink-primary">{value}</div>
     </div>
   );
 }
@@ -12,7 +12,7 @@ function Stat({ label, value }: { label: string; value: string | number }) {
 /** Pitch-room engagement (internal telemetry — never shown to the visitor). */
 export function PitchEngagementCard({ pitch }: { pitch: Partial<PitchEngagement> }) {
   if (!pitch || Object.keys(pitch).length === 0) {
-    return <p className="text-sec text-ink-400">No pitch engagement yet.</p>;
+    return <p className="text-sec text-ink-secondary">No pitch engagement yet.</p>;
   }
   return (
     <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">

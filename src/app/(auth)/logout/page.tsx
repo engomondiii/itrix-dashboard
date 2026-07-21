@@ -14,7 +14,7 @@ export default function LogoutPage() {
   }, []);
 
   return (
-    <div className="flex items-center justify-center gap-2 text-sec text-ink-500">
+    <div className="flex items-center justify-center gap-2 text-sec text-ink-secondary">
       <Spinner /> Signing out…
     </div>
   );

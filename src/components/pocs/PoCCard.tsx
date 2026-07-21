@@ -12,20 +12,20 @@ export function PoCCard({ poc }: { poc: PoC }) {
   return (
     <Link
       href={ROUTES.poc(poc.id)}
-      className="block rounded-md border border-line bg-surface p-4 shadow-1 transition-colors hover:border-sapphire-300"
+      className="block rounded-md border border-border-soft bg-surface p-4 shadow-1 transition-colors hover:border-signature-soft"
     >
       <div className="flex items-center justify-between gap-2">
-        <span className="text-sec font-medium text-ink-900">{poc.leadName}</span>
+        <span className="text-sec font-medium text-ink-primary">{poc.leadName}</span>
         <PoCStatusBadge status={poc.status} />
       </div>
       <div className="mt-3">
-        <div className="flex items-center justify-between text-caption text-ink-500">
+        <div className="flex items-center justify-between text-caption text-ink-secondary">
           <span>Milestones</span>
           <span className="tabular-nums">
             {done}/{total}
           </span>
         </div>
-        <div className="mt-1 h-1.5 overflow-hidden rounded-full bg-surface-sunken">
+        <div className="mt-1 h-1.5 overflow-hidden rounded-full bg-soft">
           <div className="h-full rounded-full bg-success" style={{ width: `${pct}%` }} />
         </div>
       </div>

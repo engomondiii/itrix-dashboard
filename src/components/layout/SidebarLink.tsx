@@ -43,7 +43,7 @@ export function SidebarNavItem({ item }: { item: NavItem }) {
               <SidebarMenuButton isActive={groupActive}>
                 {Icon ? <Icon /> : null}
                 <span>{item.label}</span>
-                <ChevronRightIcon className="ml-auto size-4 shrink-0 text-oni-muted transition-transform duration-200 group-data-[panel-open]/collapsible:rotate-90 group-data-[collapsible=icon]:hidden" />
+                <ChevronRightIcon className="ml-auto size-4 shrink-0 text-ink-muted transition-transform duration-200 group-data-[panel-open]/collapsible:rotate-90 group-data-[collapsible=icon]:hidden" />
               </SidebarMenuButton>
             }
           />

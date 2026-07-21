@@ -26,21 +26,21 @@ export function TeamMemberCard({ member }: { member: TeamMember }) {
   const [confirming, setConfirming] = useState(false);
 
   return (
-    <div className="flex items-center gap-3 rounded-md border border-line bg-surface p-3 shadow-1">
+    <div className="flex items-center gap-3 rounded-md border border-border-soft bg-surface p-3 shadow-1">
       <Avatar className="size-9">
-        <AvatarFallback className="bg-sapphire-100 text-caption font-semibold text-sapphire-700">
+        <AvatarFallback className="bg-tint text-caption font-semibold text-ink-primary">
           {initials(member.name)}
         </AvatarFallback>
       </Avatar>
       <div className="min-w-0">
-        <div className="truncate text-sec font-medium text-ink-900">
+        <div className="truncate text-sec font-medium text-ink-primary">
           {member.name}
         </div>
-        <div className="truncate text-caption text-ink-400">{member.email}</div>
+        <div className="truncate text-caption text-ink-secondary">{member.email}</div>
       </div>
       <div className="ml-auto flex shrink-0 items-center gap-3">
         {member.openLeads != null && (
-          <span className="text-caption tabular-nums text-ink-500">
+          <span className="text-caption tabular-nums text-ink-secondary">
             {member.openLeads} open
           </span>
         )}
@@ -48,7 +48,7 @@ export function TeamMemberCard({ member }: { member: TeamMember }) {
         <DropdownMenu>
           <DropdownMenuTrigger
             aria-label="Member actions"
-            className="inline-flex size-7 items-center justify-center rounded-md text-ink-400 outline-none hover:bg-muted hover:text-ink-700 focus-visible:ring-2 focus-visible:ring-ring"
+            className="inline-flex size-7 items-center justify-center rounded-md text-ink-secondary outline-none hover:bg-muted hover:text-ink-secondary focus-visible:ring-2 focus-visible:ring-ring"
           >
             <MoreVerticalIcon className="size-4" />
           </DropdownMenuTrigger>

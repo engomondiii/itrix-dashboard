@@ -21,12 +21,12 @@ export function FunnelChart({ stages }: { stages: FunnelStage[] }) {
           type="category"
           dataKey="stage"
           width={110}
-          tick={{ fontSize: 12, fill: "var(--color-ink-500)" }}
+          tick={{ fontSize: 12, fill: "var(--color-ink-secondary)" }}
           axisLine={false}
           tickLine={false}
         />
-        <Tooltip cursor={{ fill: "var(--color-sapphire-50)" }} />
-        <Bar dataKey="count" radius={[0, 4, 4, 0]} fill="var(--color-sapphire-600)" />
+        <Tooltip cursor={{ fill: "var(--color-soft)" }} />
+        <Bar dataKey="count" radius={[0, 4, 4, 0]} fill="var(--color-ink-primary)" />
       </BarChart>
     </ResponsiveContainer>
   );

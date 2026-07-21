@@ -19,7 +19,7 @@ export default function GovernanceSettingsPage() {
             <CardTitle>Auto-approve threshold</CardTitle>
           </CardHeader>
           <CardContent className="space-y-2">
-            <p className="text-sec text-ink-700">
+            <p className="text-sec text-ink-secondary">
               Drafts at or below{" "}
               <strong>
                 Level {AGENT_AUTO_APPROVE_MAX_LEVEL} ·{" "}
@@ -27,7 +27,7 @@ export default function GovernanceSettingsPage() {
               </strong>{" "}
               deliver automatically. Anything above queues for a human.
             </p>
-            <p className="text-caption text-ink-500">
+            <p className="text-caption text-ink-secondary">
               Configured server-side via <code>AGENT_AUTO_APPROVE_MAX_LEVEL</code>.
             </p>
           </CardContent>
@@ -36,7 +36,7 @@ export default function GovernanceSettingsPage() {
           <CardHeader>
             <CardTitle>Approval routing</CardTitle>
           </CardHeader>
-          <CardContent className="space-y-2 text-sec text-ink-700">
+          <CardContent className="space-y-2 text-sec text-ink-secondary">
             <p>Level 3 (technical / performance) — drafted with citation, one approver.</p>
             <p>
               Levels {SECOND_APPROVER_LEVELS.join(" & ")} (commercial / legal) — mandatory

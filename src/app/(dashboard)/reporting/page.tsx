@@ -43,13 +43,13 @@ export default function ReportingPage() {
             <Link
               key={r.id}
               href={ROUTES.report(r.id)}
-              className="rounded-md border border-line bg-surface p-4 shadow-1 transition-colors hover:border-sapphire-300"
+              className="rounded-md border border-border-soft bg-surface p-4 shadow-1 transition-colors hover:border-signature-soft"
             >
-              <div className="flex items-center gap-2 text-card-title font-semibold text-ink-900">
-                <FileTextIcon className="size-4 text-ink-400" />
+              <div className="flex items-center gap-2 text-card-title font-semibold text-ink-primary">
+                <FileTextIcon className="size-4 text-ink-secondary" />
                 {r.month}
               </div>
-              <div className="mt-1 text-caption text-ink-400">
+              <div className="mt-1 text-caption text-ink-secondary">
                 {r.sections.length} sections · generated {formatDate(r.generatedAt)}
               </div>
             </Link>

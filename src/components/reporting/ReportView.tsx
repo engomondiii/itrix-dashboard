@@ -62,7 +62,7 @@ export function ReportView({ report }: { report: MonthlyReport }) {
               <DropdownMenu>
                 <DropdownMenuTrigger
                   aria-label="Section actions"
-                  className="inline-flex size-7 items-center justify-center rounded-md text-ink-400 outline-none hover:bg-muted hover:text-ink-700 focus-visible:ring-2 focus-visible:ring-ring"
+                  className="inline-flex size-7 items-center justify-center rounded-md text-ink-secondary outline-none hover:bg-muted hover:text-ink-secondary focus-visible:ring-2 focus-visible:ring-ring"
                 >
                   <MoreVerticalIcon className="size-4" />
                 </DropdownMenuTrigger>
@@ -83,7 +83,7 @@ export function ReportView({ report }: { report: MonthlyReport }) {
             </div>
           </CardHeader>
           <CardContent>
-            <p className="text-body whitespace-pre-wrap text-ink-700">{s.body}</p>
+            <p className="text-body whitespace-pre-wrap text-ink-secondary">{s.body}</p>
           </CardContent>
         </Card>
       ))}

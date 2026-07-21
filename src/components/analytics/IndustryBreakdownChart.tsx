@@ -20,11 +20,11 @@ export function IndustryBreakdownChart({ data }: { data: IndustryBreakdown[] }) 
           type="category"
           dataKey="industry"
           width={180}
-          tick={{ fontSize: 11, fill: "var(--color-ink-500)" }}
+          tick={{ fontSize: 11, fill: "var(--color-ink-secondary)" }}
           axisLine={false}
           tickLine={false}
         />
-        <Tooltip cursor={{ fill: "var(--color-sapphire-50)" }} />
+        <Tooltip cursor={{ fill: "var(--color-soft)" }} />
         <Bar dataKey="count" radius={[0, 4, 4, 0]} fill="var(--color-chart-4)" />
       </BarChart>
     </ResponsiveContainer>

@@ -43,13 +43,13 @@ export function JourneyDistribution() {
           const v = data.distribution[s] ?? 0;
           return (
             <div key={s}>
-              <div className="flex justify-between text-caption text-ink-600">
+              <div className="flex justify-between text-caption text-ink-secondary">
                 <span>{JOURNEY_STATE_LABEL[s]}</span>
                 <span className="tabular-nums">{v}</span>
               </div>
-              <div className="mt-1 h-1.5 overflow-hidden rounded-full bg-surface-sunken">
+              <div className="mt-1 h-1.5 overflow-hidden rounded-full bg-soft">
                 <div
-                  className="h-full rounded-full bg-sapphire-600"
+                  className="h-full rounded-full bg-ink-primary"
                   style={{ width: `${(v / max) * 100}%` }}
                 />
               </div>

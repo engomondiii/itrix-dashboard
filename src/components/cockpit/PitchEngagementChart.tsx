@@ -8,9 +8,9 @@ import { usePitchAnalytics } from "@/hooks/useCockpit";
 
 function Stat({ label, value }: { label: string; value: number }) {
   return (
-    <div className="rounded-lg border border-line bg-surface p-4">
-      <div className="text-micro text-ink-400">{label}</div>
-      <div className="text-kpi font-semibold tabular-nums text-ink-900">{value}</div>
+    <div className="rounded-lg border border-border-soft bg-surface p-4">
+      <div className="text-micro text-ink-secondary">{label}</div>
+      <div className="text-kpi font-semibold tabular-nums text-ink-primary">{value}</div>
     </div>
   );
 }
@@ -45,20 +45,20 @@ export function PitchEngagementChart() {
         <Stat label="CTA clicks" value={data.totalCtaClicks} />
         <Stat label="Questions asked" value={data.totalQuestionsAsked} />
       </div>
-      <div className="rounded-lg border border-line bg-surface p-4">
-        <div className="mb-3 text-micro font-semibold uppercase tracking-[0.06em] text-ink-400">
+      <div className="rounded-lg border border-border-soft bg-surface p-4">
+        <div className="mb-3 text-micro font-semibold uppercase tracking-[0.06em] text-ink-secondary">
           By pitch type
         </div>
         <div className="space-y-2">
           {entries.map(([type, v]) => (
             <div key={type}>
-              <div className="flex justify-between text-caption text-ink-600">
+              <div className="flex justify-between text-caption text-ink-secondary">
                 <span>{type}</span>
                 <span className="tabular-nums">{v}</span>
               </div>
-              <div className="mt-1 h-2 overflow-hidden rounded-full bg-surface-sunken">
+              <div className="mt-1 h-2 overflow-hidden rounded-full bg-soft">
                 <div
-                  className="h-full rounded-full bg-sapphire-600"
+                  className="h-full rounded-full bg-ink-primary"
                   style={{ width: `${(v / max) * 100}%` }}
                 />
               </div>
@@ -66,7 +66,7 @@ export function PitchEngagementChart() {
           ))}
         </div>
       </div>
-      <p className="text-micro text-ink-400">
+      <p className="text-micro text-ink-secondary">
         Internal telemetry only — never surfaced to the visitor.
       </p>
     </div>

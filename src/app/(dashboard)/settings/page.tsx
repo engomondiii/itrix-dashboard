@@ -36,14 +36,14 @@ export default function SettingsPage() {
           <Link
             key={href}
             href={href}
-            className="flex items-center gap-3 rounded-md border border-line bg-surface p-4 shadow-1 transition-colors hover:border-sapphire-300"
+            className="flex items-center gap-3 rounded-md border border-border-soft bg-surface p-4 shadow-1 transition-colors hover:border-signature-soft"
           >
-            <span className="flex size-9 items-center justify-center rounded-md bg-surface-sunken">
-              <Icon className="size-4 text-ink-500" />
+            <span className="flex size-9 items-center justify-center rounded-md bg-soft">
+              <Icon className="size-4 text-ink-secondary" />
             </span>
             <div>
-              <div className="text-card-title font-semibold text-ink-900">{title}</div>
-              <div className="text-caption text-ink-400">{desc}</div>
+              <div className="text-card-title font-semibold text-ink-primary">{title}</div>
+              <div className="text-caption text-ink-secondary">{desc}</div>
             </div>
           </Link>
         ))}

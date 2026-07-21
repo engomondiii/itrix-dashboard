@@ -45,9 +45,9 @@ export function SLAConfigForm() {
       {TIERS.map((t) => (
         <div
           key={t}
-          className="flex items-center justify-between gap-3 rounded-md border border-line bg-surface px-3 py-2"
+          className="flex items-center justify-between gap-3 rounded-md border border-border-soft bg-surface px-3 py-2"
         >
-          <span className="text-sec text-ink-800">
+          <span className="text-sec text-ink-primary">
             Tier {t} · {TIER_DEFS[t].label}
           </span>
           <div className="flex items-center gap-1.5">
@@ -61,12 +61,12 @@ export function SLAConfigForm() {
               onChange={(e) => setHours(t, e.target.value)}
               className="w-24 text-right tabular-nums"
             />
-            <span className="text-caption text-ink-400">hours</span>
+            <span className="text-caption text-ink-secondary">hours</span>
           </div>
         </div>
       ))}
       <div className="flex items-center justify-between pt-1">
-        <p className="text-caption text-ink-400">
+        <p className="text-caption text-ink-secondary">
           Leave blank for no SLA on a tier.
         </p>
         <Button type="submit" disabled={!dirty || update.isPending}>

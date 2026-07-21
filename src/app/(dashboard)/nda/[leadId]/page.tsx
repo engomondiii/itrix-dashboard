@@ -54,7 +54,7 @@ export default function NDADetailPage({
         icon={FileSignatureIcon}
         title="NDA not found"
         action={
-          <Link href={ROUTES.nda} className="text-sec font-medium text-sapphire-600">
+          <Link href={ROUTES.nda} className="text-sec font-medium text-ink-primary">
             Back to NDA tracker
           </Link>
         }
@@ -68,7 +68,7 @@ export default function NDADetailPage({
         title={nda.leadName}
         description="NDA document, status, and signature tracking."
         actions={
-          <Link href={ROUTES.lead(nda.leadId)} className="text-sec font-medium text-sapphire-600">
+          <Link href={ROUTES.lead(nda.leadId)} className="text-sec font-medium text-ink-primary">
             Open lead
           </Link>
         }
@@ -91,7 +91,7 @@ export default function NDADetailPage({
             </div>
           </CardHeader>
           <CardContent>
-            <pre className="max-h-[28rem] overflow-y-auto rounded-md bg-surface-sunken p-4 font-sans text-caption whitespace-pre-wrap text-ink-700">
+            <pre className="max-h-[28rem] overflow-y-auto rounded-md bg-soft p-4 font-sans text-caption whitespace-pre-wrap text-ink-secondary">
               {nda.body}
             </pre>
           </CardContent>
@@ -105,14 +105,14 @@ export default function NDADetailPage({
             </CardHeader>
             <CardContent className="space-y-3">
               <NDAChecklistDisplay items={nda.checklist} />
-              <dl className="space-y-1 text-caption text-ink-500">
+              <dl className="space-y-1 text-caption text-ink-secondary">
                 <div className="flex justify-between gap-2">
-                  <dt className="text-ink-400">Requested</dt>
+                  <dt className="text-ink-secondary">Requested</dt>
                   <dd>{formatDate(nda.requestedAt)}</dd>
                 </div>
                 {nda.signerName || nda.signerEmail ? (
                   <div className="flex justify-between gap-2">
-                    <dt className="text-ink-400">Signer</dt>
+                    <dt className="text-ink-secondary">Signer</dt>
                     <dd className="text-right">
                       {nda.signerName}
                       {nda.signerName && nda.signerEmail ? " · " : ""}
@@ -122,13 +122,13 @@ export default function NDADetailPage({
                 ) : null}
                 {nda.sentAt && (
                   <div className="flex justify-between gap-2">
-                    <dt className="text-ink-400">Sent</dt>
+                    <dt className="text-ink-secondary">Sent</dt>
                     <dd>{formatDate(nda.sentAt)}</dd>
                   </div>
                 )}
                 {nda.signedAt && (
                   <div className="flex justify-between gap-2">
-                    <dt className="text-ink-400">Signed</dt>
+                    <dt className="text-ink-secondary">Signed</dt>
                     <dd>{formatDate(nda.signedAt)}</dd>
                   </div>
                 )}

@@ -19,10 +19,10 @@ export function LeadQualificationAnswers({ answers }: { answers: QualificationAn
         const v = answers[key];
         return (
           <div key={key}>
-            <dt className="text-micro font-semibold uppercase tracking-[0.06em] text-ink-400">
+            <dt className="text-micro font-semibold uppercase tracking-[0.06em] text-ink-secondary">
               {label}
             </dt>
-            <dd className="mt-0.5 text-sec text-ink-800">
+            <dd className="mt-0.5 text-sec text-ink-primary">
               {Array.isArray(v) ? v.join(", ") : v}
             </dd>
           </div>

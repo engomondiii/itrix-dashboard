@@ -21,9 +21,9 @@ export function ConversionRateTable({ stages }: { stages: FunnelStage[] }) {
       <TableBody>
         {stages.map((s) => (
           <TableRow key={s.stage}>
-            <TableCell className="text-ink-700">{s.stage}</TableCell>
-            <TableCell className="text-right tabular-nums text-ink-900">{s.count}</TableCell>
-            <TableCell className="text-right tabular-nums text-ink-500">
+            <TableCell className="text-ink-secondary">{s.stage}</TableCell>
+            <TableCell className="text-right tabular-nums text-ink-primary">{s.count}</TableCell>
+            <TableCell className="text-right tabular-nums text-ink-secondary">
               {s.conversion != null ? `${Math.round(s.conversion * 100)}%` : "—"}
             </TableCell>
           </TableRow>

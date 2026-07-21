@@ -10,9 +10,9 @@ export function NDAChecklistDisplay({ items }: { items: NDAChecklistItem[] }) {
           {item.done ? (
             <CheckCircle2Icon className="size-4 shrink-0 text-success" />
           ) : (
-            <CircleIcon className="size-4 shrink-0 text-ink-300" />
+            <CircleIcon className="size-4 shrink-0 text-ink-muted" />
           )}
-          <span className={item.done ? "text-ink-700" : "text-ink-500"}>
+          <span className={item.done ? "text-ink-secondary" : "text-ink-secondary"}>
             {item.label}
           </span>
         </li>

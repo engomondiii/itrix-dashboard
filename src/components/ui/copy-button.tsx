@@ -39,7 +39,7 @@ export function CopyButton({ value, className, label }: CopyButtonProps) {
       {copied ? (
         <CheckIcon className="text-success" />
       ) : (
-        <CopyIcon className="text-ink-400" />
+        <CopyIcon className="text-ink-secondary" />
       )}
       {label}
     </Button>

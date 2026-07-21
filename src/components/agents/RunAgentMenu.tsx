@@ -19,7 +19,7 @@ export function RunAgentMenu({ leadId }: { leadId: string }) {
 
   if (!canAdminGovernance(user?.role)) {
     return (
-      <p className="text-caption text-ink-400">
+      <p className="text-caption text-ink-secondary">
         Running agents is restricted to Admin / Assessment Team.
       </p>
     );

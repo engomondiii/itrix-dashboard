@@ -11,11 +11,11 @@ export default function AnalyticsPage() {
         title="Analytics"
         description="Funnel, SLA compliance, and demand signals."
         actions={
-          <div className="flex items-center gap-3 text-sec text-ink-500">
-            <Link href={ROUTES.analyticsFunnel} className="hover:text-ink-700">Funnel</Link>
-            <Link href={ROUTES.analyticsResponseTime} className="hover:text-ink-700">SLA</Link>
-            <Link href={ROUTES.analyticsLeads} className="hover:text-ink-700">Leads</Link>
-            <Link href={ROUTES.analyticsBottlenecks} className="hover:text-ink-700">Bottlenecks</Link>
+          <div className="flex items-center gap-3 text-sec text-ink-secondary">
+            <Link href={ROUTES.analyticsFunnel} className="hover:text-ink-secondary">Funnel</Link>
+            <Link href={ROUTES.analyticsResponseTime} className="hover:text-ink-secondary">SLA</Link>
+            <Link href={ROUTES.analyticsLeads} className="hover:text-ink-secondary">Leads</Link>
+            <Link href={ROUTES.analyticsBottlenecks} className="hover:text-ink-secondary">Bottlenecks</Link>
           </div>
         }
       />

@@ -25,7 +25,7 @@ export function FollowUpSLATimer({ dueAt }: { dueAt: string }) {
       title={title}
       className={cn(
         "inline-flex items-center gap-1 text-caption font-medium tabular-nums",
-        overdue ? "text-error-text" : soon ? "text-warning-text" : "text-ink-500",
+        overdue ? "text-error-text" : soon ? "text-warning-text" : "text-ink-secondary",
       )}
     >
       <ClockIcon className="size-3.5" />

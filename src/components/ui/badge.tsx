@@ -20,13 +20,16 @@ const badgeVariants = cva(
           "hover:bg-muted hover:text-muted-foreground dark:hover:bg-muted/50",
         link: "text-primary underline-offset-4 hover:underline",
 
-        // Atelier Indigo status intents — always soft-bg + strong-text, never solid.
+        // Status intents — always soft-bg + strong-text, never a solid fill.
         success: "bg-success-soft text-success-text",
         warning: "bg-warning-soft text-warning-text",
         error: "bg-error-soft text-error-text",
         info: "bg-info-soft text-info",
         neutral: "bg-muted text-muted-foreground",
-        gold: "bg-gold-100 text-gold-600",
+        // The signature intent — the restrained holographic highlight. Named
+        // `signature` rather than `accent` because shadcn already owns
+        // --color-accent as its hover wash (see globals.css).
+        signature: "bg-tint text-structure-600",
 
         // Lead tiers (soft companion backgrounds).
         "tier-1": "bg-tier-1-soft text-tier-1",

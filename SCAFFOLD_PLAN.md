@@ -207,6 +207,84 @@ lists from the backend `models.py` before applying):**
 
 ---
 
+## 10. Surface 2 v5.0 — implemented (2026-07-21)
+
+Built against **Surface 2 Structure v5.0**, which folds in Master Technical Architecture v2.6 and
+Backend Structure v6.0. All three phases are in the tree. Nothing shipped was removed except the
+retired token names and the two legacy journey values.
+
+### Unflagged corrections (they are corrections, not features)
+
+1. **Mock mode is fail-closed twice over** — `site.config.ts` requires the exact string `"true"`
+   **and** `NODE_ENV !== "production"`; `api/auth/login` repeats the production test on the one
+   route where getting it wrong means a junk login is accepted. The old default (`!== "false"`)
+   meant a deploy that forgot the variable shipped with an unauthenticated ADMIN session.
+2. **Brand Manual v1.5 token rename** — ~475 call sites. Atelier names are gone and
+   `eslint-rules/no-atelier-tokens.mjs` (wired as `itrix/no-atelier-tokens`) keeps them gone.
+   Two deviations from `itrix-web`, both argued in `globals.css`: `signature` instead of `accent`
+   (shadcn owns `--color-accent`), and `line-strong → border-medium` (mapped by rendered value).
+
+### Ten-state journey
+
+`ENGAGED` split into **ASSESSMENT (7) / POC (8) / INTEGRATION (9)**, `CLIENT → NDA_REVIEW (6)`,
+`CUSTOMER_SUCCESS (10)` added. Both retired values are still accepted on the wire by
+`normalizeState`, which falls back to `ARRIVED` — the most restrictive state — on anything
+unknown, so vocabulary drift under-states progress rather than over-stating it.
+`MigrationReportPanel` renders the ENGAGED-split **dry run** for review before
+`0003_migrate_engaged_split` is applied; unjustified rows sort to the top.
+
+`nda_signed` is modelled as a **self-transition** on NDA_REVIEW: reveal ④ raises the ceiling in
+place without moving the subject, so `EVENT_REVEAL` exists alongside `STATE_REVEAL` and
+`advanceChangesState` distinguishes "no state change" from "nothing happened".
+
+### New areas
+
+| Area | Routes | Notes |
+|---|---|---|
+| Threads | `/threads`, `/threads/[threadId]`, `/threads/coverage` | Anonymous threads are first-class — a conversation exists before a Lead does. Blocked and live threads sort first. |
+| Attachments | `/attachments`, `/attachments/[attachmentId]` | Quarantined files have **no** download control (absent, not disabled). Release is ADMIN/ASSESSMENT + a logged reason. |
+| Customers | `/customers`, `/customers/[clientId]`, `/customers/outcomes`, `/customers/reviews` | Population starts at **first payment** (state 7), not license-out. |
+| Support | `/support`, `/support/[requestId]` | Reuses `useSLATimer`. A blocking request suppresses commercial actions for that customer. |
+| Personas | `/personas`, `/personas/[personaId]` | Read-only registry browser. Team plane only. |
+| Governance | `/governance/streaming` | Guard halts with matched pattern, envelope downgrades, blocking-approval banner. |
+| Analytics | six new tabs | Reuse the operational hooks so a chart cannot disagree with the queue it summarises. |
+
+### The customer-first rule
+
+`mocks/nbaDb.ts` implements the five-step precedence rule for real rather than returning a
+fixture — a mock that always returned a commercial action would let the acceptance test pass
+against nothing. Verified in mock mode: a customer with an open blocking request gets
+`primary=support, suppressionReason=blocking_support_issue`; adoption below 60% gets
+`enablement`; a pulse ≤ 3 gets `human_outreach`; only a clean customer gets `commercial`.
+Suppressed candidates are **shown struck through**, not hidden — a rule nobody can see is a rule
+nobody trusts. `CommercialOverrideDialog` logs an exception with a reason and does **not** clear
+the condition.
+
+### Flags
+
+`src/config/features.config.ts` — all default off, navigation pruned at module scope.
+`.env.local` enables all six for local development; `.env.example` ships them off.
+A frontend flag may only be enabled once its backend counterpart is on.
+
+### Verified
+
+`pnpm lint && pnpm typecheck && pnpm build` green; dev server smoke-tested — all 16 new pages
+200, all 9 new API endpoints 200, release-without-reason 409, release-as-VIEWER 403,
+override-without-reason 409, audit trail records the release with actor and reason.
+
+### Still open
+
+- **`itriX Brand Manual v1.5 EN` is not in OneDrive.** Token values were mirrored from
+  `itrix-web/src/styles/tokens/brand.css`. Confirm against the real manual when it lands.
+- Real-mode branches are marked `// v6:` and are untestable until Django runs.
+- WebSocket cutover is **not** done: the live views poll (10–30s) and the spec's Phase 3 swaps
+  these to sockets with GET as the fallback. Poll intervals are in the hooks, not the fetchers,
+  for exactly that reason.
+- The v5.0 Playwright specs named in the doc (`no-commercial-during-support-issue.spec.ts`
+  et al.) are **not** written — this repo still has no test runner.
+
+---
+
 *Plan authored against the organized source docs in `OneDrive/Documents/IWL/ITRIX`.
 Updated for the actual scaffold (Next.js 16 + Tailwind v4 + TypeScript + pnpm) and reconciled
-with Backend v3 / Surface 2 v2.*
+with Master Technical Architecture v2.6 / Backend v6.0 / Surface 2 v5.0.*

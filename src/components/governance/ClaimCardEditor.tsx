@@ -8,7 +8,7 @@ import { CLAIM_LEVELS, CLAIM_LEVEL_LABEL, type ClaimLevel } from "@/constants/cl
 import type { ClaimCard } from "@/types/claimCard";
 
 const FIELD =
-  "w-full rounded-md border border-line bg-surface p-2 text-sec text-ink-800 outline-none focus:border-sapphire-500";
+  "w-full rounded-md border border-border-soft bg-surface p-2 text-sec text-ink-primary outline-none focus:border-structure-600";
 
 /** Create (no `card`) or edit (with `card`) a Claim-Card. */
 export function ClaimCardEditor({
@@ -40,10 +40,10 @@ export function ClaimCardEditor({
   }
 
   return (
-    <div className="space-y-3 rounded-lg border border-line bg-surface p-4">
+    <div className="space-y-3 rounded-lg border border-border-soft bg-surface p-4">
       <div className="grid gap-3 sm:grid-cols-2">
         <label className="space-y-1">
-          <span className="text-micro text-ink-400">Key</span>
+          <span className="text-micro text-ink-secondary">Key</span>
           <input
             value={key}
             onChange={(e) => setKey(e.target.value)}
@@ -52,12 +52,12 @@ export function ClaimCardEditor({
           />
         </label>
         <label className="space-y-1">
-          <span className="text-micro text-ink-400">Title</span>
+          <span className="text-micro text-ink-secondary">Title</span>
           <input value={title} onChange={(e) => setTitle(e.target.value)} className={FIELD} />
         </label>
       </div>
       <label className="block space-y-1">
-        <span className="text-micro text-ink-400">Approved wording</span>
+        <span className="text-micro text-ink-secondary">Approved wording</span>
         <textarea
           value={approvedWording}
           onChange={(e) => setApprovedWording(e.target.value)}
@@ -67,11 +67,11 @@ export function ClaimCardEditor({
       </label>
       <div className="flex flex-wrap items-center gap-4">
         <label className="flex items-center gap-2">
-          <span className="text-micro text-ink-400">Claim level</span>
+          <span className="text-micro text-ink-secondary">Claim level</span>
           <select
             value={claimLevel}
             onChange={(e) => setClaimLevel(Number(e.target.value) as ClaimLevel)}
-            className="rounded-md border border-line bg-surface px-2 py-1 text-sec text-ink-800"
+            className="rounded-md border border-border-soft bg-surface px-2 py-1 text-sec text-ink-primary"
           >
             {CLAIM_LEVELS.map((l) => (
               <option key={l} value={l}>
@@ -80,7 +80,7 @@ export function ClaimCardEditor({
             ))}
           </select>
         </label>
-        <label className="flex items-center gap-2 text-sec text-ink-700">
+        <label className="flex items-center gap-2 text-sec text-ink-secondary">
           <input
             type="checkbox"
             checked={isActive}
@@ -90,7 +90,7 @@ export function ClaimCardEditor({
         </label>
       </div>
       <label className="block space-y-1">
-        <span className="text-micro text-ink-400">Notes</span>
+        <span className="text-micro text-ink-secondary">Notes</span>
         <textarea
           value={notes}
           onChange={(e) => setNotes(e.target.value)}

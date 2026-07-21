@@ -11,7 +11,7 @@ export default function NotFound() {
       title="Lead not found"
       description="This lead may have been removed or the link is invalid."
       action={
-        <Link href={ROUTES.leads} className="text-sec font-medium text-sapphire-600">
+        <Link href={ROUTES.leads} className="text-sec font-medium text-ink-primary">
           Back to all leads
         </Link>
       }

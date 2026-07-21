@@ -4,6 +4,7 @@ import type { JourneyEvent } from "@/constants/journeyStates";
 import type {
   JourneyAdvanceResult,
   JourneyLead,
+  JourneyMigrationReport,
   JourneyOverview,
 } from "@/types/journey";
 
@@ -13,6 +14,11 @@ export function getJourney(leadId: string) {
 
 export function getJourneyOverview() {
   return apiGet<JourneyOverview>(API.journeyOverview);
+}
+
+/** The ENGAGED-split dry run, reviewed before the data migration is applied. */
+export function getJourneyMigrationReport() {
+  return apiGet<JourneyMigrationReport>(API.journeyMigrationReport);
 }
 
 export function advanceJourney(

@@ -108,11 +108,11 @@ export function CommandMenu() {
         type="button"
         onClick={openMenu}
         aria-label="Search"
-        className="hidden h-8 w-56 items-center gap-2 rounded-lg border border-line bg-canvas-deep/60 pr-2 pl-2.5 text-sec text-ink-400 transition-colors hover:border-line-strong hover:bg-canvas-deep sm:flex"
+        className="hidden h-8 w-56 items-center gap-2 rounded-lg border border-border-soft bg-soft/60 pr-2 pl-2.5 text-sec text-ink-secondary transition-colors hover:border-border-medium hover:bg-soft sm:flex"
       >
         <SearchIcon className="size-4 shrink-0" />
         <span className="flex-1 text-left">Search…</span>
-        <kbd className="rounded border border-line bg-surface px-1 py-0.5 font-mono text-[10px] text-ink-400">
+        <kbd className="rounded border border-border-soft bg-surface px-1 py-0.5 font-mono text-[10px] text-ink-secondary">
           ⌘K
         </kbd>
       </button>
@@ -122,7 +122,7 @@ export function CommandMenu() {
         type="button"
         onClick={openMenu}
         aria-label="Search"
-        className="inline-flex size-7 items-center justify-center rounded-md text-ink-500 transition-colors hover:bg-muted sm:hidden"
+        className="inline-flex size-7 items-center justify-center rounded-md text-ink-secondary transition-colors hover:bg-muted sm:hidden"
       >
         <SearchIcon className="size-4" />
       </button>
@@ -134,8 +134,8 @@ export function CommandMenu() {
         >
           <DialogTitle className="sr-only">Command menu</DialogTitle>
 
-          <div className="flex items-center gap-2.5 border-b border-line px-3.5">
-            <SearchIcon className="size-4 shrink-0 text-ink-400" />
+          <div className="flex items-center gap-2.5 border-b border-border-soft px-3.5">
+            <SearchIcon className="size-4 shrink-0 text-ink-secondary" />
             <input
               ref={inputRef}
               autoFocus
@@ -143,13 +143,13 @@ export function CommandMenu() {
               onChange={(e) => onQueryChange(e.target.value)}
               onKeyDown={onKeyDown}
               placeholder="Search pages…"
-              className="h-11 flex-1 bg-transparent text-sm text-ink-900 outline-none placeholder:text-ink-400"
+              className="h-11 flex-1 bg-transparent text-sm text-ink-primary outline-none placeholder:text-ink-secondary"
             />
           </div>
 
           <div className="max-h-80 overflow-y-auto p-1.5">
             {results.length === 0 ? (
-              <div className="px-3 py-8 text-center text-sec text-ink-400">
+              <div className="px-3 py-8 text-center text-sec text-ink-secondary">
                 No results for “{query}”.
               </div>
             ) : (
@@ -164,7 +164,7 @@ export function CommandMenu() {
                     onMouseMove={() => setActiveIndex(i)}
                     data-active={active || undefined}
                     className={cn(
-                      "flex w-full items-center gap-2.5 rounded-md px-2.5 py-2 text-left text-sec text-ink-700 transition-colors",
+                      "flex w-full items-center gap-2.5 rounded-md px-2.5 py-2 text-left text-sec text-ink-secondary transition-colors",
                       active && "bg-accent text-accent-foreground",
                     )}
                   >
@@ -172,14 +172,14 @@ export function CommandMenu() {
                       <Icon
                         className={cn(
                           "size-4 shrink-0",
-                          active ? "text-accent-foreground" : "text-ink-400",
+                          active ? "text-accent-foreground" : "text-ink-secondary",
                         )}
                       />
                     ) : null}
                     <span className="flex-1 truncate">{cmd.label}</span>
-                    <span className="text-micro text-ink-400">{cmd.section}</span>
+                    <span className="text-micro text-ink-secondary">{cmd.section}</span>
                     {active && (
-                      <CornerDownLeftIcon className="size-3.5 shrink-0 text-ink-400" />
+                      <CornerDownLeftIcon className="size-3.5 shrink-0 text-ink-secondary" />
                     )}
                   </button>
                 );

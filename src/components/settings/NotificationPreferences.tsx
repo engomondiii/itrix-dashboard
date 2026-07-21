@@ -41,9 +41,9 @@ export function NotificationPreferences() {
       {PREFS.map((p) => (
         <div
           key={p.key}
-          className="flex items-center justify-between rounded-md border border-line bg-surface px-3 py-2"
+          className="flex items-center justify-between rounded-md border border-border-soft bg-surface px-3 py-2"
         >
-          <Label htmlFor={`pref-${p.key}`} className="text-sec text-ink-800">
+          <Label htmlFor={`pref-${p.key}`} className="text-sec text-ink-primary">
             {p.label}
           </Label>
           <Switch

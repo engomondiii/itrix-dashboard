@@ -12,8 +12,8 @@ export function LeadBulkActions() {
   if (count === 0) return null;
 
   return (
-    <div className="flex items-center gap-3 rounded-md border border-sapphire-100 bg-sapphire-50 px-3 py-2">
-      <span className="text-sec font-medium text-sapphire-700 tabular-nums">
+    <div className="flex items-center gap-3 rounded-md border border-tint bg-soft px-3 py-2">
+      <span className="text-sec font-medium text-ink-primary tabular-nums">
         {count} selected
       </span>
       <div className="ml-auto flex items-center gap-2">

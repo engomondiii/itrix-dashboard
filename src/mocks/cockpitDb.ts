@@ -12,6 +12,7 @@ import { getJourney } from "@/mocks/journeyDb";
 import { queueDraft } from "@/mocks/approvalsDb";
 import { recordAgentRun } from "@/mocks/agentRunsDb";
 import { listConversations } from "@/mocks/conversationsDb";
+import { listThreads } from "@/mocks/threadsDb";
 
 /** The conversation belonging to a lead, if one exists (so drafts deliver into it). */
 function conversationForLead(leadId: string): string | null {
@@ -78,7 +79,53 @@ export function getCockpit(leadId: string): CockpitLead | null {
     },
     licenseOutProbability: clamp(lead.score + (lead.specialRights !== "None" ? 18 : 0)),
     ladderStage: STATUS_TO_STAGE[lead.status],
+
+    // v5.0 — the conversation this lead came out of, and what it gathered.
+    ...conversationRead(leadId),
+    riskFlags: riskFlagsFor(lead.specialRights, lead.commercialIntent, lead.score),
   };
+}
+
+/**
+ * The thread-derived half of the cockpit read.
+ *
+ * Sourced from the thread store rather than recomputed, so the cockpit and the
+ * thread board can never disagree about the same conversation — an operator
+ * seeing "4 covered" here and "6 covered" there would trust neither.
+ */
+function conversationRead(leadId: string): Partial<CockpitLead> {
+  const thread = listThreads().find((t) => t.leadId === leadId);
+  if (!thread) return { threadId: null, live: false };
+  return {
+    threadId: thread.id,
+    live: thread.live,
+    coverage: thread.coverage,
+    loop: thread.loop,
+    attachments: thread.attachments,
+  };
+}
+
+/**
+ * Sensitivity alerts — things that should make a concierge slow down.
+ *
+ * Deliberately conservative: these are prompts to pay attention, not scores.
+ * Anything here is internal-only and must never be paraphrased into a message
+ * to the visitor.
+ */
+function riskFlagsFor(
+  specialRights: string,
+  commercialIntent: string,
+  score: number,
+): string[] {
+  const flags: string[] = [];
+  if (specialRights !== "None") {
+    flags.push(`Requests ${specialRights.toLowerCase()} rights — exclusivity needs sign-off`);
+  }
+  if (commercialIntent === "Acquisition / partnership") {
+    flags.push("Acquisition intent — route to executive before any commercial answer");
+  }
+  if (score >= 85) flags.push("High score — confirm qualification before escalating");
+  return flags;
 }
 
 const NEXT_ACTION: Record<JourneyState, { nextAction: string; reason: string }> = {
@@ -93,13 +140,28 @@ const NEXT_ACTION: Record<JourneyState, { nextAction: string; reason: string }> 
     reason: "Engaged with the page — offer account creation if the gate passes.",
   },
   INVITED: { nextAction: "await_claim", reason: "Invite sent — awaiting account creation." },
-  CLIENT: {
+  NDA_REVIEW: {
     nextAction: "propose_evaluation",
-    reason: "Client active — propose the paid ALPHA Compute Assessment.",
+    reason: "Client active under NDA — propose the paid ALPHA Compute Assessment.",
   },
-  ENGAGED: {
-    nextAction: "advance_engagement",
-    reason: "In evaluation / PoC — advance the engagement toward license-out.",
+  // States 7–10 each carry their own next step. Under v3.0 all three of these
+  // collapsed into one "advance the engagement" line, which told the operator
+  // nothing about which rung the relationship was actually on.
+  ASSESSMENT: {
+    nextAction: "start_poc",
+    reason: "Assessment delivered — scope the paid PoC against agreed KPIs.",
+  },
+  POC: {
+    nextAction: "start_integration",
+    reason: "PoC evidence is in — move to integration readiness.",
+  },
+  INTEGRATION: {
+    nextAction: "record_contract",
+    reason: "Integration is ready — close the license-out agreement.",
+  },
+  CUSTOMER_SUCCESS: {
+    nextAction: "review_outcomes",
+    reason: "Contracted customer — keep outcomes on plan before anything commercial.",
   },
   DORMANT: { nextAction: "reactivate", reason: "Dormant — nurture and re-score on return." },
 };

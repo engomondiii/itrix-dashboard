@@ -31,7 +31,7 @@ export function PipelineCard({
   return (
     <div
       className={cn(
-        "relative rounded-md border border-line bg-surface p-3 shadow-1 transition-colors hover:border-sapphire-300",
+        "relative rounded-md border border-border-soft bg-surface p-3 shadow-1 transition-colors hover:border-signature-soft",
         card.overdue && "pl-4",
       )}
     >
@@ -46,12 +46,12 @@ export function PipelineCard({
       />
       <div className="pointer-events-none relative">
         <div className="flex items-start justify-between gap-2">
-          <span className="text-sec font-medium text-ink-900">
+          <span className="text-sec font-medium text-ink-primary">
             {leadDisplayName(card)}
           </span>
           <LeadTierBadge tier={card.tier} />
         </div>
-        <div className="mt-1 text-caption text-ink-500">
+        <div className="mt-1 text-caption text-ink-secondary">
           {[card.primaryPain, card.productRoute].filter(Boolean).join(" · ") || "—"}
         </div>
         <div className="mt-2 flex items-center justify-between">
@@ -61,7 +61,7 @@ export function PipelineCard({
             <DropdownMenu>
               <DropdownMenuTrigger
                 aria-label="Move to stage"
-                className="pointer-events-auto inline-flex size-6 items-center justify-center rounded-md text-ink-400 outline-none hover:bg-muted hover:text-ink-700 focus-visible:ring-2 focus-visible:ring-ring"
+                className="pointer-events-auto inline-flex size-6 items-center justify-center rounded-md text-ink-secondary outline-none hover:bg-muted hover:text-ink-secondary focus-visible:ring-2 focus-visible:ring-ring"
               >
                 <ChevronsRightIcon className="size-3.5" />
               </DropdownMenuTrigger>

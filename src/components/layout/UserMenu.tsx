@@ -34,16 +34,16 @@ export function UserMenu({ user }: { user: SessionUser }) {
     <DropdownMenu>
       <DropdownMenuTrigger className="flex items-center gap-2 rounded-full outline-none focus-visible:ring-2 focus-visible:ring-ring">
         <Avatar className="size-8">
-          <AvatarFallback className="bg-sapphire-100 text-caption font-semibold text-sapphire-700">
+          <AvatarFallback className="bg-tint text-caption font-semibold text-ink-primary">
             {initials(user.name)}
           </AvatarFallback>
         </Avatar>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-56">
         <DropdownMenuLabel>
-          <div className="font-medium text-ink-900">{user.name}</div>
-          <div className="text-caption font-normal text-ink-500">{user.email}</div>
-          <div className="mt-1 text-micro font-semibold uppercase tracking-[0.06em] text-ink-400">
+          <div className="font-medium text-ink-primary">{user.name}</div>
+          <div className="text-caption font-normal text-ink-secondary">{user.email}</div>
+          <div className="mt-1 text-micro font-semibold uppercase tracking-[0.06em] text-ink-secondary">
             {ROLE_DEFS[user.role].role}
           </div>
         </DropdownMenuLabel>

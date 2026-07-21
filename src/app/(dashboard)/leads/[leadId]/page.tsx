@@ -20,7 +20,9 @@ import { LeadMeetings } from "@/components/lead-detail/LeadMeetings";
 import { FollowUpEmailDraft } from "@/components/lead-detail/FollowUpEmailDraft";
 import { JourneyPanel } from "@/components/journey/JourneyPanel";
 import { ClientLinkCard } from "@/components/journey/ClientLinkCard";
+import { SidebarContractPanel } from "@/components/journey/SidebarContractPanel";
 import { CockpitPanel } from "@/components/cockpit/CockpitPanel";
+import { PersonaPanel } from "@/components/personas/PersonaPanel";
 import { RunAgentMenu } from "@/components/agents/RunAgentMenu";
 import { LeadProductRouteBadge } from "@/components/leads/LeadProductRouteBadge";
 import { Badge } from "@/components/ui/badge";
@@ -51,7 +53,7 @@ export default function LeadDetailPage({
         title="Lead not found"
         description="This lead may have been removed or the link is invalid."
         action={
-          <Link href={ROUTES.leads} className="text-sec font-medium text-sapphire-600">
+          <Link href={ROUTES.leads} className="text-sec font-medium text-ink-primary">
             Back to all leads
           </Link>
         }
@@ -84,11 +86,11 @@ Recommended next step: ${lead.recommendedNextStep || "—"}`;
               <CardTitle>AI summary</CardTitle>
             </CardHeader>
             <CardContent className="space-y-3">
-              <p className="text-body text-ink-800">
+              <p className="text-body text-ink-primary">
                 {lead.computeBottleneck || "No AI summary yet for this lead."}
               </p>
               {lead.recommendedNextStep && (
-                <div className="rounded-md bg-sapphire-50 p-3 text-sec text-sapphire-700">
+                <div className="rounded-md bg-soft p-3 text-sec text-ink-primary">
                   Recommended next step: {lead.recommendedNextStep}
                 </div>
               )}
@@ -116,13 +118,13 @@ Recommended next step: ${lead.recommendedNextStep || "—"}`;
               </CardHeader>
               <CardContent className="space-y-3">
                 <div className="space-y-1">
-                  <div className="text-micro font-semibold uppercase tracking-[0.06em] text-ink-400">
+                  <div className="text-micro font-semibold uppercase tracking-[0.06em] text-ink-secondary">
                     Status
                   </div>
                   <LeadStatusControl leadId={lead.id} status={lead.status} />
                 </div>
                 <div className="space-y-1">
-                  <div className="text-micro font-semibold uppercase tracking-[0.06em] text-ink-400">
+                  <div className="text-micro font-semibold uppercase tracking-[0.06em] text-ink-secondary">
                     Owner
                   </div>
                   <LeadOwnerControl leadId={lead.id} owner={lead.owner} />
@@ -186,6 +188,13 @@ Recommended next step: ${lead.recommendedNextStep || "—"}`;
 
           <JourneyPanel leadId={lead.id} />
 
+          {/* The persona hypothesis and the shell contract sit beside the journey
+              because all three answer the same question from different angles:
+              who we think this is, what they can see, and where they are. */}
+          <PersonaPanel leadId={lead.id} />
+
+          <SidebarContractPanel leadId={lead.id} />
+
           <ClientLinkCard lead={lead} />
 
           <Card>
@@ -213,7 +222,7 @@ Recommended next step: ${lead.recommendedNextStep || "—"}`;
               <CardTitle>Offline handoff memo</CardTitle>
             </CardHeader>
             <CardContent className="space-y-2">
-              <pre className="max-h-48 overflow-y-auto rounded-md bg-surface-sunken p-3 font-sans text-caption whitespace-pre-wrap text-ink-700">
+              <pre className="max-h-48 overflow-y-auto rounded-md bg-soft p-3 font-sans text-caption whitespace-pre-wrap text-ink-secondary">
                 {handoffMemo}
               </pre>
               <div className="flex justify-end">

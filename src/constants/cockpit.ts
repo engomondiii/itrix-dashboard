@@ -6,13 +6,17 @@
 import type { JourneyEvent } from "@/constants/journeyStates";
 
 export const NEXT_ACTION_LABEL: Record<string, string> = {
-  review: "Wait for a prompt",
+  review: "Wait for a first turn",
   await_diagnosis: "Await diagnosis",
-  reveal_client_page: "Reveal the client page",
+  reveal_client_page: "Deliver the pitch room",
   send_account_invite: "Send account invite",
   await_claim: "Await account creation",
   propose_evaluation: "Propose paid assessment",
-  advance_engagement: "Advance the engagement",
+  // v5.0: the single `advance_engagement` action split with the ENGAGED state.
+  start_poc: "Scope the paid PoC",
+  start_integration: "Move to integration",
+  record_contract: "Close the license-out agreement",
+  review_outcomes: "Review customer outcomes",
   reactivate: "Reactivate (nurture)",
   nurture: "Nurture",
 };
@@ -26,13 +30,16 @@ export function nextActionLabel(action: string): string {
  *
  * The two vocabularies deliberately differ (the cockpit speaks in operator intent,
  * the journey machine in state transitions), so the mapping is explicit. Actions
- * that are waits (`await_diagnosis`, `await_claim`) or that happen off-machine
- * (`propose_evaluation`) have no event and stay advisory.
+ * that are waits (`await_diagnosis`, `await_claim`), that happen off-machine
+ * (`propose_evaluation`), or that are standing work rather than a transition
+ * (`review_outcomes`) have no event and stay advisory.
  */
 export const NEXT_ACTION_EVENT: Record<string, JourneyEvent | undefined> = {
   reveal_client_page: "reveal_client_page",
   send_account_invite: "gate_invite",
-  advance_engagement: "engage",
+  start_poc: "poc_start",
+  start_integration: "integration_start",
+  record_contract: "contract_executed",
   reactivate: "reactivate",
   nurture: "gate_dormant",
 };

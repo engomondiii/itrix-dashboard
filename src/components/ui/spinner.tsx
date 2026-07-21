@@ -11,7 +11,7 @@ export function Spinner({
     <Loader2Icon
       role="status"
       aria-label="Loading"
-      className={cn("size-4 animate-spin text-ink-400", className)}
+      className={cn("size-4 animate-spin text-ink-secondary", className)}
       {...props}
     />
   );

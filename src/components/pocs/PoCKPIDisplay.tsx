@@ -39,15 +39,15 @@ export function PoCKPIDisplay({
         <TableBody>
           {kpis.map((k) => (
             <TableRow key={k.id}>
-              <TableCell className="text-ink-700">
+              <TableCell className="text-ink-secondary">
                 {k.metric}
-                <span className="ml-1 text-caption text-ink-400">({k.category})</span>
+                <span className="ml-1 text-caption text-ink-secondary">({k.category})</span>
               </TableCell>
-              <TableCell className="text-right text-ink-500">{k.baseline ?? "—"}</TableCell>
-              <TableCell className="text-right tabular-nums text-ink-700">
+              <TableCell className="text-right text-ink-secondary">{k.baseline ?? "—"}</TableCell>
+              <TableCell className="text-right tabular-nums text-ink-secondary">
                 {k.target ?? "—"}
               </TableCell>
-              <TableCell className="text-right tabular-nums font-medium text-ink-900">
+              <TableCell className="text-right tabular-nums font-medium text-ink-primary">
                 {k.result ?? "—"}
               </TableCell>
               <TableCell className="text-right">
@@ -57,7 +57,7 @@ export function PoCKPIDisplay({
                   aria-label={`Edit ${k.metric} KPI`}
                   onClick={() => setEditing(k)}
                 >
-                  <PencilIcon className="text-ink-400" />
+                  <PencilIcon className="text-ink-secondary" />
                 </Button>
               </TableCell>
             </TableRow>

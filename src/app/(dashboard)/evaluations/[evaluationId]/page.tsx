@@ -32,7 +32,7 @@ export default function EvaluationDetailPage({
         icon={ClipboardCheckIcon}
         title="Evaluation not found"
         action={
-          <Link href={ROUTES.evaluations} className="text-sec font-medium text-sapphire-600">
+          <Link href={ROUTES.evaluations} className="text-sec font-medium text-ink-primary">
             Back to evaluations
           </Link>
         }
@@ -45,7 +45,7 @@ export default function EvaluationDetailPage({
       <PageHeader
         title="Evaluation"
         actions={
-          <Link href={ROUTES.evaluations} className="text-sec font-medium text-sapphire-600">
+          <Link href={ROUTES.evaluations} className="text-sec font-medium text-ink-primary">
             All evaluations
           </Link>
         }

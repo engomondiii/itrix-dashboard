@@ -8,7 +8,7 @@ const COLOR: Record<Tier, string> = {
   4: "text-tier-4",
 };
 
-/** Score rendered in its tier color (Atelier table convention). */
+/** Score rendered in its tier color (table convention). */
 export function LeadScoreBadge({ score, tier }: { score: number; tier: Tier }) {
   return (
     <span className={cn("font-semibold tabular-nums", COLOR[tier])}>{score}</span>
