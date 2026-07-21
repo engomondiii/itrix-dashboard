@@ -60,13 +60,27 @@ export interface ConversationHeaderContract {
   quickHelp: boolean;
 }
 
-/** A lead's journey read (Backend `JourneyLeadSerializer`). */
+/**
+ * A lead's journey read (Backend `JourneyLeadSerializer`).
+ *
+ * THE v6.0 FIELDS ARE OPTIONAL, AND THAT IS NOT DEFENSIVE PADDING — it is what
+ * the wire actually looks like today. `shell`, `journeyNumber`, `stateKey` and
+ * `successOverlayActive` are Backend v6.0 §3.1 additions; the running Django
+ * still serves the v3-era payload without them. Typing them as required told
+ * the compiler a lie, and the first component to dereference `journey.shell`
+ * crashed the whole lead page in production.
+ *
+ * Use `normalizeJourney` (lib/api/journeyApi.ts) rather than reading these
+ * straight off the response: it derives what can be derived from `state` and
+ * leaves genuinely absent things absent.
+ */
 export interface JourneyLead {
   leadId: string;
   state: JourneyState;
-  /** `journey_number` 1–10, or null for the off-ladder DORMANT. */
-  journeyNumber: number | null;
-  stateKey: StateKey;
+  /** `journey_number` 1–10, or null for the off-ladder DORMANT. [v6.0] */
+  journeyNumber?: number | null;
+  /** [v6.0] */
+  stateKey?: StateKey;
   /** True once the lead has reached DIAGNOSED (a value artifact was delivered). */
   valueDelivered: boolean;
   /** True when the deterministic invite gate would pass. */
@@ -74,11 +88,14 @@ export interface JourneyLead {
   /**
    * True from the FIRST PAYMENT (state 7), not from license-out. A paid
    * Assessment customer already has named owners, support access and success
-   * goals (Architecture v2.6 §7.1).
+   * goals (Architecture v2.6 §7.1). [v6.0]
    */
-  successOverlayActive: boolean;
-  /** What Surface 1 may render for this subject right now. */
-  shell: ShellContract;
+  successOverlayActive?: boolean;
+  /**
+   * What Surface 1 may render for this subject right now. [v6.0 — absent until
+   * the backend ships `shell.for_subject`.]
+   */
+  shell?: ShellContract;
   transitions: JourneyTransition[];
 }
 

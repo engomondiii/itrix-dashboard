@@ -49,7 +49,8 @@ export function MigrationReportPanel() {
           isError={query.isError}
           hasData={Boolean(report)}
           label="the migration report"
-        />
+        error={query.error}
+      />
 
         {report && report.totalLegacy === 0 && (
           <EmptyState

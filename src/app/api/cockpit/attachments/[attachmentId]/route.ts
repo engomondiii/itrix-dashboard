@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 
 import { siteConfig } from "@/config/site.config";
 import { getSessionUser } from "@/lib/server/session";
-import { djangoFetch, djangoJson } from "@/lib/server/proxy";
+import { notImplementedOnBackend } from "@/lib/server/proxy";
 import { getAttachment } from "@/mocks/attachmentsDb";
 
 export async function GET(
@@ -15,9 +15,10 @@ export async function GET(
   const { attachmentId } = await params;
 
   if (!siteConfig.useMocks) {
-    // v6: GET cockpit/attachments/{id}/
-    const r = await djangoFetch(`/cockpit/attachments/${attachmentId}/`);
-    return djangoJson(r);
+    return notImplementedOnBackend(
+      "Attachment detail",
+      "GET cockpit/attachments/{id}/ on the team plane",
+    );
   }
 
   const attachment = getAttachment(attachmentId);

@@ -45,6 +45,7 @@ export function SupportQueue({ clientId }: { clientId?: string }) {
         isError={query.isError}
         hasData={Boolean(data)}
         label="the support queue"
+        error={query.error}
       />
 
       {data && (

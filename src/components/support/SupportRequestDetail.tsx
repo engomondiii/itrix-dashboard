@@ -39,6 +39,7 @@ export function SupportRequestDetail({ requestId }: { requestId: string }) {
         isError={query.isError}
         hasData={Boolean(request)}
         label="this support request"
+        error={query.error}
       />
 
       {request && (

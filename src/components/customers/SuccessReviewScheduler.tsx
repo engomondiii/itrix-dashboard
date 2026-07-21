@@ -29,6 +29,7 @@ export function SuccessReviewScheduler() {
         isError={query.isError}
         hasData={Boolean(reviews)}
         label="scheduled reviews"
+        error={query.error}
       />
 
       {reviews && reviews.length === 0 && (

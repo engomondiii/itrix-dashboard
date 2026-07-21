@@ -1,4 +1,4 @@
-import { apiGet } from "@/lib/api/client";
+import { apiGet, NotImplementedOnBackendError } from "@/lib/api/client";
 import { API } from "@/constants/routes";
 import type { Persona, PersonaMatch } from "@/types/persona";
 
@@ -21,6 +21,11 @@ export async function getPersonaMatch(leadId: string): Promise<PersonaMatch | nu
   if (r.status === 204) return null;
   if (!r.ok) {
     const body = await r.json().catch(() => ({}));
+    // Mirror `apiGet`'s handling — this fetcher is hand-rolled for the 204, so
+    // it has to reproduce the 501 case rather than inherit it.
+    if (r.status === 501 && body?.unimplemented) {
+      throw new NotImplementedOnBackendError(body.detail, body.expectedEndpoint);
+    }
     throw new Error(body?.detail ?? `Request failed (${r.status})`);
   }
   return (await r.json()) as PersonaMatch;

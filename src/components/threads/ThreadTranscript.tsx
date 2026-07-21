@@ -49,6 +49,7 @@ export function ThreadTranscript({ threadId }: { threadId: string }) {
         isError={query.isError}
         hasData={Boolean(detail)}
         label="this thread"
+        error={query.error}
       />
 
       {detail && (

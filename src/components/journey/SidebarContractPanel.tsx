@@ -60,6 +60,33 @@ export function SidebarContractPanel({ leadId }: { leadId: string }) {
 
   const { shell } = journey;
 
+  /**
+   * The shell contract is Backend v6.0 §3.1. Until `shell.for_subject` ships,
+   * the journey payload simply does not carry it.
+   *
+   * Say so plainly rather than rendering an empty panel or, as this did before,
+   * dereferencing `shell.identityState` and taking the entire lead page down
+   * with it. An operator needs to know the difference between "this visitor can
+   * see nothing" and "we cannot tell you yet" — those are opposite answers to a
+   * governance question.
+   */
+  if (!shell) {
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle>Shell contract</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <p className="text-sec text-ink-secondary">
+            Not served by the connected backend yet. This panel reports what Surface 1
+            is authorized to render for a subject, and it appears once the backend
+            ships the shell contract.
+          </p>
+        </CardContent>
+      </Card>
+    );
+  }
+
   return (
     <Card>
       <CardHeader>

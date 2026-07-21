@@ -78,6 +78,7 @@ export function ConversationAnalytics() {
         isError={threadsQuery.isError || coverageQuery.isError}
         hasData={Boolean(threads && coverage)}
         label="conversation analytics"
+        error={threadsQuery.error ?? coverageQuery.error}
       />
 
       {threads && coverage && (
@@ -165,6 +166,7 @@ export function AttachmentAnalytics() {
         isError={query.isError}
         hasData={Boolean(rows)}
         label="attachment analytics"
+        error={query.error}
       />
 
       {rows && (
@@ -238,6 +240,7 @@ export function StreamingAnalytics() {
         isError={query.isError}
         hasData={Boolean(data)}
         label="streaming analytics"
+        error={query.error}
       />
 
       {data && (
@@ -313,6 +316,7 @@ export function CustomerAnalytics() {
         isError={query.isError}
         hasData={Boolean(rows)}
         label="customer analytics"
+        error={query.error}
       />
 
       {rows && (
@@ -369,6 +373,7 @@ export function SupportAnalytics() {
         isError={query.isError}
         hasData={Boolean(data)}
         label="support analytics"
+        error={query.error}
       />
 
       {data && (
@@ -420,6 +425,7 @@ export function OutcomeAnalytics() {
         isError={query.isError}
         hasData={Boolean(outcomes)}
         label="outcome analytics"
+        error={query.error}
       />
 
       {outcomes && (

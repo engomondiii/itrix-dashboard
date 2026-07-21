@@ -1,7 +1,8 @@
-import { TriangleAlertIcon } from "lucide-react";
+import { ConstructionIcon, TriangleAlertIcon } from "lucide-react";
 
 import { EmptyState } from "@/components/ui/empty-state";
 import { Spinner } from "@/components/ui/spinner";
+import { isNotImplemented } from "@/lib/api/client";
 
 /**
  * The loading / error gate for a React Query view.
@@ -17,12 +18,15 @@ export function QueryState({
   isError,
   hasData,
   label = "this data",
+  error,
 }: {
   isLoading: boolean;
   isError: boolean;
   hasData: boolean;
   /** Named in the error copy, e.g. "the SLA settings". */
   label?: string;
+  /** Pass `query.error` so a not-yet-built backend route reads as such. */
+  error?: unknown;
 }) {
   if (isLoading) {
     return (
@@ -31,6 +35,26 @@ export function QueryState({
       </div>
     );
   }
+
+  /**
+   * "The backend has not shipped this yet" is a normal state of an in-progress
+   * cutover, not a fault. Rendering it as a red failure trains operators to
+   * ignore red failures, so it gets its own calm treatment.
+   */
+  if (isNotImplemented(error)) {
+    return (
+      <EmptyState
+        icon={ConstructionIcon}
+        title="Not available on this backend yet"
+        description={
+          error.expectedEndpoint
+            ? `This view is built and waiting on ${error.expectedEndpoint}.`
+            : error.message
+        }
+      />
+    );
+  }
+
   if (isError || !hasData) {
     return (
       <EmptyState

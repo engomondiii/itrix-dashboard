@@ -64,6 +64,7 @@ export function PersonaTable() {
         isError={query.isError}
         hasData={Boolean(personas)}
         label="the persona registry"
+        error={query.error}
       />
 
       {personas && personas.length === 0 && (

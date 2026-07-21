@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 
 import { siteConfig } from "@/config/site.config";
 import { getSessionUser } from "@/lib/server/session";
-import { djangoFetch, djangoJson } from "@/lib/server/proxy";
+import { notImplementedOnBackend } from "@/lib/server/proxy";
 import { getCustomerNextAction, recordCommercialOverride } from "@/mocks/nbaDb";
 
 /**
@@ -23,9 +23,10 @@ export async function GET(
   const { clientId } = await params;
 
   if (!siteConfig.useMocks) {
-    // v6: GET cockpit/customers/{id}/next-action/ — carries suppression_reason.
-    const r = await djangoFetch(`/cockpit/customers/${clientId}/next-action/`);
-    return djangoJson(r);
+    return notImplementedOnBackend(
+      "The customer-first next best action",
+      "GET/POST cockpit/customers/{id}/next-action/",
+    );
   }
 
   const nba = getCustomerNextAction(clientId);
@@ -54,12 +55,10 @@ export async function POST(
   const reason = String(body?.reason ?? "");
 
   if (!siteConfig.useMocks) {
-    // v6: POST cockpit/customers/{id}/next-action/ — logs the override.
-    const r = await djangoFetch(`/cockpit/customers/${clientId}/next-action/`, {
-      method: "POST",
-      body: JSON.stringify({ reason }),
-    });
-    return djangoJson(r);
+    return notImplementedOnBackend(
+      "Logging a commercial override",
+      "POST cockpit/customers/{id}/next-action/",
+    );
   }
 
   const entry = recordCommercialOverride(clientId, reason, user.name ?? user.email);

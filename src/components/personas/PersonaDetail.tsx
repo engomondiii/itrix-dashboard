@@ -32,6 +32,7 @@ export function PersonaDetail({ personaId }: { personaId: string }) {
         isError={query.isError}
         hasData={Boolean(persona)}
         label="this persona"
+        error={query.error}
       />
 
       {persona && (

@@ -162,6 +162,7 @@ export function ThreadBoard() {
         isError={query.isError}
         hasData={Boolean(threads)}
         label="live threads"
+        error={query.error}
       />
 
       {threads && threads.length === 0 && (

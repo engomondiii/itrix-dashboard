@@ -33,6 +33,7 @@ export function CoverageOverviewPanel() {
         isError={query.isError}
         hasData={Boolean(data)}
         label="loop productivity"
+        error={query.error}
       />
 
       {data && (

@@ -45,7 +45,8 @@ export function NextBestAction({ clientId }: { clientId: string }) {
           isError={query.isError}
           hasData={Boolean(nba)}
           label="the next best action"
-        />
+        error={query.error}
+      />
 
         {nba && (
           <>

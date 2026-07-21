@@ -45,3 +45,35 @@ export async function djangoJson(r: Response) {
   }
   return NextResponse.json(data, { status: r.status });
 }
+
+/**
+ * Declare that a route has no counterpart on the connected backend.
+ *
+ * Surface 2 v5.0 specifies a team-plane RESOURCE for each of its new areas —
+ * a thread list, an attachment review queue, a support queue, a customer list.
+ * The shipped backend (v6.0 Phase 3) mounts team-plane AGGREGATES at those
+ * names instead: `cockpit/threads/` is conversation metrics, not a list of
+ * threads; `cockpit/attachments/` is volume and quarantine rates, not a queue
+ * of files. The resources simply are not there yet.
+ *
+ * WHY 501 AND NOT A PASSTHROUGH 404. A 404 is indistinguishable from "this
+ * lead does not exist", so it surfaces as a generic failure and an operator
+ * cannot tell a missing record from a missing feature. 501 says precisely what
+ * is true — the surface is built, the backend route is not — and
+ * `unimplemented: true` lets the client render an honest empty state instead of
+ * an error. It also stops the request being made at all, which is why the
+ * network tab stops filling with red rows.
+ *
+ * Each call names the endpoint the backend would need to expose, so closing the
+ * gap is a grep away: `rg "notImplementedOnBackend" src/app/api`.
+ */
+export function notImplementedOnBackend(what: string, expectedEndpoint: string) {
+  return NextResponse.json(
+    {
+      detail: `${what} is not served by the connected backend yet.`,
+      unimplemented: true,
+      expectedEndpoint,
+    },
+    { status: 501 },
+  );
+}

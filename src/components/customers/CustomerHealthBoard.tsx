@@ -39,6 +39,7 @@ export function CustomerHealthBoard() {
         isError={query.isError}
         hasData={Boolean(rows)}
         label="the customer health board"
+        error={query.error}
       />
 
       {rows && rows.length === 0 && (

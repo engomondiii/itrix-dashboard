@@ -46,6 +46,7 @@ export function OutcomeBookView() {
         isError={query.isError}
         hasData={Boolean(outcomes)}
         label="outcomes"
+        error={query.error}
       />
 
       {outcomes && outcomes.length > 0 && (

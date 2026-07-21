@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 
 import { siteConfig } from "@/config/site.config";
 import { getSessionUser } from "@/lib/server/session";
-import { djangoFetch, djangoJson } from "@/lib/server/proxy";
+import { notImplementedOnBackend } from "@/lib/server/proxy";
 import { getSupportRequest } from "@/mocks/supportDb";
 
 export async function GET(
@@ -15,9 +15,10 @@ export async function GET(
   const { requestId } = await params;
 
   if (!siteConfig.useMocks) {
-    // v6: GET support/queue/{id}/
-    const r = await djangoFetch(`/support/queue/${requestId}/`);
-    return djangoJson(r);
+    return notImplementedOnBackend(
+      "A support request",
+      "GET support/queue/{id}/ on the team plane",
+    );
   }
 
   const request = getSupportRequest(requestId);

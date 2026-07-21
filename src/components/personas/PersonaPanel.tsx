@@ -6,6 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Spinner } from "@/components/ui/spinner";
 import { usePersonaMatch } from "@/hooks/usePersonas";
+import { isNotImplemented } from "@/lib/api/client";
 import { ROUTES } from "@/constants/routes";
 import { FUNCTIONAL_FAMILY_LABEL } from "@/types/persona";
 
@@ -27,7 +28,15 @@ import { ValidationStatusBadge } from "./ValidationStatusBadge";
  * because the operator will prepare around it either way.
  */
 export function PersonaPanel({ leadId }: { leadId: string }) {
-  const { data: match, isLoading, isError } = usePersonaMatch(leadId);
+  const { data: match, isLoading, isError, error } = usePersonaMatch(leadId);
+
+  /**
+   * The registry exists on the backend (`GET personas/`), but nothing joins a
+   * LEAD to a persona yet — there is no `cockpit/leads/{id}/persona/`. Say that,
+   * rather than "no persona matched": those are different claims, and the second
+   * one would have an operator conclude the matcher ran and found nothing.
+   */
+  const unavailable = isNotImplemented(error);
 
   return (
     <Card>
@@ -43,7 +52,15 @@ export function PersonaPanel({ leadId }: { leadId: string }) {
           </div>
         )}
 
-        {isError && !isLoading && (
+        {unavailable && !isLoading && (
+          <p className="text-sec text-ink-secondary">
+            The persona registry is live, but the connected backend has no route that
+            joins a lead to a persona yet, so there is no hypothesis to show. Browse the
+            registry directly from Operations → Personas.
+          </p>
+        )}
+
+        {isError && !unavailable && !isLoading && (
           <p className="text-sec text-ink-secondary">Persona data isn’t available yet.</p>
         )}
 

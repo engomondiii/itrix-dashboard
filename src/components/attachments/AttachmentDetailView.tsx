@@ -61,6 +61,7 @@ export function AttachmentDetailView({ attachmentId }: { attachmentId: string })
         isError={query.isError}
         hasData={Boolean(attachment)}
         label="this attachment"
+        error={query.error}
       />
 
       {attachment && (

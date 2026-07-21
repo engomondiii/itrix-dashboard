@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 
 import { siteConfig } from "@/config/site.config";
 import { getSessionUser } from "@/lib/server/session";
-import { djangoFetch, djangoJson } from "@/lib/server/proxy";
+import { notImplementedOnBackend } from "@/lib/server/proxy";
 import { listSupportRequests, supportQueueSummary } from "@/mocks/supportDb";
 
 /**
@@ -23,10 +23,10 @@ export async function GET(req: Request) {
   const clientId = new URL(req.url).searchParams.get("clientId") ?? undefined;
 
   if (!siteConfig.useMocks) {
-    // v6: GET support/queue/
-    const qs = clientId ? `?clientId=${encodeURIComponent(clientId)}` : "";
-    const r = await djangoFetch(`/support/queue/${qs}`);
-    return djangoJson(r);
+    return notImplementedOnBackend(
+      "The support queue",
+      "GET support/queue/ on the team plane (portal/success/support/ is client-plane)",
+    );
   }
 
   const results = listSupportRequests(clientId);

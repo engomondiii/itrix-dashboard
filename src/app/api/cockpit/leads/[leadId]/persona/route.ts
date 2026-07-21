@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 
 import { siteConfig } from "@/config/site.config";
 import { getSessionUser } from "@/lib/server/session";
-import { djangoFetch, djangoJson } from "@/lib/server/proxy";
+import { notImplementedOnBackend } from "@/lib/server/proxy";
 import { getPersonaMatch } from "@/mocks/personasDb";
 
 /**
@@ -22,9 +22,10 @@ export async function GET(
   const { leadId } = await params;
 
   if (!siteConfig.useMocks) {
-    // v6: GET cockpit/leads/{id}/persona/ — team plane only.
-    const r = await djangoFetch(`/cockpit/leads/${leadId}/persona/`);
-    return djangoJson(r);
+    return notImplementedOnBackend(
+      "The persona hypothesis for a lead",
+      "GET cockpit/leads/{id}/persona/ (personas/ exists, but nothing joins a lead to one)",
+    );
   }
 
   const match = getPersonaMatch(leadId);

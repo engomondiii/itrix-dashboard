@@ -101,6 +101,7 @@ export function AttachmentQueue() {
         isError={query.isError}
         hasData={Boolean(rows)}
         label="the attachment queue"
+        error={query.error}
       />
 
       {rows && rows.length === 0 && (

@@ -46,6 +46,7 @@ export function StreamGuardHitTable() {
         isError={query.isError}
         hasData={Boolean(data)}
         label="streaming governance"
+        error={query.error}
       />
 
       {data && (

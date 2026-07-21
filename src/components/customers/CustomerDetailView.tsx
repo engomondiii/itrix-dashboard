@@ -37,6 +37,7 @@ export function CustomerDetailView({ clientId }: { clientId: string }) {
         isError={query.isError}
         hasData={Boolean(detail)}
         label="this customer"
+        error={query.error}
       />
 
       {detail && (

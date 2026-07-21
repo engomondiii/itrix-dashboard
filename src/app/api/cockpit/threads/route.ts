@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 
 import { siteConfig } from "@/config/site.config";
 import { getSessionUser } from "@/lib/server/session";
-import { djangoFetch, djangoJson } from "@/lib/server/proxy";
+import { notImplementedOnBackend } from "@/lib/server/proxy";
 import { listThreads } from "@/mocks/threadsDb";
 
 /**
@@ -24,9 +24,10 @@ export async function GET(req: Request) {
   const sp = new URL(req.url).searchParams;
 
   if (!siteConfig.useMocks) {
-    // v6: GET cockpit/threads/ — live threads including anonymous.
-    const r = await djangoFetch(`/cockpit/threads/?${sp.toString()}`);
-    return djangoJson(r);
+    return notImplementedOnBackend(
+      "Live thread oversight",
+      "GET cockpit/threads/ returning a thread LIST (it currently returns conversation metrics)",
+    );
   }
 
   const results = listThreads({

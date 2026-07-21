@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 
 import { siteConfig } from "@/config/site.config";
 import { getSessionUser } from "@/lib/server/session";
-import { djangoFetch, djangoJson } from "@/lib/server/proxy";
+import { notImplementedOnBackend } from "@/lib/server/proxy";
 import { listSuccessReviews } from "@/mocks/customersDb";
 
 /**
@@ -19,9 +19,10 @@ export async function GET() {
   }
 
   if (!siteConfig.useMocks) {
-    // v6: GET success/reviews/
-    const r = await djangoFetch("/success/reviews/");
-    return djangoJson(r);
+    return notImplementedOnBackend(
+      "Scheduled success reviews",
+      "GET success/reviews/",
+    );
   }
 
   const results = listSuccessReviews();
