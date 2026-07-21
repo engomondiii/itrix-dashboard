@@ -185,3 +185,42 @@ backend confirmed the proxy delivers all three shapes end to end
 Throwaway script and scratch route both removed; `.env.local` restored to mock mode.
 
 Gate: `pnpm lint` ✅ · `pnpm typecheck` ✅ · `pnpm build` ✅
+
+---
+
+## 2026-07-22 · Batch 6: Lead-detail actions — stale cross-screen caches
+
+**Scope.** The five action buttons on the lead detail rail (Book meeting, Mark NDA
+required, Request paid evaluation, Mark PoC candidate, Escalate) and the two inline
+controls (status, owner), traced through `useLeadActions` to what each one actually
+mutates and which *other* screens read that state.
+
+### Real fix
+
+| # | Defect | Fix | Severity |
+|---|---|---|---|
+| 1 | `useLeadActions` invalidated only `["lead"]` and `["leads"]`. But **four actions move `lead.status`** — which the **pipeline board** groups by and the **NDA list** filters on (`listNda` selects `NDA_LEAD_STATUSES`) — and two more create a deal record their own screen lists. With a 30s `staleTime`, marking a lead NDA-required and opening Pipeline showed it still in its old column | per-action invalidation: status-movers refresh `["pipeline"]`+`["nda"]`; eval/poc also refresh `["evaluations"]`/`["pocs"]`; assign refreshes `["pipeline"]` (cards show the owner). `escalate`/`addNote`/`bookMeeting` stay lead-local — they touch nothing off-screen | Medium |
+
+### Verified correct (no change needed)
+
+- **Not a permission hole.** None of the eight lead-action routes gate role
+  dashboard-side, but every `@action` on `LeadViewSet` carries
+  `[IsAuthenticated, IsDashboardUser, IsNotViewer]` — a read-only operator is refused
+  one layer down, on the authoritative side. (This is the recon's classic false
+  positive — "unguarded action" defended by the layer below — so it was checked
+  before touching anything.)
+- **`escalate` genuinely is lead-local** — it only appends a `LeadActivity`, changes
+  no status and creates no record, so it correctly needs no extra invalidation.
+  Reverting the instinct to invalidate it wholesale is the method working.
+- Per-action keys chosen over blanket invalidation on purpose: a note or an
+  escalation must not refetch the whole pipeline board.
+
+### Runtime evidence (mock mode, driven over HTTP as Admin)
+
+- `POST /api/leads/{id}/nda` on a `Meeting Booked` lead → `status: NDA`, and the lead
+  went from **absent to present** on the NDA screen (`onNdaScreen: False → True`).
+- `POST /api/leads/{id}/poc` on a `Closed` lead → pipeline column **`Closed → PoC`**
+  AND a PoC record appeared on the PoCs screen. Both are cross-screen effects the old
+  two-key invalidation left stale.
+
+Gate: `pnpm lint` ✅ · `pnpm typecheck` ✅ · `pnpm build` ✅
