@@ -7,6 +7,21 @@
  * and the Brand Manual v1.5 token rename), which are corrections rather than
  * features and therefore ship unconditionally.
  *
+ * DEFAULT-ON, UNLIKE MOCK MODE — and the difference is deliberate.
+ *
+ * `useMocks` is opt-in by the exact string "true" because it is a SECURITY
+ * boundary: forgetting it must fail closed. These are not. All three phases are
+ * merged, every view degrades honestly when its backend route is missing (see
+ * `notImplementedOnBackend`), and the failure mode of forgetting one is only
+ * that an operator cannot reach a page that would have told them the truth
+ * anyway. Defaulting them off meant a deployment with no env vars pruned the
+ * new areas out of the sidebar entirely, which is how they went missing in
+ * production.
+ *
+ * So: enabled unless explicitly set to "false". Set the variable to "false" to
+ * hide an area — for example while its backend counterpart is being built and
+ * the empty state would only confuse people.
+ *
  * BUILD-TIME, NOT RUNTIME. `NEXT_PUBLIC_*` is inlined by the compiler, so every
  * value here is frozen at `next build`. The reads below are written as full
  * literal `process.env.NEXT_PUBLIC_…` expressions on purpose: Next only
@@ -21,8 +36,8 @@
  * Surface 2 v5.0 §06, §10
  */
 
-/** Opt-in by exact value, matching the mock-mode discipline in site.config.ts. */
-const on = (value: string | undefined): boolean => value === "true";
+/** On unless explicitly disabled. See the default-on note above. */
+const on = (value: string | undefined): boolean => value !== "false";
 
 export const features = {
   /** Phase 1 — live conversation oversight: the Threads board and transcript. */

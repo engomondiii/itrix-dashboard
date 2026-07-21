@@ -49,6 +49,24 @@ export function SidebarNavItem({ item }: { item: NavItem }) {
           />
           <CollapsibleContent>
             <SidebarMenuSub>
+              {/*
+                The trigger opens the group; it does not navigate. Without this
+                first entry the parent's own page is unreachable from the
+                sidebar — /follow-up, /analytics, /templates and /settings all
+                have real pages that nothing linked to.
+
+                A trigger that both toggled and navigated would be the other
+                option, and a worse one: it makes the disclosure arrow
+                unpredictable, and every accidental expand becomes a page load.
+              */}
+              <SidebarMenuSubItem>
+                <SidebarMenuSubButton
+                  isActive={pathname === item.href}
+                  render={<Link href={item.href} />}
+                >
+                  <span>All {item.label.toLowerCase()}</span>
+                </SidebarMenuSubButton>
+              </SidebarMenuSubItem>
               {item.children.map((child) => {
                 const ChildIcon = NAV_ICONS[child.icon];
                 return (

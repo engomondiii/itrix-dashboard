@@ -1,4 +1,9 @@
-import { apiGet, NotImplementedOnBackendError } from "@/lib/api/client";
+import {
+  apiGet,
+  NotImplementedOnBackendError,
+  rememberUnimplementedEndpoint,
+  throwIfKnownUnimplemented,
+} from "@/lib/api/client";
 import { API } from "@/constants/routes";
 import type { Persona, PersonaMatch } from "@/types/persona";
 
@@ -17,14 +22,19 @@ export function getPersona(personaId: string) {
  * `apiGet` would throw on `r.json()` of an empty response.
  */
 export async function getPersonaMatch(leadId: string): Promise<PersonaMatch | null> {
-  const r = await fetch(API.cockpitPersona(leadId), { cache: "no-store" });
+  const url = API.cockpitPersona(leadId);
+  throwIfKnownUnimplemented(url);
+
+  const r = await fetch(url, { cache: "no-store" });
   if (r.status === 204) return null;
   if (!r.ok) {
     const body = await r.json().catch(() => ({}));
     // Mirror `apiGet`'s handling — this fetcher is hand-rolled for the 204, so
     // it has to reproduce the 501 case rather than inherit it.
     if (r.status === 501 && body?.unimplemented) {
-      throw new NotImplementedOnBackendError(body.detail, body.expectedEndpoint);
+      const error = new NotImplementedOnBackendError(body.detail, body.expectedEndpoint);
+      rememberUnimplementedEndpoint(url, error);
+      throw error;
     }
     throw new Error(body?.detail ?? `Request failed (${r.status})`);
   }

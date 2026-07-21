@@ -56,6 +56,14 @@ const rawNavigation: NavSection[] = [
       { label: "PoCs", href: ROUTES.pocs, icon: "FlaskConical" },
     ],
   },
+  /**
+   * FLAT ON PURPOSE. A nav item with `children` renders as a COLLAPSIBLE
+   * TRIGGER rather than a link (see SidebarLink) — so nesting the board under
+   * itself made `/threads` and `/customers` unreachable: you could open the
+   * group and click a sub-page, but never the board the group is named after.
+   *
+   * Every destination here is therefore its own leaf.
+   */
   {
     label: "Conversations",
     items: [
@@ -64,14 +72,12 @@ const rawNavigation: NavSection[] = [
         href: ROUTES.threads,
         icon: "Radio",
         enabled: features.threadOversight,
-        children: [
-          {
-            label: "Loop productivity",
-            href: ROUTES.threadsCoverage,
-            icon: "Target",
-            enabled: features.coverageReading,
-          },
-        ],
+      },
+      {
+        label: "Loop productivity",
+        href: ROUTES.threadsCoverage,
+        icon: "Target",
+        enabled: features.coverageReading,
       },
       {
         label: "Attachments",
@@ -90,20 +96,18 @@ const rawNavigation: NavSection[] = [
         href: ROUTES.customers,
         icon: "HeartHandshake",
         enabled: features.customerSuccess,
-        children: [
-          {
-            label: "Outcomes",
-            href: ROUTES.customersOutcomes,
-            icon: "Target",
-            enabled: features.customerSuccess,
-          },
-          {
-            label: "Success reviews",
-            href: ROUTES.customersReviews,
-            icon: "CalendarCheck",
-            enabled: features.customerSuccess,
-          },
-        ],
+      },
+      {
+        label: "Outcomes",
+        href: ROUTES.customersOutcomes,
+        icon: "Target",
+        enabled: features.customerSuccess,
+      },
+      {
+        label: "Success reviews",
+        href: ROUTES.customersReviews,
+        icon: "CalendarCheck",
+        enabled: features.customerSuccess,
       },
       {
         label: "Support",
