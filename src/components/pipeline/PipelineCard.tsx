@@ -31,7 +31,7 @@ export function PipelineCard({
   return (
     <div
       className={cn(
-        "relative rounded-md border border-border-soft bg-surface p-3 shadow-1 transition-colors hover:border-signature-soft",
+        "relative rounded-md border border-border-soft bg-surface p-3 shadow-1 transition-colors hover:border-tint",
         card.overdue && "pl-4",
       )}
     >

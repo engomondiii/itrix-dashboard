@@ -22,7 +22,7 @@ export const GOVERNANCE_STATUS_LABEL: Record<GovernanceStatus, string> = {
   rejected: "Rejected",
 };
 
-type BadgeIntent = "info" | "warning" | "success" | "neutral" | "signature" | "error";
+type BadgeIntent = "info" | "warning" | "success" | "neutral" | "accent" | "error";
 
 export const GOVERNANCE_STATUS_INTENT: Record<GovernanceStatus, BadgeIntent> = {
   auto_approved: "success",

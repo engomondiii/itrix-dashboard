@@ -126,7 +126,7 @@ export const JOURNEY_STATE_DESCRIPTION: Record<JourneyState, string> = {
   DORMANT: "Nurture — inactive, or below the invite gate.",
 };
 
-type BadgeIntent = "info" | "warning" | "success" | "neutral" | "signature" | "error";
+type BadgeIntent = "info" | "warning" | "success" | "neutral" | "accent" | "error";
 
 export const JOURNEY_STATE_INTENT: Record<JourneyState, BadgeIntent> = {
   ARRIVED: "neutral",
@@ -135,9 +135,9 @@ export const JOURNEY_STATE_INTENT: Record<JourneyState, BadgeIntent> = {
   CLIENT_PAGE: "info",
   INVITED: "warning",
   NDA_REVIEW: "success",
-  ASSESSMENT: "signature",
-  POC: "signature",
-  INTEGRATION: "signature",
+  ASSESSMENT: "accent",
+  POC: "accent",
+  INTEGRATION: "accent",
   CUSTOMER_SUCCESS: "success",
   DORMANT: "neutral",
 };

@@ -26,10 +26,10 @@ const badgeVariants = cva(
         error: "bg-error-soft text-error-text",
         info: "bg-info-soft text-info",
         neutral: "bg-muted text-muted-foreground",
-        // The signature intent — the restrained holographic highlight. Named
-        // `signature` rather than `accent` because shadcn already owns
-        // --color-accent as its hover wash (see globals.css).
-        signature: "bg-tint text-structure-600",
+        // The accent intent. Brand Manual v1.5 defines no flat highlight
+        // colour — its only accent value is #D6E6FF, which is `tint`. So this
+        // is soft-bg + strong-text like every other intent, never a fill.
+        accent: "bg-tint text-structure-600",
 
         // Lead tiers (soft companion backgrounds).
         "tier-1": "bg-tier-1-soft text-tier-1",

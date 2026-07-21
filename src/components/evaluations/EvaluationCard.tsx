@@ -9,7 +9,7 @@ export function EvaluationCard({ evaluation }: { evaluation: Evaluation }) {
   return (
     <Link
       href={ROUTES.evaluation(evaluation.id)}
-      className="block rounded-md border border-border-soft bg-surface p-4 shadow-1 transition-colors hover:border-signature-soft"
+      className="block rounded-md border border-border-soft bg-surface p-4 shadow-1 transition-colors hover:border-tint"
     >
       <div className="flex items-center justify-between gap-2">
         <span className="text-sec font-medium text-ink-primary">

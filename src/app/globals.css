@@ -32,23 +32,38 @@
      ink-primary / ink-secondary / ink-muted / ink-inverse
      border-glass / border-soft / border-medium / border-strong
      structure-600..900   (restrained dark ramp: sidebar, dark sections)
-     signature(+soft/line) — see the naming note below
+     accent-line          (the manual's only flat accent token)
 
-   TWO DELIBERATE DEVIATIONS FROM itrix-web
+   THERE IS NO FLAT ACCENT COLOUR, AND THAT IS THE MANUAL'S POINT
    ---------------------------------------------------------------
-   1. `signature`, not `accent`. The Brand Manual calls the
-      holographic soft-blue highlight "accent", and itrix-web uses
-      that name. This repo cannot: shadcn already owns
-      --color-accent as its hover/selected wash (#D6E6FF), and the
-      colour-utility namespace is shared between them, so a second
-      `accent` would silently shadow it. Same rule as --text-sec vs
-      --text-secondary. The family is therefore signature /
-      signature-soft / signature-line, matching --shadow-signature.
-   2. line-strong → border-medium, not border-strong. The mapping
-      here follows the rendered VALUE: the old --color-line-strong
-      was rgba(148,163,184,0.56), which is border-medium. Brand
-      Manual border-strong is a much darker rgba(31,41,55,0.72) and
-      would visibly thicken every hairline it touched.
+   An earlier version of this file carried a `signature` family
+   (#8FA8EA / #B7CBF4), mirrored from itrix-web. Neither value
+   appears anywhere in Brand Manual v1.5 EN. The manual is explicit:
+
+     "The Holographic Accent is not a single color; it is used by
+      mixing only a very faint cyan/violet light into the
+      #EAF0FF → #D6E6FF → #F8FAFC flow. Excessive rainbow, neon and
+      cyberpunk effects are prohibited."
+
+   Its only flat accent token is --color-accent-blue-soft: #D6E6FF,
+   which is `tint` — already here. So the highlight is expressed as
+   a gradient across soft → tint → canvas, and `accent-line`
+   (rgba(148,163,184,0.48), a real manual token) carries hairlines.
+
+   ONE DELIBERATE DEVIATION FROM THE MANUAL'S NAMES
+   ---------------------------------------------------------------
+   The manual names the background and text families
+   --color-background-* and --color-text-*. This repo uses
+   canvas/soft/tint and ink-*, matching itrix-web, so the two
+   frontends share one vocabulary. Values are identical either way;
+   only the names differ. Borders, surfaces, focus-ring, hover-glow
+   and accent-line all match the manual exactly.
+
+   And one mapping note: line-strong → border-medium, not
+   border-strong. That follows the rendered VALUE — the old
+   --color-line-strong was rgba(148,163,184,0.56), which IS
+   border-medium. Manual border-strong is a much darker
+   rgba(31,41,55,0.72) and would visibly thicken every hairline.
 
    ACCESSIBILITY CONTRACT (Brand Manual §3.3)
    ---------------------------------------------------------------
@@ -80,11 +95,10 @@
   --color-ink-muted: #94a3b8;      /* Steel Blue Gray — NON-informational only */
   --color-ink-inverse: #f8fafc;    /* Reversed text on the dark ground */
 
-  /* Signature — restrained holographic soft-blue. Under 5% of a screen.
-     Never a full holographic button, never a rainbow gradient. */
-  --color-signature: #8fa8ea;
-  --color-signature-soft: #b7cbf4;
-  --color-signature-line: rgba(148, 163, 184, 0.48);
+  /* Accent — the manual's only flat accent value is #D6E6FF, which is `tint`
+     above. This is the hairline companion. Under 5% of a screen; never a full
+     holographic button, never a rainbow gradient. */
+  --color-accent-line: rgba(148, 163, 184, 0.48);
 
   /* Borders — slate glass hairlines */
   --color-border-glass: rgba(214, 230, 255, 0.88);
@@ -122,8 +136,9 @@
   --shadow-1: 0 18px 48px rgba(31, 41, 55, 0.08);
   --shadow-2: 0 24px 72px rgba(31, 41, 55, 0.12);
   --shadow-3: 0 28px 80px rgba(31, 41, 55, 0.16);
-  /* Signature ring — the holographic soft-blue highlight */
-  --shadow-signature: 0 0 0 1px rgba(143, 168, 234, 0.35), 0 2px 12px rgba(143, 168, 234, 0.18);
+  /* Accent ring — built from the manual's accent-line and tint, not from a
+     flat highlight colour (there isn't one). */
+  --shadow-accent: 0 0 0 1px rgba(148, 163, 184, 0.48), 0 2px 12px rgba(214, 230, 255, 0.64);
 
   /* Radius — v1.2 softer geometry (was 6/8/12) */
   --radius-sm: 10px;
@@ -195,8 +210,8 @@
   --secondary-foreground: #374151;
   --muted: #eaf0ff; /* soft */
   --muted-foreground: #4b5563; /* ink-secondary */
-  --accent: #d6e6ff; /* tint — shadcn's hover/selected wash. NOT the Brand
-                        Manual signature accent; see the naming note above. */
+  --accent: #d6e6ff; /* tint — shadcn's hover/selected wash. This is also the
+                        manual's --color-accent-blue-soft, so the two agree. */
   --accent-foreground: #1f2937; /* ink on tint */
   --destructive: #d92d20; /* error */
   --border: rgba(148, 163, 184, 0.32); /* border-soft */
@@ -204,7 +219,8 @@
   --ring: rgba(148, 163, 184, 0.72); /* focus ring (§8.5) */
 
   --chart-1: #2c3a4e; /* deep slate-ink */
-  --chart-2: #8fa8ea; /* signature soft-blue */
+  --chart-2: #4b5563; /* ink-secondary — the manual defines no chart palette,
+                         so series colours are drawn from its real values */
   --chart-3: #067647; /* emerald */
   --chart-4: #6e7ca8; /* muted slate-blue */
   --chart-5: #b54708; /* amber */
@@ -219,7 +235,7 @@
   --sidebar-accent: #313e50; /* structure-700 (active item fill) */
   --sidebar-accent-foreground: #f8fafc; /* ink-inverse */
   --sidebar-border: #3c4a5e; /* structure-600 */
-  --sidebar-ring: #8fa8ea; /* signature soft-blue (active indicator) */
+  --sidebar-ring: #d6e6ff; /* tint (active indicator) */
 }
 
 /* Map next/font CSS vars + shadcn semantic colors onto Tailwind utilities.

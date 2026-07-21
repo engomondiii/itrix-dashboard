@@ -19,7 +19,7 @@ export function LicenseOutProbability({ value }: { value?: number }) {
         <div className="text-micro font-semibold uppercase tracking-[0.06em] text-ink-secondary">
           License-out probability
         </div>
-        <Badge variant="signature">Directional</Badge>
+        <Badge variant="accent">Directional</Badge>
       </div>
       <CockpitMeter label="Likelihood" value={value} />
       <p className="text-micro text-ink-secondary">

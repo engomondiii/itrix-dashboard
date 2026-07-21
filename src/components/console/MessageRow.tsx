@@ -12,7 +12,7 @@ function formatAt(iso: string): string {
     : d.toLocaleString(undefined, { dateStyle: "medium", timeStyle: "short" });
 }
 
-/** Sender washes - visitor/client neutral, agent tinted, team signature (Theme §21). */
+/** Sender washes - visitor/client neutral, agent tinted, team accent (Theme §21). */
 const WASH: Record<SenderKind, string> = {
   visitor: "bg-surface border-border-soft",
   client: "bg-surface border-border-soft",

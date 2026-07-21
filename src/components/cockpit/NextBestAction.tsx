@@ -53,7 +53,7 @@ export function NextBestAction({ clientId }: { clientId: string }) {
             <div className="rounded-md bg-soft p-3">
               <div className="flex flex-wrap items-center gap-2">
                 <Badge variant="neutral">{NBA_ACTION_TYPE_LABEL[nba.primary.type]}</Badge>
-                {nba.primary.commercial && <Badge variant="signature">Commercial</Badge>}
+                {nba.primary.commercial && <Badge variant="accent">Commercial</Badge>}
               </div>
               <p className="mt-1 text-sec font-medium text-ink-primary">
                 {nba.primary.label}

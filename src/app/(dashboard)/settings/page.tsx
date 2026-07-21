@@ -36,7 +36,7 @@ export default function SettingsPage() {
           <Link
             key={href}
             href={href}
-            className="flex items-center gap-3 rounded-md border border-border-soft bg-surface p-4 shadow-1 transition-colors hover:border-signature-soft"
+            className="flex items-center gap-3 rounded-md border border-border-soft bg-surface p-4 shadow-1 transition-colors hover:border-tint"
           >
             <span className="flex size-9 items-center justify-center rounded-md bg-soft">
               <Icon className="size-4 text-ink-secondary" />

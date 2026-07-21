@@ -61,7 +61,7 @@ export function ClaimCardTable() {
             <Link
               key={c.id}
               href={ROUTES.governanceClaimCard(c.id)}
-              className="block rounded-md border border-border-soft bg-surface p-3 transition-colors hover:border-signature-soft"
+              className="block rounded-md border border-border-soft bg-surface p-3 transition-colors hover:border-tint"
             >
               <div className="flex flex-wrap items-center gap-2">
                 <span className="text-sec font-medium text-ink-primary">{c.title}</span>

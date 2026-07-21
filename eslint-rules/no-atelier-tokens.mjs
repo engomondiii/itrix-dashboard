@@ -21,7 +21,7 @@
 
 /** Retired name → replacement. Longest / most specific patterns first. */
 const RETIRED = [
-  ['shadow-gold', 'shadow-signature'],
+  ['shadow-gold', 'shadow-accent'],
   ['canvas-deep', 'soft'],
   ['surface-warm', 'surface'],
   ['surface-sunken', 'soft'],
@@ -34,12 +34,12 @@ const RETIRED = [
   ['sapphire-700', 'ink-primary'],
   ['sapphire-600', 'ink-primary'],
   ['sapphire-500', 'structure-600'],
-  ['sapphire-300', 'signature-soft'],
+  ['sapphire-300', 'tint'],
   ['sapphire-100', 'tint'],
   ['sapphire-50', 'soft'],
   ['gold-600', 'structure-600'],
-  ['gold-500', 'signature'],
-  ['gold-400', 'signature-soft'],
+  ['gold-500', 'tint (Brand Manual v1.5 has no flat accent colour)'],
+  ['gold-400', 'tint'],
   ['gold-100', 'tint'],
   ['gold-50', 'soft'],
   ['ink-900', 'ink-primary'],

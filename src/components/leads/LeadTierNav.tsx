@@ -32,7 +32,7 @@ export function LeadTierNav({ current }: { current?: Tier }) {
         >
           {t.label}
           {t.active && (
-            <span className="absolute inset-x-2 -bottom-px h-0.5 rounded-full bg-signature" />
+            <span className="absolute inset-x-2 -bottom-px h-0.5 rounded-full bg-tint" />
           )}
         </Link>
       ))}

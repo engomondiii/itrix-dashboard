@@ -43,7 +43,7 @@ export default function ReportingPage() {
             <Link
               key={r.id}
               href={ROUTES.report(r.id)}
-              className="rounded-md border border-border-soft bg-surface p-4 shadow-1 transition-colors hover:border-signature-soft"
+              className="rounded-md border border-border-soft bg-surface p-4 shadow-1 transition-colors hover:border-tint"
             >
               <div className="flex items-center gap-2 text-card-title font-semibold text-ink-primary">
                 <FileTextIcon className="size-4 text-ink-secondary" />

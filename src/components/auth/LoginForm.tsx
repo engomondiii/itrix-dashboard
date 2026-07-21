@@ -23,7 +23,7 @@ export function LoginForm() {
   // Shared field styling - translucent structural wells that brighten on focus.
   const fieldClass =
     "border-ink-inverse/15 bg-structure-900/40 text-ink-inverse placeholder:text-ink-muted/50 " +
-    "focus-visible:border-signature-soft focus-visible:ring-structure-600/40 " +
+    "focus-visible:border-tint focus-visible:ring-structure-600/40 " +
     "selection:bg-structure-600/30";
 
   return (
@@ -69,7 +69,7 @@ export function LoginForm() {
       </Button>
 
       {siteConfig.useMocks && (
-        <p className="rounded-md border border-signature/25 bg-signature/10 px-3 py-2 text-caption text-tint">
+        <p className="rounded-md border border-tint/25 bg-tint/10 px-3 py-2 text-caption text-tint">
           Mock mode — any credentials sign you in. Try{" "}
           <span className="font-mono text-soft">admin@itrix.example</span>.
         </p>
