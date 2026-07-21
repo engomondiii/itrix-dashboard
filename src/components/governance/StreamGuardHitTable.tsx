@@ -21,6 +21,7 @@ import { GUARD_PATTERNS, GUARD_PATTERN_LABEL } from "@/types/streaming";
 
 import { EnvelopeDowngradeRow } from "./EnvelopeDowngradeRow";
 import { MatchedPatternChip } from "./MatchedPatternChip";
+import { MatchedTextReveal } from "./MatchedTextReveal";
 
 /**
  * Every stream-guard halt and envelope downgrade.
@@ -102,6 +103,7 @@ export function StreamGuardHitTable() {
                       <TableRow>
                         <TableHead>Thread</TableHead>
                         <TableHead>Matched</TableHead>
+                        <TableHead>What was blocked</TableHead>
                         <TableHead>Agent</TableHead>
                         <TableHead>Plane</TableHead>
                         <TableHead>Discarded</TableHead>
@@ -121,6 +123,9 @@ export function StreamGuardHitTable() {
                           </TableCell>
                           <TableCell>
                             <MatchedPatternChip pattern={hit.pattern} />
+                          </TableCell>
+                          <TableCell className="max-w-[34ch]">
+                            <MatchedTextReveal text={hit.matchedText} />
                           </TableCell>
                           <TableCell className="text-sec text-ink-secondary">
                             {hit.agent}

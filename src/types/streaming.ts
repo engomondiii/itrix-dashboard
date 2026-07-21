@@ -73,6 +73,20 @@ export interface GuardHit {
   stateKey: string;
   plane: "anonymous" | "client" | "team";
   pattern: GuardPattern;
+  /**
+   * The prohibited wording the guard actually matched — what the model was
+   * about to say before the stream was halted.
+   *
+   * THE MOST SENSITIVE FIELD ON THIS SURFACE. The backend's own docstring for
+   * `stream_metrics.recent_hits()` says it "must never appear anywhere else".
+   * It is rendered to ADMIN / ASSESSMENT operators only, behind an explicit
+   * reveal, and it must never be copied into a thread intervention, a follow-up
+   * draft, or any client-plane payload — the whole point of the halt was that
+   * the visitor never saw it.
+   *
+   * Null when the backend withheld it, which is a valid answer, not an error.
+   */
+  matchedText: string | null;
   /** How much provisional text was discarded from the client. */
   discardedChars: number;
   at: string; // ISO

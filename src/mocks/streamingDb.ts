@@ -22,6 +22,25 @@ const NOW = Date.parse("2026-07-21T11:00:00Z");
 
 const AGENTS = ["Concierge", "Diagnosis", "Pitch", "Proof"];
 
+/**
+ * Representative wording for each pattern family — what the guard caught.
+ *
+ * Written to look like the real failure mode: a plausible, confident sentence
+ * that would have been genuinely damaging if it had reached a visitor. A mock
+ * of anodyne text would let the console's reveal-and-warn treatment look like
+ * overkill, which is how that treatment gets removed later.
+ */
+const MATCHED_TEXT: Record<GuardPattern, string> = {
+  benchmark_figure: "…delivers a 3.4× speed-up on comparable HBM-bound workloads…",
+  guarantee_language: "…we guarantee at least a 40% reduction in inference cost…",
+  pricing: "…the Alpha Compute Assessment is priced at USD 45,000…",
+  exclusivity_terms: "…field-of-use exclusivity in APAC is available for this segment…",
+  competitor_claim: "…roughly twice what you would see from an equivalent NVIDIA stack…",
+  mechanism_disclosure: "…the reordering step factors the operator into an index-ordered…",
+  lookup_table_phrasing: "…ALPHA Core replaces the multiply with a lookup-table execution…",
+  inferred_identity: "…given that you are on the platform infrastructure team at a hyperscaler…",
+};
+
 function hash(value: string): number {
   let h = 0;
   for (let i = 0; i < value.length; i += 1) {
@@ -57,6 +76,7 @@ export function getStreamingGovernance(): StreamingGovernanceRead {
         "lookup_table_phrasing",
         "inferred_identity",
       ];
+      const pattern = patterns[seed % patterns.length];
       return {
         id: `hit-${t.id}`,
         threadId: t.id,
@@ -67,7 +87,8 @@ export function getStreamingGovernance(): StreamingGovernanceRead {
           t.identityState === "anonymous"
             ? ("anonymous" as const)
             : ("client" as const),
-        pattern: patterns[seed % patterns.length],
+        pattern,
+        matchedText: MATCHED_TEXT[pattern],
         discardedChars: 40 + (seed % 260),
         at: new Date(NOW - (8 + i * 17) * 60_000).toISOString(),
       };
