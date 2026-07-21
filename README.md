@@ -5,15 +5,20 @@ console where the IWL team works every lead from the itriX AI Sales Engine: list
 detail, pipeline board, follow-up SLAs, NDA tracking, evaluations, PoCs, analytics,
 templates, monthly reporting, and settings.
 
+Since **Surface 2 v5.0** it is also the only place any human can watch Surface 1's
+live conversations: thread oversight from a visitor's first sentence, attachment
+review, customer success and support, the persona registry, and streaming
+governance.
+
 It is a **display + proxy** frontend. All business logic — scoring, AI/RAG, CRM writes,
 email, Knowledge Core — lives in the Django backend; every `app/api/**/route.ts` is a thin
 authenticated pass-through. See [`SCAFFOLD_PLAN.md`](./SCAFFOLD_PLAN.md) for the full plan
-and the Backend v3 cutover checklist.
+and the Backend v6.0 / Surface 2 v5.0 cutover checklist (§9–§10).
 
 ## Stack
 
 - **Next.js 16** (App Router, TypeScript) · **React 19**
-- **Tailwind CSS v4** (CSS-first) + **shadcn/ui**, themed with the **Atelier Indigo** design system
+- **Tailwind CSS v4** (CSS-first) + **shadcn/ui**, themed with **itriX Brand Manual v1.5 EN**
 - **Zustand** (client state) · **TanStack Query v5** (server state) · **Recharts** (analytics)
 - **pnpm**
 
@@ -21,8 +26,8 @@ and the Backend v3 cutover checklist.
 
 ```bash
 pnpm install
-cp .env.example .env.local   # defaults are fine for mock mode
-pnpm dev                     # http://localhost:3000
+cp .env.example .env.local   # then set NEXT_PUBLIC_USE_MOCKS=true for offline dev
+pnpm dev                     # http://localhost:3001  (3000 belongs to itrix-web)
 ```
 
 Other scripts: `pnpm build` · `pnpm start` · `pnpm lint` · `pnpm typecheck`.
