@@ -102,3 +102,86 @@ files removed:
   reveals fire, and an illegal `engage` from `INVITED` → **409**.
 
 Gate: `pnpm lint` ✅ · `pnpm exec tsc --noEmit` ✅ (one real `prefer-const` caught and fixed).
+
+---
+
+## 2026-07-22 · Batch 4–5: Console rows, and a contract sweep of every screen
+
+**Scope.** Triggered by a production screenshot of `/console` in which *every*
+conversation row rendered a bare `—` where the last message should be. Batch 4 is that
+row. Batch 5 sweeps every dashboard proxy path against the real backend URL map
+(`engomondiii/itrix-backend` @ `07a7ad8`) — a screen is broken if its endpoint is
+wrong, so this is the systematic form of "review all screens".
+
+**Method note.** Recon was done by reading both sides of the contract directly rather
+than by delegating, so there was no recon layer to false-positive. The one false
+positive below was my own path-normalising, caught the same way — by reading the code.
+
+### Real fixes
+
+| # | Defect | Fix | Severity |
+|---|---|---|---|
+| 1 | Console rows rendered `—` for three completely different states: no messages, messages held at the governance gate, and no data. On a governance console the middle case is the one an operator is looking for — a turn pending approval, possibly with a visitor waiting — and it was indistinguishable from an idle conversation | new `conversationPreview()` splits the states using `lastMessageAt`; the row now shows an **"Awaiting approval"** badge and says nothing was delivered | High |
+| 2 | The row rendered `unreadCount` as "**N new**". On the team plane the backend resolves that field with neither `client` nor `user`, so no `last_read_at` filter applies and it is the count of *approved* messages, not unread ones — a mislabelled number, not a missing one | relabelled to "N approved"; the comment records why the honest label is not "new" | Medium |
+
+Root cause of #1 is worth stating plainly: `lastPreview` comes from
+`deliverable_messages()`, which admits only `AUTO_APPROVED`/`APPROVED` turns. That is
+the **client-facing** filter, and the team console inherits it (the serializer's own
+docstring says *"a row in the portal conversation list"*). An empty preview therefore
+means "nothing approved", never "nothing happened".
+
+### Verified correct (no change needed)
+
+- **All eight lead actions** the detail page posts — `assign`, `status`, `note`,
+  `meeting`, `escalate`, `nda`, `paid-eval`, `poc` — exist as `@action` methods on
+  `LeadViewSet`. The action buttons on the lead screen are wired correctly.
+- **Follow-up** `{id}/{complete|snooze|dismiss|reschedule}/` — all four exist; the
+  dashboard only ever sends three of them.
+- **Notifications** `{id}/read/` — exists (`@action(detail=True) def read`).
+- **Settings → Profile** — `/auth/profile/` is mounted and correct.
+- **Governance** claim-cards (list + detail) and audit, **agents** approval-queue /
+  approval action / runs / `{key}/run`, **console** conversations + message,
+  **conversations** `{id}`, **cockpit** leads + next-action, **journey** leads /
+  advance / overview, **analytics** + analytics/pitch, **personas** list + detail —
+  every one matches a real backend route.
+- The **`—` no longer appears anywhere** in the console list; each state has words.
+
+### False positives caught
+
+- *"`/personas/{id}` is missing its trailing slash — Django `APPEND_SLASH` will break
+  the POST."* Not real. The call is `` `/personas/${qs}` `` on the **list** route,
+  where `qs` is a query string (`""` or `"?family=…"`), so it resolves to `/personas/`
+  or `/personas/?family=…`. The artefact came from my own path-normalising sed
+  collapsing `${…}` to `{id}`, not from the code. Reading the actual line settled it.
+- Same cause: `/agents/approval/{id}/{id}/`, `/follow-up/{id}/{id}/` and
+  `/nda/{id}/{id}/` all looked like doubled ids. They are `{id}/{action}` pairs and
+  match the backend exactly.
+
+### Deferred — needs a human decision
+
+1. **`apps.settings` is never mounted.** `apps/settings/urls.py` defines exactly
+   `sla/` and `notifications/` — precisely the two paths the dashboard calls — and the
+   app is in `INSTALLED_APPS`, but `api/v1/urls.py` has no `path("settings/", …)`.
+   **Settings → SLA** and **Settings → Notifications** therefore 404 in real mode.
+   One-line backend fix. **Deliberately not patched dashboard-side:** the dashboard is
+   calling the right path, and adding a `notImplementedOnBackend` guard would go stale
+   the moment the route is wired. Written up in `../BACKEND_GAPS.md`.
+2. **The console preview is computed with client-plane visibility.** An operator cannot
+   see the latest turn of a conversation whose turns are all pending — the exact
+   conversation that needs attention. Needs a team-plane preview
+   (`all_messages().last()`), which is a backend serializer decision, not a frontend
+   one. Batch 4 fix #1 makes the *state* visible; it cannot recover the text.
+3. **No per-operator read state on the team plane.** `unreadCount` cannot mean "unread
+   for you" until console participants carry a `user` and a `last_read_at`. Fix #2
+   stops the UI claiming otherwise.
+
+### Runtime evidence
+
+`conversationPreview` exercised directly under `node --experimental-strip-types` across
+five cases — approved turn, held-at-gate, genuinely empty, `null` timestamp off the
+wire, and preview-without-timestamp — all pass, including the happy path. The stub
+backend confirmed the proxy delivers all three shapes end to end
+(`preview='…'` / `preview='' + lastMessageAt` / `preview='' + no timestamp`).
+Throwaway script and scratch route both removed; `.env.local` restored to mock mode.
+
+Gate: `pnpm lint` ✅ · `pnpm typecheck` ✅ · `pnpm build` ✅
