@@ -224,3 +224,57 @@ mutates and which *other* screens read that state.
   two-key invalidation left stale.
 
 Gate: `pnpm lint` ✅ · `pnpm typecheck` ✅ · `pnpm build` ✅
+
+---
+
+## 2026-07-22 · Batch 7: Pipeline board — the move menu
+
+**Scope.** `usePipeline` / `useMoveLead` and the per-card "Move to stage" menu
+(`PipelineCard.tsx:73`), which offers every value in `LEAD_STATUSES` — including NDA,
+Evaluation, PoC and Licensed — as a one-click target.
+
+### Real fix
+
+| # | Defect | Fix | Severity |
+|---|---|---|---|
+| 1 | `useMoveLead` invalidated only `["pipeline"]` and `["leads"]`. But the **NDA list** is derived from status (`listNda` selects `["NDA","Evaluation","PoC","Licensed"]`), and the menu can move a lead straight into NDA. Moving a card into the NDA column left the NDA screen showing the stale set for its 30s window | added `["nda"]` invalidation | Medium |
+
+### Over-reach caught and reverted (the method working)
+
+The first version of this fix also invalidated `["evaluations"]` and `["pocs"]`, on
+the assumption — carried over from Batch 6 — that those screens are status-derived
+too. **They are not.** `/api/pocs` returns `pocDb()` and `/api/evaluations` returns
+`evalDb()`: Evaluation and PoC *records*, created only by the dedicated
+"Request paid evaluation" / "Mark PoC candidate" actions, which `useLeadActions`
+already refreshes.
+
+Caught by the runtime rather than by reading: after moving a lead to `PoC`, its
+pipeline column changed to `PoC` and `onPoCs` stayed **False**. Both keys removed —
+shipping them would have been two needless refetches on every pipeline move, justified
+by a comment that was simply wrong.
+
+Batch 6 is unaffected and stands: `requestEvaluation` / `markPoC` *do* create records
+(`createEvaluationForLead` / `createPoCForLead`), so refreshing those lists there is
+correct.
+
+### False positives caught
+
+- *"`/api/nda` is broken — the dev log shows `TypeError: components.ComponentMod.handler
+  is not a function`."* Not real. **Port 3001 was held by `wslrelay.exe`**, a WSL port
+  forward, so half the verification traffic was hitting an unrelated service (its 401
+  body was `{messageId: "auth.unauthorized", traceID: …}` — not this app's
+  `{detail: …}` shape). Re-running the dashboard on port 3021: `/api/nda` → **200**.
+  The error was HMR fallout from the port clash.
+- *A typecheck failure in `.next/dev/types/validator.ts`.* Generated file, written by
+  the dev server concurrently with `tsc`. Clean after stopping dev and removing
+  `.next/dev/types`.
+
+### Runtime evidence (mock mode, port 3021, driven as Admin)
+
+`POST /api/leads/{id}/status {"status":"NDA"}` — the exact call the move menu makes —
+on a `Meeting Booked` lead: pipeline column `Meeting Booked → NDA`, and NDA-screen
+membership **False → True**. A subsequent move to `PoC`: column `NDA → PoC`, NDA
+membership stayed True (correct — PoC is in `NDA_LEAD_STATUSES`), PoCs screen stayed
+False (correct — no record was created).
+
+Gate: `pnpm lint` ✅ · `pnpm typecheck` ✅ · `pnpm build` ✅
