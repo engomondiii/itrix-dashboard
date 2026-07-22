@@ -42,7 +42,7 @@ export function ConversationListItem({
             Latest turn is not approved yet — nothing has been delivered.
           </span>
         )}
-        {preview.kind === "empty" && <span className="text-ink-muted">No messages yet</span>}
+        {preview.kind === "empty" && <span className="italic text-ink-secondary">No messages yet</span>}
       </p>
     </Link>
   );

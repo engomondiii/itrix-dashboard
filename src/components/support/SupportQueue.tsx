@@ -124,7 +124,7 @@ export function SupportQueue({ clientId }: { clientId?: string }) {
                   </TableCell>
 
                   <TableCell className="text-sec text-ink-secondary">
-                    {r.owner ?? <span className="text-ink-muted">Unassigned</span>}
+                    {r.owner ?? <span className="italic text-ink-secondary">Unassigned</span>}
                   </TableCell>
                 </TableRow>
               ))}

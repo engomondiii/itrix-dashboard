@@ -134,7 +134,7 @@ function ThreadRow({ thread }: { thread: ThreadListItem }) {
       </TableCell>
 
       <TableCell className="text-sec text-ink-secondary">
-        {thread.humanOwner ?? <span className="text-ink-muted">Unassigned</span>}
+        {thread.humanOwner ?? <span className="italic text-ink-secondary">Unassigned</span>}
       </TableCell>
     </TableRow>
   );

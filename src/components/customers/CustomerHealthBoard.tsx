@@ -123,7 +123,7 @@ export function CustomerHealthBoard() {
                   </TableCell>
 
                   <TableCell className="text-sec text-ink-secondary">
-                    {c.owner ?? <span className="text-ink-muted">Unassigned</span>}
+                    {c.owner ?? <span className="italic text-ink-secondary">Unassigned</span>}
                   </TableCell>
                 </TableRow>
               ))}

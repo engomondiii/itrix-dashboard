@@ -417,3 +417,79 @@ pre-hydration render is fail-closed (`user` undefined → hidden), so there is n
 a forbidden control.
 
 Gate: `pnpm lint` ✅ · `pnpm typecheck` ✅ · `pnpm build` ✅
+
+---
+
+## Batch 10 — brand and accessibility token compliance (final)
+
+The one class where a browser-free audit is genuinely strong rather than a
+compromise: the Brand Manual v1.5 rules are static and greppable.
+
+### Verified correct (no change needed)
+
+- **No raw hex in components.** The single match is a *comment* in
+  `components/ui/badge.tsx` explaining why `tint` is the only accent value.
+- **No solid-fill badges.** The "soft-bg + strong-text, never solid fill" rule
+  holds across every `Badge` call site.
+- **No retired Atelier token names** — the `itrix/no-atelier-tokens` ESLint rule
+  is doing its job and the build is green.
+
+### Real finding — `ink-muted` used for information-bearing text
+
+The accessibility contract is explicit: `ink-muted` (#94A3B8) fails contrast on
+light grounds and is for **placeholders, disabled states and dividers only**.
+
+Most of the 29 `text-ink-muted` uses are legitimate and were left alone:
+
+- the sidebar and login screen sit on **dark** grounds (`structure-800/900`),
+  where #94A3B8 has ample contrast — the contract is scoped to light grounds;
+- em-dashes, `CircleIcon`/`ChevronRightIcon` glyphs, and one `aria-hidden`
+  separator are dividers, not text.
+
+Six were violations — all on light ground, all **downgrading a cell that already
+carried `text-ink-secondary`** to a value the operator actually has to read:
+
+| Where | Text |
+|---|---|
+| `customers/CustomerHealthBoard.tsx:126` | `Unassigned` |
+| `support/SupportQueue.tsx:127` | `Unassigned` |
+| `threads/ThreadBoard.tsx:137` | `Unassigned` |
+| `threads/ThreadTranscript.tsx:80` | `unassigned` |
+| `threads/ThreadTranscript.tsx:91` | `No lead yet — this visitor has not been qualified` |
+| `attachments/RiskFlagList.tsx:14` | `None` (i.e. no risk flags) |
+
+"Unassigned" in an Owner column is the cell's **value**, not an absent one — an
+operator scanning for unowned threads is reading exactly that word. `None` on an
+attachment-review screen is the security answer the reviewer came for.
+
+Fixed as `italic text-ink-secondary`: this keeps the visual distinction the muted
+styling was reaching for (an absent value still does not read like a person's
+name) without spending contrast to get it.
+
+`console/ConversationListItem.tsx` got the same treatment for consistency — its
+`No messages yet` is deliberately distinct from the `pending` state (Batch 4), so
+it carries meaning too.
+
+**Judgement call, stated plainly:** applied strictly, this contract leaves
+`ink-muted` usable for almost nothing but glyphs and em-dashes. That appears to be
+the intent — but if the brand owner meant it more loosely, the six changes above
+are the ones to revisit, and they are a single class change each.
+
+Gate: `pnpm lint` ✅ · `pnpm typecheck` ✅ · `pnpm build` ✅
+
+---
+
+# Audit closed
+
+Ten batches. The last two opened new classes deliberately because the original one
+was exhausted; both returned real but progressively smaller findings, which is the
+convergence signal. Remaining ground is genuinely blocked, not merely unswept:
+
+- **Visual and interaction QA needs a browser.** The Chrome extension is not
+  connected, so hover, focus, spacing, motion and the role-dependent branches that
+  resolve client-side were never observed. Static token compliance (Batch 10) is
+  the best available proxy, not a substitute.
+- **Real-mode proxy branches cannot be exercised until Django runs.** Everything
+  verified at runtime was verified in mock mode.
+- **The v5.0 screens cannot be audited against a backend that does not serve them**
+  — see `BACKEND_GAPS.md`.

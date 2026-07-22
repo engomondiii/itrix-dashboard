@@ -11,7 +11,7 @@ import { Badge } from "@/components/ui/badge";
  */
 export function RiskFlagList({ flags }: { flags: string[] }) {
   if (flags.length === 0) {
-    return <span className="text-caption text-ink-muted">None</span>;
+    return <span className="text-caption italic text-ink-secondary">None</span>;
   }
   return (
     <ul className="flex flex-wrap gap-1">

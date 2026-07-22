@@ -77,7 +77,7 @@ export function ThreadTranscript({ threadId }: { threadId: string }) {
                 <span>
                   Owner:{" "}
                   {detail.thread.humanOwner ?? (
-                    <span className="text-ink-muted">unassigned</span>
+                    <span className="italic text-ink-secondary">unassigned</span>
                   )}
                 </span>
                 {detail.thread.leadId ? (
@@ -88,7 +88,7 @@ export function ThreadTranscript({ threadId }: { threadId: string }) {
                     Open the lead →
                   </Link>
                 ) : (
-                  <span className="text-ink-muted">
+                  <span className="italic text-ink-secondary">
                     No lead yet — this visitor has not been qualified
                   </span>
                 )}
