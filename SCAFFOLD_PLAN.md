@@ -201,6 +201,20 @@ lists from the backend `models.py` before applying):**
 - Available-but-not-applied (values *are* given in v3, deferred pending confirmation):
   NDA states add `DECLINED`/`EXPIRED`; auth roles → `ADMIN`/`ASSESSMENT`/`SPECIALIST`/`VIEWER` (4).
 
+**Must be un-degraded at cutover — team roster writes (added 2026-07-22):** the roster is
+**dashboard-managed** (decided 22 Jul), but `TeamMemberViewSet` today has neither
+`CreateModelMixin` nor `DestroyModelMixin` and its `http_method_names` exclude `post`/`delete`,
+so forwarding produced a bare DRF 405. Both proxy branches therefore return
+`notImplementedOnBackend` instead of forwarding:
+- `src/app/api/team/route.ts` → `POST` — restore the `djangoFetch("/team/", {method:"POST"})` branch.
+- `src/app/api/team/[memberId]/route.ts` → `DELETE` — restore the `djangoFetch(\`/team/${memberId}/\`)` branch.
+
+These are the only two routes deliberately degraded for a *decided-and-agreed* endpoint rather
+than an undecided one, so they are the first thing to re-check when the backend lands. Endpoint
+spec and the open `role` vs `team_role` question are in the repo-root `BACKEND_GAPS.md`.
+⚠️ The dashboard gates both affordances ADMIN-only (`canAdministerTeam`) to match the backend's
+`IsAdminOrReadOnly`; if that permission is relaxed, the predicate must move with it.
+
 **Not yet built (v3 lists, lower priority for the dashboard MVP):** `leads/{id}/paid-eval`,
 `{id}/poc`, `{id}/summary`, `{id}/handoff`, `approval-checklist`; `emails/send` route; reporting
 `generate`/`html`/`json_export`; notifications `read`/`read-all`/`unread-count` write endpoints.

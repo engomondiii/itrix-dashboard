@@ -48,11 +48,19 @@ export function TeamMemberFormDialog({
   function onSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (!valid || pending) return;
-    const payload = { name: name.trim(), email: email.trim(), role };
     if (editing && member) {
-      update.mutate({ id: member.id, patch: payload }, { onSuccess: onClose });
+      // Email is deliberately NOT sent on edit. The backend serializer lists it
+      // in `read_only_fields`, and DRF discards read-only fields on write
+      // *silently* — so an admin would edit an address, get a success toast, and
+      // find it unchanged. The mock layer does apply it, which would have made
+      // this work locally and fail only after cutover. The field is disabled
+      // when editing; changing an address is an identity change.
+      update.mutate(
+        { id: member.id, patch: { name: name.trim(), role } },
+        { onSuccess: onClose },
+      );
     } else {
-      invite.mutate(payload, { onSuccess: onClose });
+      invite.mutate({ name: name.trim(), email: email.trim(), role }, { onSuccess: onClose });
     }
   }
 
@@ -89,7 +97,14 @@ export function TeamMemberFormDialog({
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               placeholder="name@itrix.example"
+              disabled={editing}
+              aria-describedby={editing ? "member-email-hint" : undefined}
             />
+            {editing && (
+              <p id="member-email-hint" className="text-caption text-ink-secondary">
+                The sign-in address cannot be changed here.
+              </p>
+            )}
           </div>
           <div className="space-y-1.5">
             <Label htmlFor="member-role">Role</Label>

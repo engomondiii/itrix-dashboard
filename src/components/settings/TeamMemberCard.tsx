@@ -1,11 +1,18 @@
 "use client";
 
 import { useState } from "react";
-import { MoreVerticalIcon, PencilIcon, Trash2Icon } from "lucide-react";
+import {
+  MoreVerticalIcon,
+  PencilIcon,
+  Trash2Icon,
+  UserCheckIcon,
+  UserXIcon,
+} from "lucide-react";
 
 import { RoleBadge } from "@/components/settings/RoleBadge";
 import { TeamMemberFormDialog } from "@/components/settings/TeamMemberFormDialog";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Badge } from "@/components/ui/badge";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import {
   DropdownMenu,
@@ -24,7 +31,7 @@ function initials(name: string) {
 
 export function TeamMemberCard({ member }: { member: TeamMember }) {
   const { user } = useAuth();
-  const { remove } = useTeamActions();
+  const { remove, update } = useTeamActions();
   const [editing, setEditing] = useState(false);
   const [confirming, setConfirming] = useState(false);
 
@@ -46,6 +53,14 @@ export function TeamMemberCard({ member }: { member: TeamMember }) {
         <div className="truncate text-caption text-ink-secondary">{member.email}</div>
       </div>
       <div className="ml-auto flex shrink-0 items-center gap-3">
+        {/*
+          An inactive member keeps their leads but cannot sign in, so the roster
+          has to say which they are — otherwise a deactivated account is
+          indistinguishable from a working one and still looks like a valid
+          assignee. `active` was carried by the DTO, the mock and the PATCH route
+          all along, and rendered nowhere.
+        */}
+        {!member.active && <Badge variant="neutral">Inactive</Badge>}
         {member.openLeads != null && (
           <span className="text-caption tabular-nums text-ink-secondary">
             {member.openLeads} open
@@ -64,6 +79,21 @@ export function TeamMemberCard({ member }: { member: TeamMember }) {
               <DropdownMenuItem onClick={() => setEditing(true)}>
                 <PencilIcon />
                 Edit
+              </DropdownMenuItem>
+              {/*
+                Deactivation is the only roster write the backend actually serves
+                today — `PATCH /team/{id}/` maps `active` → `is_active`, while
+                create and delete still 501. It is also the reversible one, so it
+                sits above Remove rather than behind a confirm.
+              */}
+              <DropdownMenuItem
+                onClick={() =>
+                  update.mutate({ id: member.id, patch: { active: !member.active } })
+                }
+                disabled={update.isPending}
+              >
+                {member.active ? <UserXIcon /> : <UserCheckIcon />}
+                {member.active ? "Deactivate" : "Reactivate"}
               </DropdownMenuItem>
               <DropdownMenuItem
                 variant="destructive"

@@ -25,10 +25,17 @@ export async function POST(req: Request) {
   const body = await req.json().catch(() => ({}));
 
   if (!siteConfig.useMocks) {
-    // `TeamMemberViewSet` has no `CreateModelMixin` and its `http_method_names`
-    // exclude POST, so this would return a bare DRF 405. Inviting a team member
-    // creates a `User`, which the backend does not expose over the dashboard
-    // API yet. Degrade explicitly — see BACKEND_GAPS.md.
+    // v3: team invite endpoint — AGREED, NOT YET BUILT.
+    //
+    // The roster is dashboard-managed (decided 22 Jul 2026). `TeamMemberViewSet`
+    // has no `CreateModelMixin` and its `http_method_names` exclude `post`, so
+    // forwarding returns a bare DRF 405. Degrade explicitly until it lands.
+    //
+    // Open at cutover: inviting creates a `User`, and the backend carries both
+    // an auth `role` and a display `team_role` — this payload sends one `role`.
+    // Confirm which it sets before trusting it. See BACKEND_GAPS.md.
+    //
+    // RESTORE the `djangoFetch` forward at cutover — SCAFFOLD_PLAN.md §9.
     return notImplementedOnBackend("Inviting a team member", "POST /team/");
   }
 

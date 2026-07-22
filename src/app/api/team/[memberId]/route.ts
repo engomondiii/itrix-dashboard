@@ -50,11 +50,15 @@ export async function DELETE(
   const { memberId } = await params;
 
   if (!siteConfig.useMocks) {
-    // The Django `TeamMemberViewSet` declares
-    // `http_method_names = ["get", "patch", "head", "options"]` and has no
-    // `DestroyModelMixin`, so forwarding this returns a bare DRF 405 the UI can
-    // only show as a generic failure. Team members are deactivated (PATCH
-    // `active: false`), not deleted. Degrade explicitly — see BACKEND_GAPS.md.
+    // v3: team member remove endpoint — AGREED, NOT YET BUILT.
+    //
+    // The roster is dashboard-managed (decided 22 Jul 2026), so this route is
+    // correct and it is the backend that has to catch up: `TeamMemberViewSet`
+    // has no `DestroyModelMixin` and its `http_method_names` exclude `delete`,
+    // so forwarding returns a bare DRF 405 the UI can only show as a generic
+    // failure. Degrade explicitly until the endpoint lands.
+    //
+    // RESTORE the `djangoFetch` forward at cutover — SCAFFOLD_PLAN.md §9.
     return notImplementedOnBackend("Removing a team member", "DELETE /team/{id}/");
   }
 
