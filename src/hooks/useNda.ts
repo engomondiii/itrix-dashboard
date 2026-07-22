@@ -36,9 +36,22 @@ export function useNdaRecord(leadId: string) {
   });
 }
 
+/**
+ * Only ONE of the five NDA transitions moves the lead.
+ *
+ * `signNda` calls `setStatus(leadId, "Evaluation")` when the lead is at "NDA" —
+ * a signed NDA clears it into the evaluation stage — so signing moves the card
+ * from the NDA column to Evaluation on the pipeline board. `prepare`, `send`,
+ * `decline` and `expire` only write the NDA override and leave `lead.status`
+ * alone.
+ *
+ * So `["pipeline"]` is refreshed for signing and nothing else: expiring an NDA
+ * should not refetch the whole board.
+ */
 function useNdaMutation(
   fn: (leadId: string) => Promise<NDARecord>,
   message: string,
+  alsoInvalidate: readonly (readonly unknown[])[] = [],
 ): UseMutationResult<NDARecord, Error, string> {
   const qc = useQueryClient();
   const { toast } = useToast();
@@ -47,9 +60,9 @@ function useNdaMutation(
     onSuccess: (nda) => {
       qc.setQueryData(["nda", nda.leadId], nda);
       qc.invalidateQueries({ queryKey: ["nda"] });
-      // Signing advances the lead's pipeline status — refresh lead caches too.
       qc.invalidateQueries({ queryKey: ["leads"] });
       qc.invalidateQueries({ queryKey: ["lead", nda.leadId] });
+      for (const queryKey of alsoInvalidate) qc.invalidateQueries({ queryKey });
       toast.success(message);
     },
     onError: (e) => toast.error((e as Error).message),
@@ -57,7 +70,8 @@ function useNdaMutation(
 }
 
 export function useSignNda() {
-  return useNdaMutation(signNda, "NDA marked signed");
+  // Signing moves the lead NDA → Evaluation; the board must follow.
+  return useNdaMutation(signNda, "NDA marked signed", [["pipeline"]]);
 }
 
 export function useExpireNda() {

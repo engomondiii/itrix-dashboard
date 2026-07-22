@@ -60,6 +60,11 @@ export function useEvaluationActions(id: string) {
         // A terminal status (lost) can close the lead — refresh lead caches.
         qc.invalidateQueries({ queryKey: ["leads"] });
         qc.invalidateQueries({ queryKey: ["lead", ev.leadId] });
+        // Marking an evaluation LOST closes the lead (Evaluation -> Closed).
+        // Both are pipeline column changes, and Closed also drops the lead
+        // out of NDA_LEAD_STATUSES and so off the NDA list.
+        qc.invalidateQueries({ queryKey: ["pipeline"] });
+        qc.invalidateQueries({ queryKey: ["nda"] });
         toast.success("Status updated");
       },
       onError,
@@ -112,6 +117,11 @@ export function usePoCActions(id: string) {
         // Completing a PoC licenses the lead — refresh lead-facing caches.
         qc.invalidateQueries({ queryKey: ["leads"] });
         qc.invalidateQueries({ queryKey: ["lead", p.leadId] });
+        // Completing a PoC licenses it (PoC -> Licensed); cancelling closes it.
+        // Both are pipeline column changes, and Closed also drops the lead
+        // out of NDA_LEAD_STATUSES and so off the NDA list.
+        qc.invalidateQueries({ queryKey: ["pipeline"] });
+        qc.invalidateQueries({ queryKey: ["nda"] });
         toast.success("Status updated");
       },
       onError,

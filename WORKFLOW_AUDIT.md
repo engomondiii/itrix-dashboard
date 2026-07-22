@@ -278,3 +278,69 @@ membership stayed True (correct — PoC is in `NDA_LEAD_STATUSES`), PoCs screen 
 False (correct — no record was created).
 
 Gate: `pnpm lint` ✅ · `pnpm typecheck` ✅ · `pnpm build` ✅
+
+---
+
+## 2026-07-22 · Batch 8: NDA transitions, then a systematic sweep that closed the class
+
+**Scope.** Started on `useNda`'s five mutations. Having now found the same
+cache-staleness class in three consecutive batches (6, 7, 8), the batch pivoted
+mid-way from hook-by-hook to an exhaustive sweep: *every* mock function that calls
+`setStatus` — i.e. every code path that can move a lead on the pipeline board — cross
+referenced against which hooks invalidate `["pipeline"]`.
+
+### Real fixes
+
+| # | Defect | Fix | Severity |
+|---|---|---|---|
+| 1 | `useSignNda` — signing an NDA calls `setStatus(leadId, "Evaluation")` (`ndaDb.ts:181`), moving the card NDA → Evaluation. The hook refreshed `["leads"]`/`["lead"]` but not `["pipeline"]`. Its own comment said *"Signing advances the lead's pipeline status"* — the author knew, and missed the key | `["pipeline"]` added, **for signing only** — `prepare`/`send`/`decline`/`expire` write the NDA override and leave status alone | Medium |
+| 2 | `useEvaluation().setStatus` — marking an evaluation **lost** moves the lead Evaluation → Closed (`dealsDb.ts:120`), a column change that also drops it out of `NDA_LEAD_STATUSES` | `["pipeline"]` + `["nda"]` | Medium |
+| 3 | `usePoC().setStatus` — **completed** licenses the lead (PoC → Licensed) and **cancelled** closes it (PoC → Closed) (`dealsDb.ts:231,238`) | `["pipeline"]` + `["nda"]` | Medium |
+
+### The sweep — this bug class is now exhaustively closed
+
+`setStatus` has exactly **four** call sites in the mock layer, plus the lead's own
+mutators. All are now covered:
+
+| Call site | Reached from | Covered in |
+|---|---|---|
+| `leadsDb` `setStatus`/`markNda`/`markEvaluation`/`markPoC` | lead-detail actions | Batch 6 |
+| `usePipeline` move menu | pipeline card | Batch 7 |
+| `ndaDb.ts:181` (sign) | NDA screen | Batch 8 |
+| `dealsDb.ts:120` (evaluation lost) | Evaluations screen | Batch 8 |
+| `dealsDb.ts:231,238` (PoC completed/cancelled) | PoCs screen | Batch 8 |
+
+Every other mutation hook — `useFollowUp`, `useReporting`, `useTemplates`,
+`useSettings`, `useTeam`, `useApprovals`, `useClaimCards`, `useConsole`,
+`useNotifications`, `useCockpit`, `useAttachments`, `useSupport`, `useEmail` — calls
+`setStatus` nowhere, so none of them can move a lead and none needs the invalidation.
+**Verified by grep over the whole mock layer, not by sampling.**
+
+### Verified correct (no change needed)
+
+- `decline` and `expire` genuinely do not move the lead — `mergeOverride` only. Proven
+  in the runtime: expiring an NDA on a lead at `NDA` left its column at `NDA`. Not
+  invalidating the board for them is correct, not an oversight.
+- The `setPoCStatus` guard `lead.status !== "Licensed" && !== "Closed"` works: firing
+  `completed` on an already-`Licensed` lead changed nothing. The first verification run
+  looked like a failed proof and was actually the guard doing its job — the
+  precondition had to be set up before the transition was observable.
+
+### False positive caught
+
+- *"The build is failing — `Error while requesting resource` ×3."* Not real.
+  `next/font/google` fetches Space Grotesk, Inter and IBM Plex Mono at build time and
+  the requests were flaky; the same build reported `✓ Compiled successfully`. Worth
+  knowing as a **deployment fragility** (the build needs network for fonts) but it is
+  not a code defect and was not "fixed".
+
+### Runtime evidence (mock mode, port 3021 — 3001 is held by `wslrelay.exe`)
+
+- Sign: lead at `NDA` → after `POST /api/nda/{id} {"action":"sign"}` column became
+  **`Evaluation`**.
+- Expire: lead at `NDA` → column stayed **`NDA`**.
+- PoC completed: column `PoC` → **`Licensed`**, NDA membership stayed `True`
+  (correct — Licensed is in `NDA_LEAD_STATUSES`).
+- PoC cancelled: column `PoC` → **`Closed`**, NDA membership **`True` → `False`**.
+
+Gate: `pnpm lint` ✅ · `pnpm typecheck` ✅ · `pnpm build` ✅
