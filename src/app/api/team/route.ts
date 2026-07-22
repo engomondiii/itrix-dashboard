@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 
 import { siteConfig } from "@/config/site.config";
 import { getSessionUser } from "@/lib/server/session";
-import { djangoFetch, djangoJson } from "@/lib/server/proxy";
+import { djangoFetch, djangoJson, notImplementedOnBackend } from "@/lib/server/proxy";
 import { inviteMember, listTeam } from "@/mocks/teamDb";
 import { ROLES, type Role } from "@/constants/roles";
 
@@ -25,12 +25,11 @@ export async function POST(req: Request) {
   const body = await req.json().catch(() => ({}));
 
   if (!siteConfig.useMocks) {
-    // v3: team invite endpoint
-    const r = await djangoFetch("/team/", {
-      method: "POST",
-      body: JSON.stringify(body),
-    });
-    return djangoJson(r);
+    // `TeamMemberViewSet` has no `CreateModelMixin` and its `http_method_names`
+    // exclude POST, so this would return a bare DRF 405. Inviting a team member
+    // creates a `User`, which the backend does not expose over the dashboard
+    // API yet. Degrade explicitly — see BACKEND_GAPS.md.
+    return notImplementedOnBackend("Inviting a team member", "POST /team/");
   }
 
   const name = String(body?.name ?? "").trim();

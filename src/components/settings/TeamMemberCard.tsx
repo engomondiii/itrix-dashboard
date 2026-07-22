@@ -13,7 +13,9 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { useAuth } from "@/hooks/useAuth";
 import { useTeamActions } from "@/hooks/useTeam";
+import { canAdministerTeam } from "@/constants/permissions";
 import type { TeamMember } from "@/types/team";
 
 function initials(name: string) {
@@ -21,9 +23,14 @@ function initials(name: string) {
 }
 
 export function TeamMemberCard({ member }: { member: TeamMember }) {
+  const { user } = useAuth();
   const { remove } = useTeamActions();
   const [editing, setEditing] = useState(false);
   const [confirming, setConfirming] = useState(false);
+
+  // The backend guards the whole `team` resource with `IsAdminOrReadOnly`, so
+  // edit and remove are both ADMIN-only — not merely "elevated".
+  const mayAdminister = canAdministerTeam(user?.role);
 
   return (
     <div className="flex items-center gap-3 rounded-md border border-border-soft bg-surface p-3 shadow-1">
@@ -45,27 +52,29 @@ export function TeamMemberCard({ member }: { member: TeamMember }) {
           </span>
         )}
         <RoleBadge role={member.role} />
-        <DropdownMenu>
-          <DropdownMenuTrigger
-            aria-label="Member actions"
-            className="inline-flex size-7 items-center justify-center rounded-md text-ink-secondary outline-none hover:bg-muted hover:text-ink-secondary focus-visible:ring-2 focus-visible:ring-ring"
-          >
-            <MoreVerticalIcon className="size-4" />
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end">
-            <DropdownMenuItem onClick={() => setEditing(true)}>
-              <PencilIcon />
-              Edit
-            </DropdownMenuItem>
-            <DropdownMenuItem
-              variant="destructive"
-              onClick={() => setConfirming(true)}
+        {mayAdminister && (
+          <DropdownMenu>
+            <DropdownMenuTrigger
+              aria-label="Member actions"
+              className="inline-flex size-7 items-center justify-center rounded-md text-ink-secondary outline-none hover:bg-muted hover:text-ink-secondary focus-visible:ring-2 focus-visible:ring-ring"
             >
-              <Trash2Icon />
-              Remove
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
+              <MoreVerticalIcon className="size-4" />
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuItem onClick={() => setEditing(true)}>
+                <PencilIcon />
+                Edit
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                variant="destructive"
+                onClick={() => setConfirming(true)}
+              >
+                <Trash2Icon />
+                Remove
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        )}
       </div>
 
       {editing && (

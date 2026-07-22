@@ -14,7 +14,9 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { formatDate } from "@/lib/formatting";
+import { useAuth } from "@/hooks/useAuth";
 import { useTemplateActions } from "@/hooks/useTemplates";
+import { canAdministerTeam } from "@/constants/permissions";
 import { TEMPLATE_KIND_LABELS, type Template } from "@/types/template";
 
 /** Splits a template body, highlighting {{variable}} placeholders. */
@@ -32,9 +34,14 @@ function renderBody(body: string) {
 }
 
 export function TemplateViewer({ template }: { template: Template }) {
+  const { user } = useAuth();
   const { remove } = useTemplateActions();
   const [editing, setEditing] = useState(false);
   const [confirming, setConfirming] = useState(false);
+
+  // Deleting a shared template is ADMIN-only on the backend (`destroy` is gated
+  // with `IsAdminOrReadOnly`); editing is only `IsNotViewer`, so it stays open.
+  const mayDelete = canAdministerTeam(user?.role);
 
   return (
     <div className="rounded-md border border-border-soft bg-surface p-4 shadow-1">
@@ -59,13 +66,15 @@ export function TemplateViewer({ template }: { template: Template }) {
                 <PencilIcon />
                 Edit
               </DropdownMenuItem>
-              <DropdownMenuItem
-                variant="destructive"
-                onClick={() => setConfirming(true)}
-              >
-                <Trash2Icon />
-                Delete
-              </DropdownMenuItem>
+              {mayDelete && (
+                <DropdownMenuItem
+                  variant="destructive"
+                  onClick={() => setConfirming(true)}
+                >
+                  <Trash2Icon />
+                  Delete
+                </DropdownMenuItem>
+              )}
             </DropdownMenuContent>
           </DropdownMenu>
         </div>

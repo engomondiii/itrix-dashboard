@@ -344,3 +344,76 @@ Every other mutation hook — `useFollowUp`, `useReporting`, `useTemplates`,
 - PoC cancelled: column `PoC` → **`Closed`**, NDA membership **`True` → `False`**.
 
 Gate: `pnpm lint` ✅ · `pnpm typecheck` ✅ · `pnpm build` ✅
+
+---
+
+## Batch 9 — destructive actions: confirmation and role gating
+
+Deliberately a **different bug class** from batches 6–8, which had converged on one
+finding (status-moving mutations not invalidating dependent caches). Batch 8 closed
+that class exhaustively, so continuing to probe it would only have manufactured work.
+
+### Verified correct (no change needed)
+
+- **Every destructive action is confirmed.** All five DELETE-issuing call sites route
+  through `ConfirmDialog`/`AlertDialog`: PoC risk, report, report section, team member,
+  template. `deleteReport` initially looked like dead code — a grep of
+  `components/reporting` found nothing — but the affordance lives at
+  `app/(dashboard)/reporting/[reportId]/page.tsx:79`, gated by a confirm and followed
+  by a redirect. Searching for the api-layer name rather than the hook's destructured
+  property (`remove`) is what hid it.
+
+### False positive caught (and why)
+
+- *"Reporting, templates and pocs have no write gate — a VIEWER can delete."* **Wrong.**
+  Class-level `permission_classes = [IsAuthenticated, IsDashboardUser]` is only the
+  **read** default; all three override `get_permissions()` and return `IsNotViewer()`
+  for write actions (`apps/reporting/views.py:48,59`, `templates_library/views.py:35`,
+  `pocs/views.py:50`). Grepping `permission_classes` alone is not sufficient to
+  conclude anything about a DRF viewset — the dynamic override wins. Same shape as the
+  Batch 6 false positive about lead actions.
+
+### Real finding 1 — admin-only affordances were not gated
+
+Two backend routes are gated `IsAdminOrReadOnly`, i.e. literally `role == ADMIN`:
+
+- `team` — **all** writes (`apps/team/views.py`)
+- `templates_library` — the `destroy` action only
+
+That is **stricter** than the `isElevated` tier (`{Admin, Assessment Team}`) the existing
+`canControlJourney` / `canAdminGovernance` helpers mirror, so neither could be reused.
+Added `canAdministerTeam` (ADMIN only) and gated the invite / edit / remove-member
+affordances and the template Delete item.
+
+Symptom this removes: a non-admin operator — **including the default local mock user,
+Naomi, who is "Success Team"** — saw "Remove member", confirmed a destructive dialog
+that says *"will lose dashboard access. This cannot be undone."*, and got a 403.
+
+Template *create* and *edit* are deliberately left ungated: the backend guards those
+with `IsNotViewer`, and Surface 2 has no VIEWER display role to mirror it with.
+
+### Real finding 2 — team create/remove have no backend counterpart
+
+`TeamMemberViewSet` declares `http_method_names = ["get", "patch", "head", "options"]`
+and carries neither `CreateModelMixin` nor `DestroyModelMixin`. The dashboard's
+`POST /api/team` and `DELETE /api/team/{id}` proxy branches forwarded anyway and would
+return a bare DRF 405 that the UI could only show as a generic failure. Both now use
+`notImplementedOnBackend`, so they degrade as "not served by the connected backend yet"
+like the other unimplemented routes. Recorded in `BACKEND_GAPS.md`.
+
+### Runtime evidence (mock mode, port 3021)
+
+- `/api/auth/me` → `{"role":"Success Team"}` — the default local session is **not**
+  admin, so the new gating is live by default rather than dormant.
+- `/settings/team` → **200**, `/templates` → **200**: adding `useAuth` to a component
+  rendered per-row in a list introduced no render regression.
+- Mock branches untouched: `POST /api/team` → created `u-new-1`;
+  `DELETE /api/team/u-new-1` → `{"ok":true}`.
+
+**Stated limit:** `useAuth` resolves client-side, so the role-dependent branch cannot be
+observed over HTTP and the Chrome extension is not connected. The gating itself is
+verified by types, build and code path, not by seeing the button disappear. The initial
+pre-hydration render is fail-closed (`user` undefined → hidden), so there is no flash of
+a forbidden control.
+
+Gate: `pnpm lint` ✅ · `pnpm typecheck` ✅ · `pnpm build` ✅

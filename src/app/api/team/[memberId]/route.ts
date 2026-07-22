@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 
 import { siteConfig } from "@/config/site.config";
 import { getSessionUser } from "@/lib/server/session";
-import { djangoFetch, djangoJson } from "@/lib/server/proxy";
+import { djangoFetch, djangoJson, notImplementedOnBackend } from "@/lib/server/proxy";
 import { removeMember, updateMember } from "@/mocks/teamDb";
 import { ROLES, type Role } from "@/constants/roles";
 
@@ -50,9 +50,12 @@ export async function DELETE(
   const { memberId } = await params;
 
   if (!siteConfig.useMocks) {
-    // v3: team member remove endpoint
-    const r = await djangoFetch(`/team/${memberId}/`, { method: "DELETE" });
-    return NextResponse.json(await r.json().catch(() => ({})), { status: r.status });
+    // The Django `TeamMemberViewSet` declares
+    // `http_method_names = ["get", "patch", "head", "options"]` and has no
+    // `DestroyModelMixin`, so forwarding this returns a bare DRF 405 the UI can
+    // only show as a generic failure. Team members are deactivated (PATCH
+    // `active: false`), not deleted. Degrade explicitly — see BACKEND_GAPS.md.
+    return notImplementedOnBackend("Removing a team member", "DELETE /team/{id}/");
   }
 
   if (!removeMember(memberId)) {
