@@ -8,12 +8,17 @@ import type { NextRequest } from "next/server";
  * and, authoritatively, by the backend permission classes.
  *
  * The cookie name mirrors `lib/server/session.ts` SESSION_COOKIE (redefined here
- * because that module is server-only and can't be imported into edge middleware).
+ * because that module is server-only and can't be imported into this file, which
+ * runs at the network boundary ahead of the app.
+ *
+ * Next 16 renamed the `middleware` file convention to `proxy` — same semantics,
+ * new file name and exported function name. Building with the old name emits a
+ * deprecation warning.
  */
 const SESSION_COOKIE = "itrix_session";
 const PUBLIC_PREFIXES = ["/login", "/logout"];
 
-export function middleware(req: NextRequest) {
+export function proxy(req: NextRequest) {
   const { pathname } = req.nextUrl;
   if (PUBLIC_PREFIXES.some((p) => pathname === p || pathname.startsWith(`${p}/`))) {
     return NextResponse.next();
