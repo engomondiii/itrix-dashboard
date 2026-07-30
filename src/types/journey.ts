@@ -7,7 +7,7 @@ import type {
 import type {
   DisclosureCeiling,
   IdentityState,
-  SidebarSectionKey,
+  ShellMode,
 } from "@/constants/shellContract";
 
 /** One append-only journey transition (audit + timeline). Mirrors JourneyTransitionSerializer. */
@@ -24,14 +24,22 @@ export interface JourneyTransition {
 
 /**
  * The shell contract for a subject — what Surface 1 is authorized to render
- * (Backend v6.0 §3.1 `shell.for_subject`).
+ * (Backend v7.0 §4.1 `shell.for_subject`).
  *
  * `left_rail` and `right_rail` are deliberately absent. The backend emits them
  * as deprecated stubs for one release and then removes them; nothing here reads
  * them, so this surface is already on the far side of that migration.
+ *
+ * THE v7.0 ZONE FIELDS ARE OPTIONAL because the wire may still be a v6.0
+ * backend: `shell_mode` and the two zone vocabularies ship with Backend v7.0
+ * Phase 1, and until then only `sidebar_sections` is present. Section arrays
+ * are `string[]` on purpose — an unknown key is vocabulary drift the panel
+ * must SHOW, not a value the compiler should pretend cannot arrive.
  */
 export interface ShellContract {
   threadId: string | null;
+  /** "arrival" | "working", derived server-side. [v7.0] */
+  shellMode?: ShellMode;
   journeyState: number; // 1..10
   stateKey: StateKey;
   identityState: IdentityState;
@@ -42,8 +50,18 @@ export interface ShellContract {
   questionLoopOpen: boolean;
   /** Whether the attach control is active for this plane and state. */
   attachmentsEnabled: boolean;
-  /** Ordered, closed vocabulary. Replaces left_rail. */
-  sidebarSections: SidebarSectionKey[];
+  /** Closed: new_chat | conversations | account. Never grows with state. [v7.0] */
+  conversationRailSections?: string[];
+  /** Closed, ordered pane vocabulary. Only the pane grows with state. [v7.0] */
+  contentPaneSections?: string[];
+  /** The newest authorized artifact for the thread, or null. [v7.0] */
+  contentPaneDefaultArtifactId?: string | null;
+  /**
+   * One-release ALIAS of `conversationRailSections` (Backend v7.0 §4.1);
+   * on a v6.0 backend it carries the retired sidebar vocabulary instead.
+   * Read only as a fallback when the rail field is absent.
+   */
+  sidebarSections?: string[];
   conversationHeader: ConversationHeaderContract;
 }
 

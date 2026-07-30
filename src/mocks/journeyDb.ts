@@ -17,9 +17,10 @@ import {
   type JourneyState,
 } from "@/constants/journeyStates";
 import {
+  CONVERSATION_RAIL_SECTIONS,
   STATE_CEILING,
   composerLabelForState,
-  sectionsForState,
+  paneSectionsForState,
 } from "@/constants/shellContract";
 import type { LeadStatus } from "@/constants/statuses";
 import type {
@@ -125,8 +126,18 @@ function buildShell(leadId: string, state: JourneyState, owner: string | null): 
   const identityState =
     n >= 10 ? "authenticated_customer" : n >= 6 ? "identified" : n >= 3 ? "identified" : "anonymous";
 
+  /**
+   * Mode derivation mirrors Backend v7.0 §4.1: arrival only at state 1 with no
+   * turn held. A mock lead exists because a visitor spoke, so state 1 here is
+   * the edge case where the thread has not accumulated a turn yet.
+   */
+  const shellMode = n === 1 ? "arrival" : "working";
+  const railSections = shellMode === "arrival" ? [] : [...CONVERSATION_RAIL_SECTIONS];
+  const paneSections = paneSectionsForState(n);
+
   return {
     threadId: `thr_${leadId}`,
+    shellMode,
     journeyState: n,
     stateKey: stateKey(state),
     identityState,
@@ -136,7 +147,13 @@ function buildShell(leadId: string, state: JourneyState, owner: string | null): 
     // The loop is open only while the platform is still listening (state 2).
     questionLoopOpen: n === 2,
     attachmentsEnabled: true,
-    sidebarSections: sectionsForState(n),
+    conversationRailSections: railSections,
+    contentPaneSections: paneSections,
+    // The newest authorized artifact — artifacts exist from reflection (3) on.
+    contentPaneDefaultArtifactId: n >= 3 ? `art_${leadId}_latest` : null,
+    // One-release alias of the rail (Backend v7.0 §4.1), mirrored for parity
+    // with the wire so the fallback path stays exercised in mock mode.
+    sidebarSections: railSections,
     conversationHeader: {
       title: "Compute bottleneck review",
       stateLabel: JOURNEY_STATE_LABEL[state],

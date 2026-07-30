@@ -6,22 +6,147 @@
  * `conversation_header` and `composer_label` take their place. The right value
  * rail is retired entirely; the left rail became navigation.
  *
- * WHY THIS LIVES IN THE DASHBOARD AT ALL. Surface 2 never renders a sidebar for
- * a visitor. It renders what the visitor's sidebar WOULD contain, so an
+ * WHY THIS LIVES IN THE DASHBOARD AT ALL. Surface 2 never renders a rail or a
+ * pane for a visitor. It renders what the visitor's zones WOULD contain, so an
  * operator can answer "what can this person actually see right now?" without
- * guessing — which is the whole point of `SidebarContractPanel`. Getting that
+ * guessing — which is the whole point of `ShellContractPanel`. Getting that
  * answer wrong in either direction is a governance problem, so the vocabulary
  * is mirrored from `apps/journey/constants.py` exactly as itrix-web mirrors it,
  * and is never re-decided here.
  *
- * Surface 2 v5.0 §00.1 item 7 · Architecture v2.6 §11.6, §11.7
+ * Surface 2 v6.0 §00.1 item 4 · Backend v7.0 §4 · Architecture v2.7 §11.6B
  */
 
 import { JOURNEY_NUMBER, type JourneyState } from "@/constants/journeyStates";
 
-/* ── Sidebar sections ─────────────────────────────────────────────────────── */
+/* ── Shell modes (v7.0) ───────────────────────────────────────────────────── */
 
-/** Present at every state, for every identity. Orientation and policy access. */
+/**
+ * Backend v7.0 §4.1: `arrival` renders the bare centre alone; `working` renders
+ * conversation rail + column + content pane. Derived server-side — a client
+ * that computed its own mode could render a rail the backend never authorized.
+ */
+export const SHELL_MODES = ["arrival", "working"] as const;
+export type ShellMode = (typeof SHELL_MODES)[number];
+
+export const SHELL_MODE_LABEL: Record<ShellMode, string> = {
+  arrival: "Arrival",
+  working: "Working",
+};
+
+export function isShellMode(key: string): key is ShellMode {
+  return (SHELL_MODES as readonly string[]).includes(key);
+}
+
+/* ── Conversation rail sections (v7.0) ────────────────────────────────────── */
+
+/**
+ * The rail never grows with state — only the pane does (Backend v7.0 §4.2).
+ * Mirrored from `apps/journey/constants.py CONVERSATION_RAIL_SECTIONS`.
+ */
+export const CONVERSATION_RAIL_SECTIONS = ["new_chat", "conversations", "account"] as const;
+export type ConversationRailSectionKey = (typeof CONVERSATION_RAIL_SECTIONS)[number];
+
+export const CONVERSATION_RAIL_SECTION_LABEL: Record<ConversationRailSectionKey, string> = {
+  new_chat: "New chat",
+  conversations: "Conversations",
+  account: "Account",
+};
+
+const KNOWN_RAIL_SECTIONS: ReadonlySet<string> = new Set(CONVERSATION_RAIL_SECTIONS);
+
+export function isConversationRailSection(key: string): key is ConversationRailSectionKey {
+  return KNOWN_RAIL_SECTIONS.has(key);
+}
+
+/* ── Content pane sections (v7.0) ─────────────────────────────────────────── */
+
+/**
+ * The closed, ordered pane vocabulary — `apps/journey/constants.py
+ * CONTENT_PANE_SECTIONS`. The v6.0 rail sections `explore` and `legal` moved
+ * here; `brand_nav` became chrome and `new_review` became the rail's
+ * `new_chat`. An unknown key on the wire is vocabulary drift, surfaced loudly.
+ */
+export const CONTENT_PANE_SECTIONS = [
+  "artifacts",
+  "documents",
+  "pathway",
+  "nda",
+  "workspace_assessment",
+  "workspace_poc",
+  "workspace_integration",
+  "decisions",
+  "governance",
+  "outcomes",
+  "deployments",
+  "support",
+  "knowledge",
+  "meetings",
+  "feedback",
+  "explore",
+  "legal",
+] as const;
+export type ContentPaneSectionKey = (typeof CONTENT_PANE_SECTIONS)[number];
+
+export const CONTENT_PANE_SECTION_LABEL: Record<ContentPaneSectionKey, string> = {
+  artifacts: "Artifacts",
+  documents: "Documents",
+  pathway: "Your pathway",
+  nda: "NDA",
+  workspace_assessment: "Assessment",
+  workspace_poc: "PoC",
+  workspace_integration: "Integration",
+  decisions: "Decisions",
+  governance: "Decision log",
+  outcomes: "Outcomes",
+  deployments: "Deployments",
+  support: "Support",
+  knowledge: "Learning",
+  meetings: "Meetings",
+  feedback: "Feedback",
+  explore: "Explore itriX",
+  legal: "Legal",
+};
+
+const KNOWN_PANE_SECTIONS: ReadonlySet<string> = new Set(CONTENT_PANE_SECTIONS);
+
+export function isContentPaneSection(key: string): key is ContentPaneSectionKey {
+  return KNOWN_PANE_SECTIONS.has(key);
+}
+
+/**
+ * Pane growth by state (Backend v7.0 §4.2). State 1 is arrival mode — no pane.
+ * Accumulated additively, then emitted in the canonical vocabulary order.
+ */
+export function paneSectionsForState(
+  journeyState: number | null | undefined,
+): ContentPaneSectionKey[] {
+  const n = journeyState ?? 1;
+  if (n <= 1) return [];
+  const out = new Set<ContentPaneSectionKey>(["artifacts", "explore", "legal"]);
+  if (n >= 4) ["documents", "pathway"].forEach((k) => out.add(k as ContentPaneSectionKey));
+  if (n >= 6) out.add("nda");
+  if (n >= 7) ["workspace_assessment", "decisions"].forEach((k) => out.add(k as ContentPaneSectionKey));
+  if (n >= 8) out.add("workspace_poc");
+  if (n >= 9) ["workspace_integration", "governance"].forEach((k) => out.add(k as ContentPaneSectionKey));
+  if (n >= 10) {
+    ["outcomes", "deployments", "support", "knowledge", "meetings", "feedback"].forEach((k) =>
+      out.add(k as ContentPaneSectionKey),
+    );
+  }
+  return CONTENT_PANE_SECTIONS.filter((k) => out.has(k));
+}
+
+/* ── Sidebar sections (v6.0 — alias window only) ──────────────────────────── */
+
+/**
+ * DEPRECATED (v7.0). `sidebar_sections` survives on the wire for one release as
+ * an ALIAS of `conversation_rail_sections` — its values are the RAIL vocabulary
+ * above, not this v6.0 vocabulary. This list is kept only so the panel can
+ * label a payload from a backend that predates the split; it is removed with
+ * the alias window (Backend v7.0 Phase 3,
+ * `tests/contract/test_no_sidebar_sections_in_payload.py`).
+ */
 export const BASE_SIDEBAR_SECTIONS = [
   "brand_nav",
   "new_review",

@@ -20,7 +20,7 @@ import { LeadMeetings } from "@/components/lead-detail/LeadMeetings";
 import { FollowUpEmailDraft } from "@/components/lead-detail/FollowUpEmailDraft";
 import { JourneyPanel } from "@/components/journey/JourneyPanel";
 import { ClientLinkCard } from "@/components/journey/ClientLinkCard";
-import { SidebarContractPanel } from "@/components/journey/SidebarContractPanel";
+import { ShellContractPanel } from "@/components/journey/ShellContractPanel";
 import { CockpitPanel } from "@/components/cockpit/CockpitPanel";
 import { PersonaPanel } from "@/components/personas/PersonaPanel";
 import { RunAgentMenu } from "@/components/agents/RunAgentMenu";
@@ -193,7 +193,7 @@ Recommended next step: ${lead.recommendedNextStep || "—"}`;
               who we think this is, what they can see, and where they are. */}
           <PersonaPanel leadId={lead.id} />
 
-          <SidebarContractPanel leadId={lead.id} />
+          <ShellContractPanel leadId={lead.id} />
 
           <ClientLinkCard lead={lead} />
 
