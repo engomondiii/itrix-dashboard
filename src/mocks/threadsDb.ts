@@ -11,15 +11,22 @@ import {
   type ListeningDimension,
   type StopReason,
 } from "@/constants/listeningDimensions";
-import { STATE_CEILING, type IdentityState } from "@/constants/shellContract";
+import {
+  STATE_CEILING,
+  paneSectionsForState,
+  type IdentityState,
+} from "@/constants/shellContract";
 import type {
+  ContentPaneMirrorState,
   CoverageEntry,
   CoverageOverview,
   LoopState,
+  PendingStageState,
   QuestionHistoryEntry,
   ThreadArtifact,
   ThreadDetail,
   ThreadListItem,
+  ThreadSwitchEntry,
   ThreadTurn,
 } from "@/types/thread";
 import { worstVerdict, type ScanVerdict } from "@/types/attachment";
@@ -300,6 +307,59 @@ export function listThreads(q: ThreadQuery = {}): ThreadListItem[] {
   });
 }
 
+/**
+ * The v6.0 oversight overlay (Surface 2 v6.0 §6.2): what the visitor has open
+ * on their right, how this session moved between threads, and what their
+ * pending indicator is showing. Derived deterministically from the same seed
+ * as everything else so a thread reads consistently across visits.
+ */
+function buildOversight(thread: ThreadListItem): {
+  contentPane: ContentPaneMirrorState | null;
+  switchHistory: ThreadSwitchEntry[];
+  pendingStage: PendingStageState | null;
+} {
+  const seed = Math.abs(hash(thread.id));
+  const n = thread.journeyNumber ?? 1;
+  const sections = paneSectionsForState(n);
+
+  // Arrival-mode threads have no pane; otherwise the visitor usually has the
+  // newest artifact focused, sometimes a section, sometimes a collapsed pane.
+  const contentPane: ContentPaneMirrorState | null =
+    sections.length === 0
+      ? null
+      : {
+          openSection: sections[seed % sections.length],
+          openArtifactId: n >= 3 && seed % 3 !== 0 ? `art_${thread.id}_latest` : null,
+          collapsed: seed % 5 === 0,
+        };
+
+  // A minority of sessions hop between threads; two hops is the interesting
+  // case ("opened three chats and abandoned two is telling you something").
+  const others = allThreads().filter((t) => t.id !== thread.id);
+  const switchHistory: ThreadSwitchEntry[] =
+    seed % 3 === 0 && others.length > 0
+      ? [thread, ...others.slice(seed % Math.max(1, others.length - 2), (seed % Math.max(1, others.length - 2)) + 2)]
+          .map((t, i) => ({
+            threadId: t.id,
+            title: t.title,
+            at: new Date(Date.parse(thread.lastActivityAt) - i * 11 * 60_000).toISOString(),
+          }))
+      : [];
+
+  // Only a live thread can be mid-turn. A thread blocked on approval shows
+  // exactly what the visitor sees: `checking`, held for the whole wait.
+  const pendingStage: PendingStageState | null = thread.blocking
+    ? { stage: "checking", heldForSeconds: thread.blocking.waitingSeconds }
+    : thread.live && seed % 2 === 0
+      ? {
+          stage: (["retrieving", "composing"] as const)[(seed >> 3) % 2],
+          heldForSeconds: 2 + (seed % 9),
+        }
+      : null;
+
+  return { contentPane, switchHistory, pendingStage };
+}
+
 export function getThread(threadId: string): ThreadDetail | null {
   const thread = allThreads().find((t) => t.id === threadId);
   if (!thread) return null;
@@ -311,6 +371,7 @@ export function getThread(threadId: string): ThreadDetail | null {
   );
   const loop = thread.loop;
   const questionHistory = buildQuestionHistory(thread.id, coverageMap, loop);
+  const oversight = buildOversight(thread);
 
   return {
     thread,
@@ -319,6 +380,7 @@ export function getThread(threadId: string): ThreadDetail | null {
     coverageMap,
     questionHistory,
     disclosureCeiling: STATE_CEILING[thread.state],
+    ...oversight,
   };
 }
 

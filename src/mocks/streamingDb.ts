@@ -32,7 +32,9 @@ const AGENTS = ["Concierge", "Diagnosis", "Pitch", "Proof"];
  */
 const MATCHED_TEXT: Record<GuardPattern, string> = {
   benchmark_figure: "…delivers a 3.4× speed-up on comparable HBM-bound workloads…",
-  guarantee_language: "…we guarantee at least a 40% reduction in inference cost…",
+  // Caught by the marker-normalised pass — the raw buffer read `gua*ran*tee`,
+  // which a raw-text matcher alone would have streamed straight through.
+  guarantee_language: "…we gua*ran*tee at least a `40%` reduction in inference cost…",
   pricing: "…the Alpha Compute Assessment is priced at USD 45,000…",
   exclusivity_terms: "…field-of-use exclusivity in APAC is available for this segment…",
   competitor_claim: "…roughly twice what you would see from an equivalent NVIDIA stack…",
@@ -89,6 +91,9 @@ export function getStreamingGovernance(): StreamingGovernanceRead {
             : ("client" as const),
         pattern,
         matchedText: MATCHED_TEXT[pattern],
+        // The guarantee example carries Markdown markers, so it is the one the
+        // normalised pass exists to catch (Backend v7.0 §06).
+        matchedPass: pattern === "guarantee_language" ? ("normalized" as const) : ("raw" as const),
         discardedChars: 40 + (seed % 260),
         at: new Date(NOW - (8 + i * 17) * 60_000).toISOString(),
       };

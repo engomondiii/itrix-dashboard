@@ -11,12 +11,17 @@ import { ROUTES } from "@/constants/routes";
 import { DISCLOSURE_CEILING_LABEL } from "@/constants/shellContract";
 import { formatTimeAgo } from "@/lib/formatting";
 
+import { features } from "@/config/features.config";
+
 import { AnonymousBadge } from "./AnonymousBadge";
 import { ArtifactRow } from "./ArtifactRow";
+import { ContentPaneMirror } from "./ContentPaneMirror";
 import { CoverageMap } from "./CoverageMap";
 import { CoverageMeter } from "./CoverageMeter";
+import { PendingStageRow } from "./PendingStageRow";
 import { QuestionHistoryTable } from "./QuestionHistoryTable";
 import { StopReasonBadge } from "./StopReasonBadge";
+import { ThreadSwitchHistory } from "./ThreadSwitchHistory";
 import { TurnRow } from "./TurnRow";
 
 function SectionLabel({ children }: { children: string }) {
@@ -159,6 +164,34 @@ export function ThreadTranscript({ threadId }: { threadId: string }) {
                     <SectionLabel>Coverage map</SectionLabel>
                     <CoverageMap entries={detail.coverageMap} />
                   </div>
+
+                  {/* v6.0 content-pane oversight (§6.2). Each block renders
+                      only when the wire carries it — a v5.0 backend serves
+                      none of these, and inventing them would be guessing at
+                      what the visitor sees. */}
+                  {features.paneOversight && detail.pendingStage && (
+                    <div className="space-y-2">
+                      <SectionLabel>Visitor is waiting on</SectionLabel>
+                      <PendingStageRow pending={detail.pendingStage} />
+                    </div>
+                  )}
+
+                  {features.paneOversight && detail.contentPane && (
+                    <div className="space-y-2">
+                      <SectionLabel>Visitor&rsquo;s content pane</SectionLabel>
+                      <ContentPaneMirror pane={detail.contentPane} />
+                    </div>
+                  )}
+
+                  {features.paneOversight && detail.switchHistory !== undefined && (
+                    <div className="space-y-2">
+                      <SectionLabel>Thread switches this session</SectionLabel>
+                      <ThreadSwitchHistory
+                        entries={detail.switchHistory}
+                        currentThreadId={detail.thread.id}
+                      />
+                    </div>
+                  )}
                 </CardContent>
               </Card>
 

@@ -87,6 +87,14 @@ export interface GuardHit {
    * Null when the backend withheld it, which is a valid answer, not an error.
    */
   matchedText: string | null;
+  /**
+   * Which matcher pass caught it (Backend v7.0 §06): the raw emerging text, or
+   * the marker-normalised copy that strips Markdown emphasis, code, link and
+   * escape syntax first. Shown so an operator can see that `gua*ran*tee` was
+   * caught by normalisation rather than wonder why a raw search would not have
+   * found it. [v7.0 — absent from a v6.0 backend.]
+   */
+  matchedPass?: "raw" | "normalized";
   /** How much provisional text was discarded from the client. */
   discardedChars: number;
   at: string; // ISO

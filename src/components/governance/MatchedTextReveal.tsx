@@ -23,7 +23,15 @@ import { canAdminGovernance } from "@/constants/permissions";
  *     follow-up — which would publish the exact thing the guard stopped.
  *
  * A VIEWER sees that a halt occurred and which pattern matched. That is enough
- * to understand the event without reproducing the claim.
+ * to understand the event without reproducing the claim. Since v6.0 the field
+ * is also FILTERED SERVER-SIDE by the guard-hits route — the reveal is layered
+ * on top of that, not a substitute for it.
+ *
+ * COPY-LOGGING (Surface 2 v6.0 §05: "copying is permitted but logged") is
+ * deferred until the backend exposes an audit-write route — there is nowhere
+ * truthful to send the event yet, and a toast claiming "logged" over a no-op
+ * would be worse than waiting. Tracked for Backend v7.0 Phase 2 alongside the
+ * real cockpit/streaming/guard-hits/ mount.
  */
 export function MatchedTextReveal({ text }: { text: string | null }) {
   const { user } = useAuth();

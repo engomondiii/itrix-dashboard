@@ -122,7 +122,25 @@ export function StreamGuardHitTable() {
                             </Link>
                           </TableCell>
                           <TableCell>
-                            <MatchedPatternChip pattern={hit.pattern} />
+                            <div className="flex flex-wrap items-center gap-1.5">
+                              <MatchedPatternChip pattern={hit.pattern} />
+                              {/* Which pass caught it — so an operator can see
+                                  that gua*ran*tee was caught by normalisation
+                                  rather than wonder why a raw search would not
+                                  have found it (Surface 2 v6.0 §05). */}
+                              {hit.matchedPass === "normalized" ? (
+                                <Badge
+                                  variant="info"
+                                  title="Matched on the marker-normalised copy — Markdown syntax was hiding the pattern from the raw pass"
+                                >
+                                  normalised pass
+                                </Badge>
+                              ) : hit.matchedPass === "raw" ? (
+                                <Badge variant="neutral" title="Matched on the raw emerging text">
+                                  raw pass
+                                </Badge>
+                              ) : null}
+                            </div>
                           </TableCell>
                           <TableCell className="max-w-[34ch]">
                             <MatchedTextReveal text={hit.matchedText} />

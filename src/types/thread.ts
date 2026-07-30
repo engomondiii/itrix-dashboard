@@ -141,6 +141,53 @@ export interface ThreadArtifact {
  * saw it, PLUS the internal overlay they never see (coverage, question history,
  * citations, envelope levels, guard halts).
  */
+/**
+ * The three pending stages, exactly as `message.stage` emits them (Backend
+ * v7.0 §05). A closed set: no percentages, no ETA, no fourth string — the
+ * backend sends the enum and the visitor-facing wording is fixed on Surface 1.
+ */
+export const PENDING_STAGES = ["retrieving", "composing", "checking"] as const;
+export type PendingStage = (typeof PENDING_STAGES)[number];
+
+/** Operator-facing labels, mirroring the three visitor-facing strings. */
+export const PENDING_STAGE_LABEL: Record<PendingStage, string> = {
+  retrieving: "Retrieving approved material",
+  composing: "Composing the answer",
+  checking: "Checking before sending",
+};
+
+/**
+ * What the visitor currently has open on their right-hand side (Surface 2
+ * v6.0 §6.2). An operator answering a live question needs to know what is on
+ * the visitor's screen, or they will reference a document the visitor has no
+ * route to — or re-explain something already in front of them.
+ */
+export interface ContentPaneMirrorState {
+  /** The open pane section key, or null when nothing is focused. */
+  openSection: string | null;
+  /** The artifact focused in the pane, or null. */
+  openArtifactId: string | null;
+  /** True when the visitor has collapsed the pane. Changes nothing about authorization. */
+  collapsed: boolean;
+}
+
+/** One hop in the session's thread-switch history, newest first. */
+export interface ThreadSwitchEntry {
+  threadId: string;
+  title: string;
+  at: string; // ISO — when the visitor switched TO this thread
+}
+
+/**
+ * The stage the visitor's pending indicator is showing, and how long it has
+ * held. A stage stuck on `checking` is a blocking approval seen from the
+ * visitor's side.
+ */
+export interface PendingStageState {
+  stage: PendingStage;
+  heldForSeconds: number;
+}
+
 export interface ThreadDetail {
   thread: ThreadListItem;
   turns: ThreadTurn[];
@@ -148,6 +195,15 @@ export interface ThreadDetail {
   coverageMap: CoverageEntry[];
   questionHistory: QuestionHistoryEntry[];
   disclosureCeiling: DisclosureCeiling;
+  /**
+   * THE v6.0 OVERSIGHT FIELDS ARE OPTIONAL — the running backend serves the
+   * v5.0 detail without them, and the overlays render only when the wire
+   * carries them (Surface 2 v6.0 §6.2).
+   */
+  contentPane?: ContentPaneMirrorState | null;
+  switchHistory?: ThreadSwitchEntry[];
+  /** Null when nothing is pending — the visitor is not waiting on anything. */
+  pendingStage?: PendingStageState | null;
 }
 
 /** Filters on the thread board (Surface 2 v5.0 §3.1). */

@@ -52,6 +52,13 @@ export const features = {
   /** Phase 2 — coverage map and question-loop audit in the cockpit. */
   coverageReading: on(process.env.NEXT_PUBLIC_ENABLE_COVERAGE_READING),
 
+  /**
+   * Surface 2 v6.0 Phase 2 — content-pane oversight in the thread view: what
+   * the visitor has open on their right, their thread-switch history, and the
+   * stage their pending indicator is showing.
+   */
+  paneOversight: on(process.env.NEXT_PUBLIC_ENABLE_PANE_OVERSIGHT),
+
   /** Phase 3 — customer-first NBA surfacing with suppression reasons. */
   customerFirstNba: on(process.env.NEXT_PUBLIC_ENABLE_CUSTOMER_FIRST_NBA),
 
