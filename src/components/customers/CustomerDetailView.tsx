@@ -56,10 +56,15 @@ export function CustomerDetailView({ clientId }: { clientId: string }) {
                   {detail.customer.adoptionPercent}% adoption
                 </Badge>
               </div>
+              {detail.customer.reasons.length > 0 && (
+                <p className="text-caption text-ink-secondary">
+                  {detail.customer.reasons.join(" · ")}
+                </p>
+              )}
               <p className="text-caption text-ink-secondary">
                 Customer since first payment on {formatDate(detail.customer.firstPaymentAt)}
-                {detail.customer.nextReviewAt && (
-                  <> · next success review {formatDate(detail.customer.nextReviewAt)}</>
+                {detail.customer.nextReviewDate && (
+                  <> · next success review {formatDate(detail.customer.nextReviewDate)}</>
                 )}
               </p>
             </CardContent>

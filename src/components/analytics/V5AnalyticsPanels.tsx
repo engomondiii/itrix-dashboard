@@ -303,8 +303,9 @@ export function CustomerAnalytics() {
   const rows = query.data;
 
   const total = rows?.length ?? 0;
+  const critical = (rows ?? []).filter((c) => c.healthClass === "critical").length;
   const atRisk = (rows ?? []).filter((c) => c.healthClass === "at_risk").length;
-  const watch = (rows ?? []).filter((c) => c.healthClass === "watch").length;
+  const unknown = (rows ?? []).filter((c) => c.healthClass === "unknown").length;
   const avgAdoption = total
     ? Math.round((rows ?? []).reduce((s, c) => s + c.adoptionPercent, 0) / total)
     : 0;
@@ -327,11 +328,14 @@ export function CustomerAnalytics() {
             </CardHeader>
             <CardContent className="space-y-1.5">
               <StatRow label="Customers" value={total} />
+              <StatRow label="Critical" value={critical} />
               <StatRow label="At risk" value={atRisk} />
-              <StatRow label="Watch" value={watch} />
-              <StatRow label="Stable" value={total - atRisk - watch} />
+              <StatRow label="Unknown" value={unknown} />
+              <StatRow label="Stable" value={total - critical - atRisk - unknown} />
               <p className="pt-2 text-caption text-ink-secondary">
-                Counted from the first payment onward, not from license-out.
+                Counted from the first payment onward, not from license-out. Critical is
+                not folded into at-risk — it is the class the customer-first rule fires
+                on, and unknown is an account nobody is measuring, not a healthy one.
               </p>
             </CardContent>
           </Card>

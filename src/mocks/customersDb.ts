@@ -1,18 +1,19 @@
 import "server-only";
 
 import { isSuccessOverlayActive, JOURNEY_STATE_LABEL, journeyNumber } from "@/constants/journeyStates";
-import type {
-  ChangeLogEntry,
-  CustomerDetail,
-  CustomerListItem,
-  DeploymentHealth,
-  FeedbackPulse,
-  HealthClass,
-  Outcome,
-  OutcomeStatus,
-  RelationshipTeamMember,
-  SuccessPlan,
-  SuccessReview,
+import {
+  HEALTH_CLASS_URGENCY,
+  type ChangeLogEntry,
+  type CustomerDetail,
+  type CustomerListItem,
+  type DeploymentHealth,
+  type FeedbackPulse,
+  type HealthClass,
+  type Outcome,
+  type OutcomeStatus,
+  type RelationshipTeamMember,
+  type SuccessPlan,
+  type SuccessReview,
 } from "@/types/customer";
 import { getJourney } from "@/mocks/journeyDb";
 import { MOCK_LEADS } from "@/mocks/leads";
@@ -55,9 +56,10 @@ const OUTCOME_MEASURES = [
 
 function outcomesFor(clientId: string, health: HealthClass): Outcome[] {
   const seed = Math.abs(hash(clientId));
+  const troubled = health === "critical" || health === "at_risk";
   return OUTCOME_TITLES.map((title, i) => {
     let status: OutcomeStatus;
-    if (health === "at_risk" && i === 0) status = "Off plan";
+    if (troubled && i === 0) status = "Off plan";
     else if (health !== "stable" && i === 1) status = "At risk";
     else if ((seed + i) % 4 === 0) status = "Achieved";
     else status = "On plan";
@@ -80,7 +82,7 @@ function deploymentsFor(clientId: string, health: HealthClass): DeploymentHealth
       id: `${clientId}-dep-1`,
       environment: "Production",
       version: "alpha-core 2.4.1",
-      status: health === "at_risk" ? "degraded" : "healthy",
+      status: health === "critical" ? "down" : health === "at_risk" ? "degraded" : "healthy",
       lastCheckedAt: new Date(NOW - 42 * 60_000).toISOString(),
       knownLimitations: [
         "Mixed-precision path is not yet enabled for complex-valued kernels.",
@@ -166,7 +168,8 @@ function teamFor(clientId: string, owner: string | null): RelationshipTeamMember
 }
 
 function feedbackFor(clientId: string, health: HealthClass): FeedbackPulse[] {
-  const score = health === "at_risk" ? 2 : health === "watch" ? 3 : 5;
+  const score =
+    health === "critical" ? 1 : health === "at_risk" ? 2 : health === "unknown" ? 3 : 5;
   return [
     {
       id: `${clientId}-pulse-1`,
@@ -213,11 +216,35 @@ function changesFor(clientId: string): ChangeLogEntry[] {
  * plan, and the last feedback pulse. Deriving it keeps the health board and the
  * customer-first NBA rule reading the same conditions; a stored grade would
  * drift from the facts that are supposed to justify it.
+ *
+ * Four classes (Backend v7.0 §3.1): blocking support is `critical`, not merely
+ * at risk — it is the condition step 1 of the precedence rule fires on.
+ * `unknown` simulates an account whose adoption telemetry is not reporting.
  */
 function healthFor(clientId: string, offPlan: number, blockingSupport: boolean): HealthClass {
-  if (blockingSupport || offPlan > 0) return "at_risk";
-  if (Math.abs(hash(clientId)) % 3 === 0) return "watch";
+  if (blockingSupport) return "critical";
+  if (offPlan > 0) return "at_risk";
+  if (Math.abs(hash(clientId)) % 7 === 0) return "unknown";
   return "stable";
+}
+
+/**
+ * The reasons beside the badge — mirrors the backend's own comment on
+ * `board()`: a health class an operator cannot explain is a number they will
+ * learn to ignore. Stable carries no reasons; absence of trouble is the reason.
+ */
+function reasonsFor(
+  health: HealthClass,
+  offPlan: number,
+  blockingSupport: boolean,
+  breaching: boolean,
+): string[] {
+  const reasons: string[] = [];
+  if (blockingSupport) reasons.push("Open blocking support request");
+  if (breaching) reasons.push("Support SLA breached on an open request");
+  if (offPlan > 0) reasons.push(`${offPlan} outcome${offPlan === 1 ? "" : "s"} off plan`);
+  if (health === "unknown") reasons.push("Adoption telemetry not reporting");
+  return reasons;
 }
 
 function buildCustomers(): CustomerListItem[] {
@@ -246,6 +273,10 @@ function buildCustomers(): CustomerListItem[] {
       journeyNumber: journeyNumber(journey.state) ?? 7,
       stateLabel: JOURNEY_STATE_LABEL[journey.state],
       healthClass,
+      reasons: reasonsFor(healthClass, offPlan, blocking, breaching),
+      // Expansion re-opens only when health returns to stable — the mock keeps
+      // the same relation the backend's precedence rule enforces.
+      expansionAllowed: healthClass === "stable",
       outcomes: {
         total: outcomes.length,
         onPlan: outcomes.filter((o) => o.status === "On plan").length,
@@ -253,11 +284,11 @@ function buildCustomers(): CustomerListItem[] {
         offPlan,
         achieved: outcomes.filter((o) => o.status === "Achieved").length,
       },
-      openSupportRequests: openRequests.length,
-      supportBreaching: breaching,
+      openSupportCount: openRequests.length,
+      slaBreaching: breaching,
       adoptionPercent: 40 + (Math.abs(hash(clientId)) % 55),
       lastFeedbackScore: feedbackFor(clientId, healthClass)[0]?.score ?? null,
-      nextReviewAt: new Date(NOW + (7 + (Math.abs(hash(clientId)) % 21)) * 86_400_000).toISOString(),
+      nextReviewDate: new Date(NOW + (7 + (Math.abs(hash(clientId)) % 21)) * 86_400_000).toISOString(),
       firstPaymentAt: lead.submittedAt,
       owner: lead.owner,
     };
@@ -272,10 +303,10 @@ function all(): CustomerListItem[] {
 }
 
 export function listCustomers(): CustomerListItem[] {
-  // Anything needing attention first.
+  // Worst-first: critical → at_risk → unknown → stable, SLA breaches ahead
+  // within a class (Surface 2 v6.0 §4.3).
   const urgency = (c: CustomerListItem) =>
-    (c.healthClass === "at_risk" ? 2 : c.healthClass === "watch" ? 1 : 0) +
-    (c.supportBreaching ? 2 : 0);
+    HEALTH_CLASS_URGENCY[c.healthClass] * 2 + (c.slaBreaching ? 1 : 0);
   return [...all()].sort((a, b) => urgency(b) - urgency(a) || a.company.localeCompare(b.company));
 }
 
@@ -308,7 +339,7 @@ export function listAllOutcomes(): Outcome[] {
  */
 export function listSuccessReviews(): SuccessReview[] {
   return all()
-    .filter((c) => c.nextReviewAt)
+    .filter((c) => c.nextReviewDate)
     .map((c) => {
       const outcomes = outcomesFor(c.clientId, c.healthClass);
       const agenda: string[] = [];
@@ -318,8 +349,8 @@ export function listSuccessReviews(): SuccessReview[] {
       for (const o of outcomes) {
         if (o.status === "At risk") agenda.push(`At risk: ${o.title}`);
       }
-      if (c.openSupportRequests > 0) {
-        agenda.push(`${c.openSupportRequests} open support request(s)`);
+      if (c.openSupportCount > 0) {
+        agenda.push(`${c.openSupportCount} open support request(s)`);
       }
       agenda.push("Adoption and enablement");
       for (const o of outcomes) {
@@ -330,7 +361,7 @@ export function listSuccessReviews(): SuccessReview[] {
         id: `${c.clientId}-review`,
         clientId: c.clientId,
         company: c.company,
-        scheduledAt: c.nextReviewAt!,
+        scheduledAt: c.nextReviewDate!,
         owner: c.owner ?? "Success Team",
         agenda,
       };
@@ -343,8 +374,9 @@ export function customerHealthSummary() {
   const rows = all();
   return {
     total: rows.length,
+    critical: rows.filter((c) => c.healthClass === "critical").length,
     atRisk: rows.filter((c) => c.healthClass === "at_risk").length,
-    watch: rows.filter((c) => c.healthClass === "watch").length,
-    breaching: rows.filter((c) => c.supportBreaching).length,
+    unknown: rows.filter((c) => c.healthClass === "unknown").length,
+    breaching: rows.filter((c) => c.slaBreaching).length,
   };
 }

@@ -51,20 +51,40 @@ export interface Outcome {
 /**
  * Overall customer health. INTERNAL-ONLY as a class — the customer sees their
  * outcomes and their deployment status, never a grade about them.
+ *
+ * FOUR VALUES, from Backend v7.0 §3.1. `critical` is deliberately not collapsed
+ * into `at_risk` — that distinction is what step 1 of the customer-first
+ * precedence rule turns on. `unknown` means the inputs could not be computed,
+ * which is an answer, not an absence: a board that renders unknown as stable
+ * has hidden exactly the account nobody is measuring. (v6.0's `watch` is
+ * retired; the backend never had it.)
  */
-export const HEALTH_CLASSES = ["stable", "watch", "at_risk"] as const;
+export const HEALTH_CLASSES = ["stable", "at_risk", "critical", "unknown"] as const;
 export type HealthClass = (typeof HEALTH_CLASSES)[number];
 
 export const HEALTH_CLASS_LABEL: Record<HealthClass, string> = {
   stable: "Stable",
-  watch: "Watch",
   at_risk: "At risk",
+  critical: "Critical",
+  unknown: "Unknown",
 };
 
-export const HEALTH_CLASS_INTENT: Record<HealthClass, "success" | "warning" | "error"> = {
+export const HEALTH_CLASS_INTENT: Record<
+  HealthClass,
+  "success" | "warning" | "error" | "neutral"
+> = {
   stable: "success",
-  watch: "warning",
-  at_risk: "error",
+  at_risk: "warning",
+  critical: "error",
+  unknown: "neutral",
+};
+
+/** Worst-first board order (Surface 2 v6.0 §4.3): critical → at_risk → unknown → stable. */
+export const HEALTH_CLASS_URGENCY: Record<HealthClass, number> = {
+  critical: 3,
+  at_risk: 2,
+  unknown: 1,
+  stable: 0,
 };
 
 export interface DeploymentHealth {
@@ -124,7 +144,10 @@ export interface ChangeLogEntry {
   at: string; // ISO
 }
 
-/** Row on the customer health board. */
+/**
+ * Row on the customer health board — the Backend v7.0 §3.1 wire shape
+ * (`customer_health.board()` rows, `results` envelope).
+ */
 export interface CustomerListItem {
   clientId: string;
   company: string;
@@ -132,13 +155,24 @@ export interface CustomerListItem {
   journeyNumber: number;
   stateLabel: string;
   healthClass: HealthClass;
+  /**
+   * Why the class is what it is. Always rendered beside the badge — a health
+   * class an operator cannot explain is a number they will learn to ignore.
+   */
+  reasons: string[];
+  /**
+   * False while a suppression condition holds. Feeds the customer-first rule's
+   * display; the rule itself executes on the backend, and an override never
+   * flips this — the condition stays true, a human acted against it on record.
+   */
+  expansionAllowed: boolean;
   outcomes: { total: number; onPlan: number; atRisk: number; offPlan: number; achieved: number };
-  openSupportRequests: number;
+  openSupportCount: number;
   /** True when any open request has breached or is about to breach its SLA. */
-  supportBreaching: boolean;
+  slaBreaching: boolean;
   adoptionPercent: number;
   lastFeedbackScore: number | null;
-  nextReviewAt: string | null; // ISO
+  nextReviewDate: string | null; // ISO
   firstPaymentAt: string; // ISO
   owner: string | null;
 }

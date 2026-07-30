@@ -16,6 +16,7 @@ import {
 import { useCustomers } from "@/hooks/useCustomers";
 import { ROUTES } from "@/constants/routes";
 import { formatDate } from "@/lib/formatting";
+import { HEALTH_CLASS_URGENCY } from "@/types/customer";
 
 import { CustomerHealthBadge } from "./CustomerHealthBadge";
 
@@ -27,10 +28,23 @@ import { CustomerHealthBadge } from "./CustomerHealthBadge";
  * acceptance criterion for Phase 2, and it is the difference between a paid
  * Assessment customer having a named owner from day one and discovering they
  * have no support route when something breaks.
+ *
+ * WORST-FIRST IS RE-ASSERTED HERE (critical → at_risk → unknown → stable,
+ * Surface 2 v6.0 §4.3) even though the backend already sorts, because a board
+ * whose ordering silently depends on the wire order regresses the moment a
+ * backend forgets — and the whole point of the order is that the account most
+ * likely to be lost is the first one an operator sees.
  */
 export function CustomerHealthBoard() {
   const query = useCustomers();
-  const rows = query.data;
+  const rows = query.data
+    ? [...query.data].sort(
+        (a, b) =>
+          HEALTH_CLASS_URGENCY[b.healthClass] * 2 +
+          (b.slaBreaching ? 1 : 0) -
+          (HEALTH_CLASS_URGENCY[a.healthClass] * 2 + (a.slaBreaching ? 1 : 0)),
+      )
+    : undefined;
 
   return (
     <div className="space-y-4">
@@ -80,6 +94,17 @@ export function CustomerHealthBoard() {
 
                   <TableCell>
                     <CustomerHealthBadge healthClass={c.healthClass} />
+                    {/* The reasons are the valuable part — a class an operator
+                        cannot explain is a number they will learn to ignore. */}
+                    {c.reasons.length > 0 && (
+                      <ul className="mt-1 space-y-0.5">
+                        {c.reasons.map((reason) => (
+                          <li key={reason} className="text-micro text-ink-secondary">
+                            {reason}
+                          </li>
+                        ))}
+                      </ul>
+                    )}
                   </TableCell>
 
                   <TableCell>
@@ -104,12 +129,12 @@ export function CustomerHealthBoard() {
                   </TableCell>
 
                   <TableCell>
-                    {c.openSupportRequests === 0 ? (
+                    {c.openSupportCount === 0 ? (
                       <span className="text-micro text-ink-muted">—</span>
                     ) : (
-                      <Badge variant={c.supportBreaching ? "error" : "warning"}>
-                        {c.openSupportRequests} open
-                        {c.supportBreaching ? " · SLA breached" : ""}
+                      <Badge variant={c.slaBreaching ? "error" : "warning"}>
+                        {c.openSupportCount} open
+                        {c.slaBreaching ? " · SLA breached" : ""}
                       </Badge>
                     )}
                   </TableCell>
@@ -119,7 +144,7 @@ export function CustomerHealthBoard() {
                   </TableCell>
 
                   <TableCell className="text-sec text-ink-secondary">
-                    {c.nextReviewAt ? formatDate(c.nextReviewAt) : "—"}
+                    {c.nextReviewDate ? formatDate(c.nextReviewDate) : "—"}
                   </TableCell>
 
                   <TableCell className="text-sec text-ink-secondary">
