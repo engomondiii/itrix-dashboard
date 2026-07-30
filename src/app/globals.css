@@ -129,8 +129,11 @@
   --color-tier-4: #94a3b8;
   --color-tier-4-soft: #f2f5f9;
 
-  /* 6th chart series (shadcn maps chart-1..5; this adds the 6th) */
-  --color-chart-6: #4a93a8;
+  /* 6th chart series (shadcn maps chart-1..5; this adds the 6th).
+     #1e8fa8 rather than the earlier #4a93a8: nudged to clear the OKLab chroma
+     floor so it cannot read as gray, and validated CVD-safe against chart-5
+     (#b54708) — the pair carries the guard-hit raw/normalised split. */
+  --color-chart-6: #1e8fa8;
 
   /* Elevation — cool ink-tinted glass shadows (§8.1) */
   --shadow-1: 0 18px 48px rgba(31, 41, 55, 0.08);

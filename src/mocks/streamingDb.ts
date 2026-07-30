@@ -114,12 +114,27 @@ export function getStreamingGovernance(): StreamingGovernanceRead {
       at: new Date(NOW - (25 + i * 40) * 60_000).toISOString(),
     }));
 
+  /**
+   * Fourteen days of halts, split by pass. The story the fixture tells is the
+   * one worth watching for in production: the normalised pass ships mid-window
+   * (Backend v7.0 Phase 2) and immediately starts catching marker-wrapped
+   * wording the raw pass alone would have streamed.
+   */
+  const RAW_BY_DAY = [2, 1, 3, 1, 0, 2, 1, 2, 2, 1, 2, 1, 1, 2];
+  const NORMALIZED_BY_DAY = [0, 0, 0, 0, 0, 0, 0, 0, 1, 2, 1, 2, 2, 3]; // live from day 9
+  const trend = RAW_BY_DAY.map((raw, i) => ({
+    day: new Date(NOW - (13 - i) * 86_400_000).toISOString().slice(0, 10),
+    raw,
+    normalized: NORMALIZED_BY_DAY[i],
+  }));
+
   const streamedTurns = Math.max(1, threads.length * 4);
   return {
     blocking,
     guardHits,
     downgrades,
     guardHitRate: Math.round((guardHits.length / streamedTurns) * 1000) / 10,
+    trend,
   };
 }
 

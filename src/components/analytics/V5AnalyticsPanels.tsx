@@ -16,6 +16,7 @@ import {
   type StopReason,
 } from "@/constants/listeningDimensions";
 import { GUARD_PATTERN_LABEL } from "@/types/streaming";
+import { GuardHitTrendChart } from "@/components/analytics/GuardHitTrendChart";
 import { OUTCOME_STATUSES, OUTCOME_STATUS_INTENT } from "@/types/customer";
 import { SCAN_VERDICT_LABEL } from "@/types/attachment";
 import { useAllOutcomes } from "@/hooks/useCustomers";
@@ -270,6 +271,22 @@ export function StreamingAnalytics() {
               <StatRow label="Blocking a live visitor" value={data.blocking.length} />
             </CardContent>
           </Card>
+
+          {data.trend && data.trend.length > 0 && (
+            <Card className="md:col-span-2">
+              <CardHeader>
+                <CardTitle>Halts by matcher pass</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-2">
+                <GuardHitTrendChart trend={data.trend} />
+                <p className="text-caption text-ink-secondary">
+                  A rising normalised share means prohibited wording is increasingly
+                  arriving wrapped in Markdown syntax — drift the raw count alone would
+                  understate.
+                </p>
+              </CardContent>
+            </Card>
+          )}
 
           {byPattern.size > 0 && (
             <Card className="md:col-span-2">

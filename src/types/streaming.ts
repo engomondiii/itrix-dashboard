@@ -129,10 +129,24 @@ export interface BlockingApprovalItem {
   agent: string;
 }
 
+/** Halts per day, split by which matcher pass caught them. */
+export interface GuardHitTrendPoint {
+  day: string; // ISO date (YYYY-MM-DD)
+  raw: number;
+  normalized: number;
+}
+
 export interface StreamingGovernanceRead {
   blocking: BlockingApprovalItem[];
   guardHits: GuardHit[];
   downgrades: EnvelopeDowngrade[];
   /** Guard hits per 100 streamed turns, for the drift signal. */
   guardHitRate: number;
+  /**
+   * Daily halt counts split raw vs normalised (Surface 2 v6.0 Phase 3). The
+   * split matters because a rising NORMALISED share means models are learning
+   * to wrap prohibited wording in Markdown syntax — drift the raw count alone
+   * would understate. [v7.0 — absent from a v6.0 backend.]
+   */
+  trend?: GuardHitTrendPoint[];
 }
