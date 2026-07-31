@@ -73,12 +73,15 @@ const rawNavigation: NavSection[] = [
         icon: "Radio",
         enabled: features.threadOversight,
       },
-      {
-        label: "Loop productivity",
-        href: ROUTES.threadsCoverage,
-        icon: "Target",
-        enabled: features.coverageReading,
-      },
+      // Hidden until the backend mounts GET cockpit/threads/coverage/ (the
+      // book-wide read) — the page can only say "not available on this backend
+      // yet". Re-enable when it ships.
+      // {
+      //   label: "Loop productivity",
+      //   href: ROUTES.threadsCoverage,
+      //   icon: "Target",
+      //   enabled: features.coverageReading,
+      // },
       {
         label: "Attachments",
         href: ROUTES.attachments,
@@ -97,12 +100,14 @@ const rawNavigation: NavSection[] = [
         icon: "HeartHandshake",
         enabled: features.customerSuccess,
       },
-      {
-        label: "Outcomes",
-        href: ROUTES.customersOutcomes,
-        icon: "Target",
-        enabled: features.customerSuccess,
-      },
+      // Hidden until the backend mounts GET cockpit/customers/outcomes/ — the
+      // page can only say "not available on this backend yet".
+      // {
+      //   label: "Outcomes",
+      //   href: ROUTES.customersOutcomes,
+      //   icon: "Target",
+      //   enabled: features.customerSuccess,
+      // },
       {
         label: "Success reviews",
         href: ROUTES.customersReviews,
@@ -119,13 +124,16 @@ const rawNavigation: NavSection[] = [
        * The fifteenth area (Surface 2 v7.1 §02): the silent self-serve
        * population. A sidebar row, deliberately without an urgency chip —
        * this list is countable but never a queue (§04.8).
+       *
+       * Hidden until the backend mounts GET cockpit/accounts/ (Backend v7.2
+       * Phase 4) — the page can only say "not available on this backend yet".
        */
-      {
-        label: "Accounts",
-        href: ROUTES.accounts,
-        icon: "UserPlus",
-        enabled: features.customerSuccess,
-      },
+      // {
+      //   label: "Accounts",
+      //   href: ROUTES.accounts,
+      //   icon: "UserPlus",
+      //   enabled: features.customerSuccess,
+      // },
     ],
   },
   {

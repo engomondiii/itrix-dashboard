@@ -7,6 +7,12 @@ Live app: `https://itrix-dashboard-production.up.railway.app/`
 > The public site listens to visitors; this is where our team sees what it heard,
 > and decides what happens next. Nothing reaches a customer from here without a human."*
 
+**The arc (keep it in your head, not on a slide):** the demo is one continuous story —
+a visitor's review becomes a scored lead (§3), an agent drafts (§3), the message is
+held at the gate (§4), a human approves (§5), and delivery lands back in the thread (§4).
+Sections 3–5 *are* the story; every other screen is supporting evidence. If time runs
+short, cut from the edges (§9–10 first), never from the middle.
+
 ---
 
 ## 1. Login
