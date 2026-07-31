@@ -12,8 +12,8 @@ governance.
 
 It is a **display + proxy** frontend. All business logic — scoring, AI/RAG, CRM writes,
 email, Knowledge Core — lives in the Django backend; every `app/api/**/route.ts` is a thin
-authenticated pass-through. See [`SCAFFOLD_PLAN.md`](./SCAFFOLD_PLAN.md) for the full plan
-and the Backend v6.0 / Surface 2 v5.0 cutover checklist (§9–§10).
+authenticated pass-through. [`BACKEND_GAPS.md`](./BACKEND_GAPS.md) is the current
+dashboard ↔ backend gap register.
 
 ## Stack
 

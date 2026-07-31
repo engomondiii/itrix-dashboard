@@ -82,8 +82,9 @@ approves anything that carries a claim. That's why we can move fast without over
 - **"Is this a chatbot?"** No. The public site has no bot; here, agents draft and humans send.
 - **"Can the AI invent a number?"** No — claims resolve to approved Claim-Cards; L3+ needs
   citation and human approval; L4/L5 needs two approvers.
-- **"What's live vs. mocked?"** The backend serves journey, cockpit, approvals, console,
-  governance, runs and pitch. See "Known gaps" below for what still degrades.
+- **"What's live?"** Everything — there is no mock layer. The backend serves it all;
+  a view whose backend route has not shipped says so with a calm "not available yet"
+  (see BACKEND_GAPS.md for the current list).
 
 ---
 
@@ -105,7 +106,7 @@ approves anything that carries a claim. That's why we can move fast without over
 6. **Evaluations and PoCs lists have no search/filter/pagination.** Fine with a handful of
    records; with real volume there's no way to find a specific one. NDA has all three.
 7. **Analytics date range**: works against the real backend (the route forwards `days`).
-   In local mock mode 30d and 90d look identical because the seeded leads only span ~30 days.
+   With demo-seeded data 30d and 90d can look identical because seeded leads span ~30 days.
 
 ## Fixed just before this pass
 - Stylesheet was failing to compile (a Pretendard `@import` placed after `@import "tailwindcss"`)

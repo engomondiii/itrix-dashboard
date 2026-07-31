@@ -34,6 +34,6 @@ export async function DELETE() {
   // so forwarding returns a bare DRF 405 the UI can only show as a generic
   // failure. Degrade explicitly until the endpoint lands.
   //
-  // RESTORE the `djangoFetch` forward at cutover — SCAFFOLD_PLAN.md §9.
+  // RESTORE the `djangoFetch` forward when the backend mounts it — BACKEND_GAPS.md.
   return notImplementedOnBackend("Removing a team member", "DELETE /team/{id}/");
 }

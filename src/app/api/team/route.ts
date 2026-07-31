@@ -27,6 +27,6 @@ export async function POST() {
   // an auth `role` and a display `team_role` — this payload sends one `role`.
   // Confirm which it sets before trusting it. See BACKEND_GAPS.md.
   //
-  // RESTORE the `djangoFetch` forward at cutover — SCAFFOLD_PLAN.md §9.
+  // RESTORE the `djangoFetch` forward when the backend mounts it — BACKEND_GAPS.md.
   return notImplementedOnBackend("Inviting a team member", "POST /team/");
 }
