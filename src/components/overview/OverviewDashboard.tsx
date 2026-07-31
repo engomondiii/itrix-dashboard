@@ -3,6 +3,7 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Spinner } from "@/components/ui/spinner";
 import { EmptyState } from "@/components/ui/empty-state";
+import { AccountsWithoutConversationTile } from "@/components/overview/AccountsWithoutConversationTile";
 import { PipelineSummaryCards } from "@/components/overview/PipelineSummaryCards";
 import { OverviewAlerts } from "@/components/overview/OverviewAlerts";
 import { RecentLeadsFeed } from "@/components/overview/RecentLeadsFeed";
@@ -30,6 +31,11 @@ export function OverviewDashboard() {
     <div className="space-y-6">
       <PipelineSummaryCards m={m} />
       <OverviewAlerts newLeads={m.newLeads} overdue={m.overdueFollowUps} />
+
+      {/* Beside the conversion widgets, its own number (Surface 2 v7.1 §07
+          Phase 3): the aggregates above exclude silent self-serve accounts
+          (R70), and this tile carries their count separately. */}
+      <AccountsWithoutConversationTile />
 
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
         <Card>

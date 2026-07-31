@@ -33,7 +33,7 @@ import { canAdminGovernance } from "@/constants/permissions";
  * would be worse than waiting. Tracked for Backend v7.0 Phase 2 alongside the
  * real cockpit/streaming/guard-hits/ mount.
  */
-export function MatchedTextReveal({ text }: { text: string | null }) {
+export function MatchedTextReveal({ text }: { text: string | null | undefined }) {
   const { user } = useAuth();
   const [shown, setShown] = useState(false);
 

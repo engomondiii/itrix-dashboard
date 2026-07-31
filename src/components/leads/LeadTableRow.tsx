@@ -8,6 +8,7 @@ import { LeadTierBadge } from "@/components/leads/LeadTierBadge";
 import { LeadScoreBadge } from "@/components/leads/LeadScoreBadge";
 import { LeadStatusBadge } from "@/components/leads/LeadStatusBadge";
 import { LeadProductRouteBadge } from "@/components/leads/LeadProductRouteBadge";
+import { LeadSourceBadge } from "@/components/leads/LeadSourceBadge";
 import { LeadOwnerAvatar } from "@/components/leads/LeadOwnerAvatar";
 import { ROUTES } from "@/constants/routes";
 import { formatDate, leadDisplayName, leadSubtitle } from "@/lib/formatting";
@@ -49,6 +50,13 @@ export function LeadTableRow({
           {name}
         </Link>
         {subtitle && <div className="text-caption text-ink-secondary">{subtitle}</div>}
+        {/* Provenance renders only when it is not the default door — every row
+            saying "Conversation" would bury the one row that says otherwise. */}
+        {lead.leadSource && lead.leadSource !== "conversation" && (
+          <div className="mt-1">
+            <LeadSourceBadge source={lead.leadSource} />
+          </div>
+        )}
       </TableCell>
       <TableCell className="hidden text-ink-secondary lg:table-cell">{lead.industry}</TableCell>
       <TableCell className="hidden md:table-cell">

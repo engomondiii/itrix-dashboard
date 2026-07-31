@@ -127,6 +127,10 @@ function generate(): Lead[] {
       ctaClicked: r() > 0.5 ? "Request Confidential ALPHA Evaluation" : null,
       documentsViewed: Math.floor(r() * 5),
       submittedAt: new Date(now - daysAgo * 86400000 - Math.floor(r() * 86400000)).toISOString(),
+      // Provenance (Backend v7.2 §15.7). A self-serve lead in THIS list has
+      // spoken — the silent self-serve population is excluded from every lead
+      // queue (R70) and lives in accountsDb until its first turn.
+      leadSource: i % 17 === 0 ? "imported" : i % 11 === 3 ? "self_serve" : "conversation",
     });
   }
 

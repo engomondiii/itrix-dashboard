@@ -115,6 +115,17 @@ const rawNavigation: NavSection[] = [
         icon: "LifeBuoy",
         enabled: features.customerSuccess,
       },
+      /**
+       * The fifteenth area (Surface 2 v7.1 §02): the silent self-serve
+       * population. A sidebar row, deliberately without an urgency chip —
+       * this list is countable but never a queue (§04.8).
+       */
+      {
+        label: "Accounts",
+        href: ROUTES.accounts,
+        icon: "UserPlus",
+        enabled: features.customerSuccess,
+      },
     ],
   },
   {

@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 
 import { siteConfig } from "@/config/site.config";
 import { getSessionUser } from "@/lib/server/session";
-import { notImplementedOnBackend } from "@/lib/server/proxy";
+import { djangoFetch, djangoJson } from "@/lib/server/proxy";
 import { canAdminGovernance } from "@/constants/permissions";
 import { getStreamingGovernance } from "@/mocks/streamingDb";
 
@@ -21,10 +21,8 @@ export async function GET() {
   }
 
   if (!siteConfig.useMocks) {
-    return notImplementedOnBackend(
-      "Stream-guard reporting",
-      "GET cockpit/streaming/guard-hits/ (cockpit/streaming/ returns summary + recent)",
-    );
+    const r = await djangoFetch("/cockpit/streaming/guard-hits/");
+    return djangoJson(r);
   }
 
   const data = getStreamingGovernance();
@@ -36,11 +34,19 @@ export async function GET() {
    * non-elevated session in mock mode cannot see the wording in the network
    * tab that the UI declined to render. They still get `pattern`, which is
    * enough to understand the event without reproducing the claim.
+   *
+   * The key is ABSENT, not null (Surface 2 v7.1 §05) — a null still admits
+   * the field exists, and the contract is that an unauthorized response
+   * carries no trace of it.
    */
   if (!canAdminGovernance(user.role)) {
     return NextResponse.json({
       ...data,
-      guardHits: data.guardHits.map((hit) => ({ ...hit, matchedText: null })),
+      guardHits: data.guardHits.map((hit) => {
+        const rest = { ...hit };
+        delete rest.matchedText;
+        return rest;
+      }),
     });
   }
 

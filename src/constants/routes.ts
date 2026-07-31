@@ -38,6 +38,8 @@ export const ROUTES = {
   analyticsBottlenecks: "/analytics/bottlenecks",
   analyticsPitch: "/analytics/pitch",
   // Surface 2 v5.0 — conversation, attachment, streaming and customer analytics
+  // Surface 2 v7.1 — the silent self-serve population (an account is not a lead)
+  accounts: "/accounts",
   analyticsConversations: "/analytics/conversations",
   analyticsAttachments: "/analytics/attachments",
   analyticsStreaming: "/analytics/streaming",
@@ -159,6 +161,10 @@ export const API = {
   cockpitCustomers: "/api/cockpit/customers",
   cockpitCustomer: (id: string) => `/api/cockpit/customers/${id}`,
   cockpitCustomerNextAction: (id: string) => `/api/cockpit/customers/${id}/next-action`,
+  // Surface 2 v7.1 — accounts with no conversation yet
+  cockpitAccounts: "/api/cockpit/accounts",
+  cockpitAccountResendVerification: (id: string) =>
+    `/api/cockpit/accounts/${id}/resend-verification`,
   supportQueue: "/api/support/queue",
   supportRequest: (id: string) => `/api/support/queue/${id}`,
   supportRequestAction: (id: string, action: "assign" | "resolve" | "escalate") =>

@@ -87,6 +87,25 @@ export const HEALTH_CLASS_URGENCY: Record<HealthClass, number> = {
   stable: 0,
 };
 
+/**
+ * How this account was opened (Backend v7.2 §15.7). Distinct from a Lead's
+ * `leadSource` because they answer different questions: a self-serve account
+ * that later receives a proper invitation KEEPS `self_serve` — the account was
+ * not earned, and the record is not rewritten to say it was. Closed vocabulary
+ * mirrored from `apps/clients/models.py`; unknown values render raw.
+ */
+export const ACCOUNT_ORIGINS = ["invited", "self_serve"] as const;
+export type AccountOrigin = (typeof ACCOUNT_ORIGINS)[number];
+
+export const ACCOUNT_ORIGIN_LABEL: Record<AccountOrigin, string> = {
+  invited: "Invited",
+  self_serve: "Self-serve",
+};
+
+export function isAccountOrigin(value: string): value is AccountOrigin {
+  return (ACCOUNT_ORIGINS as readonly string[]).includes(value);
+}
+
 export interface DeploymentHealth {
   id: string;
   environment: string;
@@ -175,6 +194,20 @@ export interface CustomerListItem {
   nextReviewDate: string | null; // ISO
   firstPaymentAt: string; // ISO
   owner: string | null;
+  /**
+   * How this account was opened (Backend v7.2 §15.7). `string` so an
+   * unrecognised value reaches the badge raw. Absent pre-v7.2. Team-plane only.
+   */
+  accountOrigin?: string;
+  /**
+   * Whether the account's address is proven. On the row rather than a detail
+   * panel because it changes what an operator may promise: "I'll email that
+   * over" to an unverified address is a promise the platform will not keep —
+   * no non-transactional mail goes to an unverified address (Backend v7.2
+   * §15.10). [v7.2]
+   */
+  emailVerified?: boolean;
+  emailVerifiedAt?: string | null; // ISO
 }
 
 export interface CustomerDetail {

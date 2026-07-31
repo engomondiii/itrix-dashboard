@@ -18,7 +18,9 @@ import { ROUTES } from "@/constants/routes";
 import { formatDate } from "@/lib/formatting";
 import { HEALTH_CLASS_URGENCY } from "@/types/customer";
 
+import { AccountOriginBadge } from "./AccountOriginBadge";
 import { CustomerHealthBadge } from "./CustomerHealthBadge";
+import { VerificationBadge } from "./VerificationBadge";
 
 /**
  * Every paying customer, worst health first.
@@ -90,6 +92,15 @@ export function CustomerHealthBoard() {
                     <div className="text-micro text-ink-secondary">
                       {c.journeyNumber} · {c.stateLabel}
                     </div>
+                    {(c.accountOrigin !== undefined || c.emailVerified !== undefined) && (
+                      <div className="mt-1 flex flex-wrap gap-1">
+                        <AccountOriginBadge origin={c.accountOrigin} />
+                        <VerificationBadge
+                          verified={c.emailVerified}
+                          verifiedAt={c.emailVerifiedAt}
+                        />
+                      </div>
+                    )}
                   </TableCell>
 
                   <TableCell>

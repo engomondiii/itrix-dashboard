@@ -25,6 +25,7 @@ import { CockpitPanel } from "@/components/cockpit/CockpitPanel";
 import { PersonaPanel } from "@/components/personas/PersonaPanel";
 import { RunAgentMenu } from "@/components/agents/RunAgentMenu";
 import { LeadProductRouteBadge } from "@/components/leads/LeadProductRouteBadge";
+import { LeadSourceBadge } from "@/components/leads/LeadSourceBadge";
 import { Badge } from "@/components/ui/badge";
 import { ROUTES } from "@/constants/routes";
 import { leadDisplayName } from "@/lib/formatting";
@@ -140,6 +141,7 @@ Recommended next step: ${lead.recommendedNextStep || "—"}`;
                 <div className="flex flex-wrap items-center gap-2">
                   <LeadProductRouteBadge route={lead.productRoute} />
                   <Badge variant="neutral">{lead.commercialPath}</Badge>
+                  <LeadSourceBadge source={lead.leadSource} />
                 </div>
                 <LeadScoreBreakdown breakdown={lead.scoreBreakdown} />
               </CardContent>

@@ -27,6 +27,26 @@ export interface QualificationAnswers {
 /** Per-category points contributing to the 0–100 lead score. */
 export type ScoreBreakdown = Record<ScoringCategory, number>;
 
+/**
+ * How this subject entered the system (Backend v7.2 §15.7). A closed
+ * vocabulary defined in `apps/leads/models.py` and MIRRORED here, never
+ * re-decided — and an unknown wire value renders as the raw string rather
+ * than being silently dropped, because a badge that vanishes for an
+ * unrecognised provenance is a row that lies about where somebody came from.
+ */
+export const LEAD_SOURCES = ["conversation", "self_serve", "imported"] as const;
+export type LeadSource = (typeof LEAD_SOURCES)[number];
+
+export const LEAD_SOURCE_LABEL: Record<LeadSource, string> = {
+  conversation: "Conversation",
+  self_serve: "Self-serve",
+  imported: "Imported",
+};
+
+export function isLeadSource(value: string): value is LeadSource {
+  return (LEAD_SOURCES as readonly string[]).includes(value);
+}
+
 export interface LeadNote {
   id: string;
   body: string;
@@ -102,6 +122,12 @@ export interface Lead {
   client?: LeadClientLink | null;
   valueDeliveredAt?: string | null;
   gateDecision?: string | null;
+  /**
+   * How this subject entered the system. `string` on purpose — the vocabulary
+   * is closed on the backend, and an unrecognised value must reach the badge
+   * as-is. Absent from a backend older than v7.2. Team-plane only (§10.5).
+   */
+  leadSource?: string;
 }
 
 /** Lightweight row for list/table views. */
@@ -121,4 +147,5 @@ export type LeadListItem = Pick<
   | "owner"
   | "specialRights"
   | "submittedAt"
+  | "leadSource"
 >;

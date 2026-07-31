@@ -7,8 +7,10 @@ import { NextBestAction } from "@/components/cockpit/NextBestAction";
 import { useCustomerDetail } from "@/hooks/useCustomers";
 import { formatDate } from "@/lib/formatting";
 
+import { AccountOriginBadge } from "./AccountOriginBadge";
 import { ChangeDigestPreview } from "./ChangeDigestPreview";
 import { CustomerHealthBadge } from "./CustomerHealthBadge";
+import { VerificationBadge } from "./VerificationBadge";
 import { DeploymentHealthRow } from "./DeploymentHealthRow";
 import { FeedbackRiskAlert } from "./FeedbackRiskAlert";
 import { OutcomeStatusTable } from "./OutcomeStatusTable";
@@ -55,6 +57,11 @@ export function CustomerDetailView({ clientId }: { clientId: string }) {
                 <Badge variant="neutral">
                   {detail.customer.adoptionPercent}% adoption
                 </Badge>
+                <AccountOriginBadge origin={detail.customer.accountOrigin} />
+                <VerificationBadge
+                  verified={detail.customer.emailVerified}
+                  verifiedAt={detail.customer.emailVerifiedAt}
+                />
               </div>
               {detail.customer.reasons.length > 0 && (
                 <p className="text-caption text-ink-secondary">

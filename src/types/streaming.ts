@@ -84,9 +84,14 @@ export interface GuardHit {
    * draft, or any client-plane payload — the whole point of the halt was that
    * the visitor never saw it.
    *
-   * Null when the backend withheld it, which is a valid answer, not an error.
+   * Null when the backend withheld it for another reason; ABSENT for a role
+   * that may not receive it. Absence rather than an empty value is the
+   * contract (Surface 2 v7.1 §05): Backend v7.1 Phase 1 found this endpoint
+   * returning the field to VIEWER in production, undetected because no
+   * component rendered it — the bytes were still in the JSON, the browser
+   * cache and the response logs.
    */
-  matchedText: string | null;
+  matchedText?: string | null;
   /**
    * Which matcher pass caught it (Backend v7.0 §06): the raw emerging text, or
    * the marker-normalised copy that strips Markdown emphasis, code, link and

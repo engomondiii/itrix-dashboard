@@ -291,6 +291,17 @@ function buildCustomers(): CustomerListItem[] {
       nextReviewDate: new Date(NOW + (7 + (Math.abs(hash(clientId)) % 21)) * 86_400_000).toISOString(),
       firstPaymentAt: lead.submittedAt,
       owner: lead.owner,
+      // Provenance (Backend v7.2 §15.7): the origin follows the lead's door —
+      // a self-serve subject who became a customer keeps self_serve, because
+      // the account was not earned and the record is not rewritten to say it
+      // was. One self-serve customer stays unverified so the badge and the
+      // "nothing can be emailed here" title stay exercised.
+      accountOrigin: lead.leadSource === "self_serve" ? "self_serve" : "invited",
+      emailVerified: lead.leadSource === "self_serve" ? hash(clientId) % 2 === 0 : true,
+      emailVerifiedAt:
+        lead.leadSource === "self_serve" && hash(clientId) % 2 !== 0
+          ? null
+          : new Date(Date.parse(lead.submittedAt) + 3_600_000).toISOString(),
     };
   });
 }

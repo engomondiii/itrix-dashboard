@@ -32,6 +32,7 @@ import {
   TargetIcon,
   TimerIcon,
   UserIcon,
+  UserPlusIcon,
   UsersIcon,
   UsersRoundIcon,
   WavesIcon,
@@ -74,6 +75,7 @@ export const NAV_ICONS: Record<string, LucideIcon> = {
   ShieldCheck: ShieldCheckIcon,
   Timer: TimerIcon,
   User: UserIcon,
+  UserPlus: UserPlusIcon,
   Users: UsersIcon,
   UsersRound: UsersRoundIcon,
 };
