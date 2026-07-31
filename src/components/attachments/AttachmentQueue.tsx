@@ -6,7 +6,10 @@ import { useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/empty-state";
+import { Pagination } from "@/components/ui/pagination";
 import { QueryState } from "@/components/ui/query-state";
+import { SearchInput } from "@/components/ui/search-input";
+import { SortableTableHead } from "@/components/ui/sortable-table-head";
 import {
   Table,
   TableBody,
@@ -16,6 +19,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { useAttachmentQueue } from "@/hooks/useAttachments";
+import { useListControls, type SortValue } from "@/hooks/useListControls";
 import { useSLATimer } from "@/hooks/useSLATimer";
 import { ROUTES } from "@/constants/routes";
 import { formatDate } from "@/lib/formatting";
@@ -59,12 +63,25 @@ function RetentionCell({ attachment }: { attachment: AttachmentListItem }) {
   );
 }
 
+type SortKey = "file" | "size" | "retention" | "risk";
+
+const SORT_ACCESSORS: Record<SortKey, (a: AttachmentListItem) => SortValue> = {
+  file: (a) => a.filename,
+  size: (a) => a.bytes,
+  retention: (a) => (a.preNda ? (a.retentionExpiresAt ?? null) : null),
+  risk: (a) => a.riskFlags.length,
+};
+
 /**
  * Everything visitors have uploaded, worst first.
  *
  * A quarantined file is never previewable and never downloadable from here —
  * there is deliberately no download control on a quarantined row. Release is
  * the only route, and it is a logged decision with a reason.
+ *
+ * The queue's worst-first wire order is the default; column sorts and search
+ * are operator overrides on top, applied client-side because the endpoint
+ * serves the full queue.
  */
 export function AttachmentQueue() {
   const [quarantinedOnly, setQuarantinedOnly] = useState(false);
@@ -75,25 +92,42 @@ export function AttachmentQueue() {
   });
   const rows = query.data;
 
+  const { search, sort, toggleSort, pageItems, total, unfilteredTotal, pagination } =
+    useListControls<AttachmentListItem, SortKey>({
+      items: rows,
+      searchText: (a) =>
+        `${a.filename} ${a.detectedMime} ${a.threadTitle ?? ""} ${a.identityState ?? ""}`,
+      sortAccessors: SORT_ACCESSORS,
+      filterKey: `${quarantinedOnly}-${preNdaOnly}`,
+    });
+
   return (
     <div className="space-y-4">
-      <div className="flex flex-wrap gap-1.5">
-        <Button
-          size="sm"
-          variant={quarantinedOnly ? "default" : "outline"}
-          aria-pressed={quarantinedOnly}
-          onClick={() => setQuarantinedOnly((v) => !v)}
-        >
-          Quarantined only
-        </Button>
-        <Button
-          size="sm"
-          variant={preNdaOnly ? "default" : "outline"}
-          aria-pressed={preNdaOnly}
-          onClick={() => setPreNdaOnly((v) => !v)}
-        >
-          Pre-NDA only
-        </Button>
+      <div className="flex flex-wrap items-center gap-2">
+        <SearchInput
+          value={search.value}
+          onChange={(e) => search.setValue(e.target.value)}
+          placeholder="Search filename, type or thread…"
+          wrapperClassName="w-full sm:w-72"
+        />
+        <div className="flex flex-wrap gap-1.5">
+          <Button
+            size="sm"
+            variant={quarantinedOnly ? "default" : "outline"}
+            aria-pressed={quarantinedOnly}
+            onClick={() => setQuarantinedOnly((v) => !v)}
+          >
+            Quarantined only
+          </Button>
+          <Button
+            size="sm"
+            variant={preNdaOnly ? "default" : "outline"}
+            aria-pressed={preNdaOnly}
+            onClick={() => setPreNdaOnly((v) => !v)}
+          >
+            Pre-NDA only
+          </Button>
+        </div>
       </div>
 
       <QueryState
@@ -111,21 +145,34 @@ export function AttachmentQueue() {
         />
       )}
 
-      {rows && rows.length > 0 && (
+      {rows && rows.length > 0 && total === 0 && (
+        <EmptyState
+          title="No matches"
+          description={`No attachment matches this search (${unfilteredTotal} in the queue).`}
+        />
+      )}
+
+      {total > 0 && (
         <div className="overflow-x-auto">
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>File</TableHead>
+                <SortableTableHead sortKey="file" sort={sort} onToggle={toggleSort}>
+                  File
+                </SortableTableHead>
                 <TableHead>Thread</TableHead>
                 <TableHead>Scan</TableHead>
                 <TableHead>Extraction</TableHead>
-                <TableHead>Pre-NDA</TableHead>
-                <TableHead>Risk</TableHead>
+                <SortableTableHead sortKey="retention" sort={sort} onToggle={toggleSort}>
+                  Pre-NDA
+                </SortableTableHead>
+                <SortableTableHead sortKey="risk" sort={sort} onToggle={toggleSort}>
+                  Risk
+                </SortableTableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
-              {rows.map((a) => (
+              {pageItems.map((a) => (
                 <TableRow key={a.id}>
                   <TableCell>
                     <Link
@@ -178,6 +225,14 @@ export function AttachmentQueue() {
               ))}
             </TableBody>
           </Table>
+          <Pagination
+            page={pagination.page}
+            pageCount={pagination.pageCount}
+            onPageChange={pagination.setPage}
+            total={total}
+            pageSize={pagination.pageSize}
+            className="mt-3"
+          />
         </div>
       )}
     </div>

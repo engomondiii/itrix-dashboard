@@ -7,13 +7,67 @@ import {
 import { API } from "@/constants/routes";
 import type { Persona, PersonaMatch } from "@/types/persona";
 
-export async function getPersonas(family?: string): Promise<Persona[]> {
-  const data = await apiGet<{ results: Persona[] }>(API.personas, { family });
-  return data.results;
+/**
+ * BOUNDARY NORMALISATION (same rule as the customers normaliser — BACKEND_GAPS
+ * §4): the shipped `apps/personas` serializers answer a different shape than
+ * the one this surface was built against. The list envelope is
+ * `{ personas, total }` rather than the DRF-style `{ results }`, and the row
+ * speaks workbook vocabulary — `personaId`, `company`, `department`,
+ * `primary_persona` — where the surface types say `id`, `targetDepartment`,
+ * `title`. Casting the wire read unchecked made the whole registry page fail on
+ * a request that had in fact succeeded.
+ *
+ * `personaId` ("P-001") is the canonical id on this plane: the detail route
+ * looks personas up by it, so it is what `ROUTES.persona()` must link with.
+ * Blueprint fields the summary row does not carry stay empty and only the
+ * detail read fills them; nothing is fabricated.
+ */
+
+interface WirePersonaRow {
+  id: string;
+  personaId: string;
+  company?: string;
+  department?: string;
+  primary_persona?: string;
+  functionalFamily: Persona["functionalFamily"];
+  pitchArchetype?: string;
+  priority?: number;
+  validationStatus: Persona["validationStatus"];
+  pitchRoomId?: string | null;
 }
 
-export function getPersona(personaId: string) {
-  return apiGet<Persona>(API.persona(personaId));
+interface WirePersonaDetail extends WirePersonaRow {
+  decisionLens?: string;
+  boundaryWasteHypothesis?: string;
+  likelyObjection?: string;
+  pitchRoom?: { pitchRoomId?: string; slideCount?: number } | null;
+}
+
+function normalizePersona(raw: Partial<WirePersonaDetail>): Persona {
+  return {
+    id: raw.personaId ?? String(raw.id ?? ""),
+    title: [raw.company, raw.primary_persona].filter(Boolean).join(" — "),
+    functionalFamily: raw.functionalFamily as Persona["functionalFamily"],
+    targetDepartment: raw.department ?? "",
+    pitchArchetype: raw.pitchArchetype ?? "",
+    decisionLens: raw.decisionLens ?? "",
+    // The registry models "primary pain" as the boundary-waste hypothesis.
+    primaryPain: raw.boundaryWasteHypothesis ?? "",
+    likelyObjection: raw.likelyObjection ?? "",
+    validationStatus: raw.validationStatus ?? "hypothesis",
+    pitchRoomId: raw.pitchRoomId ?? raw.pitchRoom?.pitchRoomId ?? null,
+    slideCount: raw.pitchRoom?.slideCount ?? 0,
+  };
+}
+
+export async function getPersonas(family?: string): Promise<Persona[]> {
+  const data = await apiGet<{ personas: WirePersonaRow[] }>(API.personas, { family });
+  return (data.personas ?? []).map(normalizePersona);
+}
+
+export async function getPersona(personaId: string): Promise<Persona> {
+  const raw = await apiGet<WirePersonaDetail>(API.persona(personaId));
+  return normalizePersona(raw);
 }
 
 /**
