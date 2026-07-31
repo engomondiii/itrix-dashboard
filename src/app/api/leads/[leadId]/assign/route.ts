@@ -1,9 +1,7 @@
 import { NextResponse } from "next/server";
 
-import { siteConfig } from "@/config/site.config";
 import { getSessionUser } from "@/lib/server/session";
 import { djangoFetch, djangoJson } from "@/lib/server/proxy";
-import { assignOwner } from "@/mocks/leadsDb";
 
 export async function POST(
   req: Request,
@@ -14,16 +12,9 @@ export async function POST(
   const { leadId } = await params;
   const body = await req.json().catch(() => ({}));
 
-  if (!siteConfig.useMocks) {
-    const r = await djangoFetch(`/leads/${leadId}/assign/`, {
-      method: "POST",
-      body: JSON.stringify(body),
-    });
-    return djangoJson(r);
-  }
-
-  const note = typeof body?.note === "string" ? body.note : undefined;
-  const lead = assignOwner(leadId, body?.owner ?? null, user.name, note);
-  if (!lead) return NextResponse.json({ detail: "Not found" }, { status: 404 });
-  return NextResponse.json(lead);
+  const r = await djangoFetch(`/leads/${leadId}/assign/`, {
+    method: "POST",
+    body: JSON.stringify(body),
+  });
+  return djangoJson(r);
 }

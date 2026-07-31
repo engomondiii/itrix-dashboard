@@ -1,9 +1,7 @@
 import { NextResponse } from "next/server";
 
-import { siteConfig } from "@/config/site.config";
 import { getSessionUser } from "@/lib/server/session";
 import { djangoFetch, djangoJson } from "@/lib/server/proxy";
-import { deleteReport, getReport } from "@/mocks/reportingDb";
 
 export async function GET(
   _req: Request,
@@ -13,13 +11,8 @@ export async function GET(
     return NextResponse.json({ detail: "Unauthorized" }, { status: 401 });
   }
   const { reportId } = await params;
-  if (!siteConfig.useMocks) {
-    const r = await djangoFetch(`/reporting/${reportId}/`);
-    return djangoJson(r);
-  }
-  const report = getReport(reportId);
-  if (!report) return NextResponse.json({ detail: "Not found" }, { status: 404 });
-  return NextResponse.json(report);
+  const r = await djangoFetch(`/reporting/${reportId}/`);
+  return djangoJson(r);
 }
 
 export async function DELETE(
@@ -31,14 +24,7 @@ export async function DELETE(
   }
   const { reportId } = await params;
 
-  if (!siteConfig.useMocks) {
-    // v3: report delete endpoint
-    const r = await djangoFetch(`/reporting/${reportId}/`, { method: "DELETE" });
-    return NextResponse.json(await r.json().catch(() => ({})), { status: r.status });
-  }
-
-  if (!deleteReport(reportId)) {
-    return NextResponse.json({ detail: "Not found" }, { status: 404 });
-  }
-  return NextResponse.json({ ok: true });
+  // v3: report delete endpoint
+  const r = await djangoFetch(`/reporting/${reportId}/`, { method: "DELETE" });
+  return NextResponse.json(await r.json().catch(() => ({})), { status: r.status });
 }

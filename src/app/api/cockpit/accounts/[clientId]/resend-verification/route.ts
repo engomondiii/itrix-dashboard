@@ -1,9 +1,7 @@
 import { NextResponse } from "next/server";
 
-import { siteConfig } from "@/config/site.config";
 import { getSessionUser } from "@/lib/server/session";
 import { notImplementedOnBackend } from "@/lib/server/proxy";
-import { resendVerification } from "@/mocks/accountsDb";
 
 /**
  * Resend a verification email — an operator action with a REQUIRED reason,
@@ -18,16 +16,12 @@ import { resendVerification } from "@/mocks/accountsDb";
  * token: a verification token visible to an operator is an account-takeover
  * primitive with an audit trail attached (§08).
  */
-export async function POST(
-  req: Request,
-  { params }: { params: Promise<{ clientId: string }> },
-) {
+export async function POST(req: Request) {
   const user = await getSessionUser();
   if (!user) {
     return NextResponse.json({ detail: "Unauthorized" }, { status: 401 });
   }
 
-  const { clientId } = await params;
   const body = await req.json().catch(() => ({}));
   const reason = String(body?.reason ?? "");
 
@@ -38,16 +32,8 @@ export async function POST(
     );
   }
 
-  if (!siteConfig.useMocks) {
-    return notImplementedOnBackend(
-      "Resending a verification email",
-      "POST cockpit/accounts/{id}/resend-verification/ (Backend v7.2 Phase 4)",
-    );
-  }
-
-  const outcome = resendVerification(clientId, reason, user.name ?? user.email);
-  if (!outcome.ok) {
-    return NextResponse.json({ detail: outcome.detail }, { status: outcome.status });
-  }
-  return NextResponse.json(outcome.result);
+  return notImplementedOnBackend(
+    "Resending a verification email",
+    "POST cockpit/accounts/{id}/resend-verification/ (Backend v7.2 Phase 4)",
+  );
 }

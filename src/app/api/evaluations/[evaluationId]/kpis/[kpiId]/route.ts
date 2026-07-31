@@ -1,9 +1,7 @@
 import { NextResponse } from "next/server";
 
-import { siteConfig } from "@/config/site.config";
 import { getSessionUser } from "@/lib/server/session";
 import { djangoFetch, djangoJson } from "@/lib/server/proxy";
-import { updateEvaluationKpi } from "@/mocks/dealsDb";
 
 /** Update one KPI on an evaluation (metric / target / result). */
 export async function PATCH(
@@ -16,20 +14,10 @@ export async function PATCH(
   const { evaluationId, kpiId } = await params;
   const body = await req.json().catch(() => ({}));
 
-  if (!siteConfig.useMocks) {
-    // v3: evaluation KPI update endpoint
-    const r = await djangoFetch(`/evaluations/${evaluationId}/kpis/${kpiId}/`, {
-      method: "PATCH",
-      body: JSON.stringify(body),
-    });
-    return djangoJson(r);
-  }
-
-  const ev = updateEvaluationKpi(evaluationId, kpiId, {
-    metric: body?.metric,
-    target: body?.target,
-    result: body?.result,
+  // v3: evaluation KPI update endpoint
+  const r = await djangoFetch(`/evaluations/${evaluationId}/kpis/${kpiId}/`, {
+    method: "PATCH",
+    body: JSON.stringify(body),
   });
-  if (!ev) return NextResponse.json({ detail: "Not found" }, { status: 404 });
-  return NextResponse.json(ev);
+  return djangoJson(r);
 }

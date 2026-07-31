@@ -1,10 +1,8 @@
 import { NextResponse } from "next/server";
 
-import { siteConfig } from "@/config/site.config";
 import { getSessionUser } from "@/lib/server/session";
 import { djangoFetch, djangoJson } from "@/lib/server/proxy";
 import { canAdminGovernance } from "@/constants/permissions";
-import { actOnApproval } from "@/mocks/approvalsDb";
 
 const ACTIONS = ["approve", "edit", "reject"] as const;
 
@@ -28,24 +26,10 @@ export async function POST(
   }
   const body = await req.json().catch(() => ({}));
 
-  if (!siteConfig.useMocks) {
-    // v3: approve/edit/reject — POST agents/approval/{id}/{action}/
-    const r = await djangoFetch(`/agents/approval/${approvalId}/${action}/`, {
-      method: "POST",
-      body: JSON.stringify(body),
-    });
-    return djangoJson(r);
-  }
-
-  const outcome = actOnApproval(
-    approvalId,
-    action as "approve" | "edit" | "reject",
-    user.name,
-    typeof body?.body === "string" ? body.body : undefined,
-    typeof body?.reason === "string" ? body.reason : undefined,
-  );
-  if (!outcome.ok) {
-    return NextResponse.json({ detail: outcome.detail }, { status: outcome.status });
-  }
-  return NextResponse.json(outcome.request);
+  // v3: approve/edit/reject — POST agents/approval/{id}/{action}/
+  const r = await djangoFetch(`/agents/approval/${approvalId}/${action}/`, {
+    method: "POST",
+    body: JSON.stringify(body),
+  });
+  return djangoJson(r);
 }

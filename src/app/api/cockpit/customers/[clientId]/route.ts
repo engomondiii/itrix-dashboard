@@ -1,9 +1,7 @@
 import { NextResponse } from "next/server";
 
-import { siteConfig } from "@/config/site.config";
 import { getSessionUser } from "@/lib/server/session";
 import { djangoFetch, djangoJson } from "@/lib/server/proxy";
-import { getCustomer } from "@/mocks/customersDb";
 
 export async function GET(
   _req: Request,
@@ -14,12 +12,6 @@ export async function GET(
   }
   const { clientId } = await params;
 
-  if (!siteConfig.useMocks) {
-    const r = await djangoFetch(`/cockpit/customers/${clientId}/`);
-    return djangoJson(r);
-  }
-
-  const detail = getCustomer(clientId);
-  if (!detail) return NextResponse.json({ detail: "Not found" }, { status: 404 });
-  return NextResponse.json(detail);
+  const r = await djangoFetch(`/cockpit/customers/${clientId}/`);
+  return djangoJson(r);
 }

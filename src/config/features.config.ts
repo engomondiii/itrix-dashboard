@@ -3,15 +3,12 @@
  *
  * Each phase of the v5.0 plan is independently shippable behind its flags so
  * the live CRM keeps running throughout. With every flag off, the dashboard is
- * the shipped v3.0 CRM plus the unflagged corrections (fail-closed mock mode
- * and the Brand Manual v1.5 token rename), which are corrections rather than
- * features and therefore ship unconditionally.
+ * the shipped v3.0 CRM plus the unflagged corrections (such as the Brand
+ * Manual v1.5 token rename), which are corrections rather than features and
+ * therefore ship unconditionally.
  *
- * DEFAULT-ON, UNLIKE MOCK MODE — and the difference is deliberate.
- *
- * `useMocks` is opt-in by the exact string "true" because it is a SECURITY
- * boundary: forgetting it must fail closed. These are not. All three phases are
- * merged, every view degrades honestly when its backend route is missing (see
+ * DEFAULT-ON, deliberately. These are not security boundaries. Every view
+ * degrades honestly when its backend route is missing (see
  * `notImplementedOnBackend`), and the failure mode of forgetting one is only
  * that an operator cannot reach a page that would have told them the truth
  * anyway. Defaulting them off meant a deployment with no env vars pruned the

@@ -1,9 +1,7 @@
 import { NextResponse } from "next/server";
 
-import { siteConfig } from "@/config/site.config";
 import { getSessionUser } from "@/lib/server/session";
 import { djangoFetch, djangoJson } from "@/lib/server/proxy";
-import { listPersonas } from "@/mocks/personasDb";
 
 /**
  * The target-account persona registry — TEAM PLANE ONLY.
@@ -23,12 +21,8 @@ export async function GET(req: Request) {
 
   const family = new URL(req.url).searchParams.get("family") ?? undefined;
 
-  if (!siteConfig.useMocks) {
-    // v6: GET personas/ (team) — optionally filtered by functional family.
-    const qs = family ? `?family=${encodeURIComponent(family)}` : "";
-    const r = await djangoFetch(`/personas/${qs}`);
-    return djangoJson(r);
-  }
-
-  return NextResponse.json({ results: listPersonas(family) });
+  // v6: GET personas/ (team) — optionally filtered by functional family.
+  const qs = family ? `?family=${encodeURIComponent(family)}` : "";
+  const r = await djangoFetch(`/personas/${qs}`);
+  return djangoJson(r);
 }

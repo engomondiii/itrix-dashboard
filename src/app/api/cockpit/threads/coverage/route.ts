@@ -1,9 +1,7 @@
 import { NextResponse } from "next/server";
 
-import { siteConfig } from "@/config/site.config";
 import { getSessionUser } from "@/lib/server/session";
 import { notImplementedOnBackend } from "@/lib/server/proxy";
-import { getCoverageOverview } from "@/mocks/threadsDb";
 
 /**
  * Loop productivity across the whole book.
@@ -17,12 +15,8 @@ export async function GET() {
     return NextResponse.json({ detail: "Unauthorized" }, { status: 401 });
   }
 
-  if (!siteConfig.useMocks) {
-    return notImplementedOnBackend(
-      "Loop productivity",
-      "GET cockpit/threads/coverage/ (only per-thread coverage is mounted; the book-wide read is not yet)",
-    );
-  }
-
-  return NextResponse.json(getCoverageOverview());
+  return notImplementedOnBackend(
+    "Loop productivity",
+    "GET cockpit/threads/coverage/ (only per-thread coverage is mounted; the book-wide read is not yet)",
+  );
 }

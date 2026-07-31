@@ -1,11 +1,9 @@
 import { NextResponse } from "next/server";
 
-import { siteConfig } from "@/config/site.config";
 import { getSessionUser } from "@/lib/server/session";
 import { djangoFetch, djangoJson } from "@/lib/server/proxy";
 import { canAdminGovernance } from "@/constants/permissions";
-import { AGENT_KEYS, type AgentKey } from "@/constants/agentKeys";
-import { runAgent } from "@/mocks/cockpitDb";
+import { AGENT_KEYS } from "@/constants/agentKeys";
 
 export async function POST(
   req: Request,
@@ -26,15 +24,10 @@ export async function POST(
   }
   const body = await req.json().catch(() => ({}));
 
-  if (!siteConfig.useMocks) {
-    // v3: invoke an agent — POST agents/{key}/run/
-    const r = await djangoFetch(`/agents/${key}/run/`, {
-      method: "POST",
-      body: JSON.stringify(body),
-    });
-    return djangoJson(r);
-  }
-
-  const leadId = typeof body?.lead_id === "string" ? body.lead_id : "";
-  return NextResponse.json(runAgent(key as AgentKey, leadId));
+  // v3: invoke an agent — POST agents/{key}/run/
+  const r = await djangoFetch(`/agents/${key}/run/`, {
+    method: "POST",
+    body: JSON.stringify(body),
+  });
+  return djangoJson(r);
 }

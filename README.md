@@ -26,21 +26,34 @@ and the Backend v6.0 / Surface 2 v5.0 cutover checklist (§9–§10).
 
 ```bash
 pnpm install
-cp .env.example .env.local   # then set NEXT_PUBLIC_USE_MOCKS=true for offline dev
+cp .env.example .env.local
 pnpm dev                     # http://localhost:3001  (3000 belongs to itrix-web)
 ```
 
 Other scripts: `pnpm build` · `pnpm start` · `pnpm lint` · `pnpm typecheck`.
 
-## Mock-first
+## Against the real Django backend, always
 
-The dashboard runs fully without the backend. With `NEXT_PUBLIC_USE_MOCKS=true` (default),
-the `app/api/*` route handlers serve fixtures from `src/mocks/`. To point at the real
-Django backend, set `NEXT_PUBLIC_USE_MOCKS=false` and `NEXT_PUBLIC_API_URL` to the API base
-— the route handlers then forward each request (with the session JWT) to Django.
+The dashboard develops against the real backend. In `../itrix-backend`:
+
+```bash
+python manage.py migrate
+python manage.py seed_demo --flush   # demo@itrix.ai / demo12345
+python manage.py runserver 8000
+```
+
+The `app/api/*` route handlers forward each request (with the session JWT) to
+Django. A route whose backend counterpart has not shipped answers a calm 501
+naming the endpoint it waits for — `rg "notImplementedOnBackend" src/app/api`
+is the switch-on checklist, and [`BACKEND_GAPS.md`](./BACKEND_GAPS.md) is the
+current gap register.
+
+There is no mock layer. The backend is the single source of data, in
+development and in production alike — the oversight surfaces (threads,
+customers, support, guard hits) render their empty states until `seed_demo`
+grows the corresponding objects.
 
 ```env
-NEXT_PUBLIC_USE_MOCKS=true
 NEXT_PUBLIC_API_URL=http://localhost:8000/api/v1
 NEXT_PUBLIC_APP_NAME=iTrix Operations
 ```
@@ -76,6 +89,10 @@ src/
 
 ## Status
 
-Surface 2 build-out is complete and runs against the mock layer. Remaining work is
-**backend cutover** (reconcile the `// v3:` proxy branches and expand enums once the
-Django models exist) — tracked in `SCAFFOLD_PLAN.md` §9.
+Surface 2 is current with **Surface 2 v7.1** and runs against the real backend:
+the shell contract, the four-class health board, content-pane oversight, the
+guard-hit console with role-filtered `matchedText`, provenance badges and the
+accounts area are built and verified live. Remaining work is the **switch-on
+tail** — deleting each remaining `notImplementedOnBackend` guard as its
+backend route lands — tracked route-by-route in
+[`BACKEND_GAPS.md`](./BACKEND_GAPS.md).

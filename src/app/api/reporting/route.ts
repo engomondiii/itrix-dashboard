@@ -1,20 +1,14 @@
 import { NextResponse } from "next/server";
 
-import { siteConfig } from "@/config/site.config";
 import { getSessionUser } from "@/lib/server/session";
 import { djangoFetch, djangoJson } from "@/lib/server/proxy";
-import { generateReport, listReports } from "@/mocks/reportingDb";
 
 export async function GET() {
   if (!(await getSessionUser())) {
     return NextResponse.json({ detail: "Unauthorized" }, { status: 401 });
   }
-  if (!siteConfig.useMocks) {
-    const r = await djangoFetch("/reporting/");
-    return djangoJson(r);
-  }
-  const results = listReports();
-  return NextResponse.json({ results, count: results.length });
+  const r = await djangoFetch("/reporting/");
+  return djangoJson(r);
 }
 
 /** Generate a new monthly report. */
@@ -24,15 +18,10 @@ export async function POST(req: Request) {
   }
   const body = await req.json().catch(() => ({}));
 
-  if (!siteConfig.useMocks) {
-    // v3: report generate endpoint
-    const r = await djangoFetch("/reporting/generate/", {
-      method: "POST",
-      body: JSON.stringify(body),
-    });
-    return djangoJson(r);
-  }
-
-  const month = typeof body?.month === "string" ? body.month : undefined;
-  return NextResponse.json(generateReport(month), { status: 201 });
+  // v3: report generate endpoint
+  const r = await djangoFetch("/reporting/generate/", {
+    method: "POST",
+    body: JSON.stringify(body),
+  });
+  return djangoJson(r);
 }

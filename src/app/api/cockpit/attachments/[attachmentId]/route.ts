@@ -1,9 +1,7 @@
 import { NextResponse } from "next/server";
 
-import { siteConfig } from "@/config/site.config";
 import { getSessionUser } from "@/lib/server/session";
 import { djangoFetch, djangoJson } from "@/lib/server/proxy";
-import { getAttachment } from "@/mocks/attachmentsDb";
 
 export async function GET(
   _req: Request,
@@ -14,12 +12,6 @@ export async function GET(
   }
   const { attachmentId } = await params;
 
-  if (!siteConfig.useMocks) {
-    const r = await djangoFetch(`/cockpit/attachments/${attachmentId}/`);
-    return djangoJson(r);
-  }
-
-  const attachment = getAttachment(attachmentId);
-  if (!attachment) return NextResponse.json({ detail: "Not found" }, { status: 404 });
-  return NextResponse.json(attachment);
+  const r = await djangoFetch(`/cockpit/attachments/${attachmentId}/`);
+  return djangoJson(r);
 }

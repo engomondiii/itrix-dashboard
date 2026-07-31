@@ -1,9 +1,7 @@
 import { NextResponse } from "next/server";
 
-import { siteConfig } from "@/config/site.config";
 import { getSessionUser } from "@/lib/server/session";
 import { notImplementedOnBackend } from "@/lib/server/proxy";
-import { getMigrationReport } from "@/mocks/journeyDb";
 
 /**
  * The ENGAGED-split migration dry run.
@@ -18,12 +16,8 @@ export async function GET() {
     return NextResponse.json({ detail: "Unauthorized" }, { status: 401 });
   }
 
-  if (!siteConfig.useMocks) {
-    return notImplementedOnBackend(
-      "The ENGAGED-split dry run",
-      "GET journey/migration-report/ (not mounted yet)",
-    );
-  }
-
-  return NextResponse.json(getMigrationReport());
+  return notImplementedOnBackend(
+    "The ENGAGED-split dry run",
+    "GET journey/migration-report/ (not mounted yet)",
+  );
 }

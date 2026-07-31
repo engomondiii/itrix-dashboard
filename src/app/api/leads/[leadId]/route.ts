@@ -1,9 +1,7 @@
 import { NextResponse } from "next/server";
 
-import { siteConfig } from "@/config/site.config";
 import { getSessionUser } from "@/lib/server/session";
 import { djangoFetch, djangoJson } from "@/lib/server/proxy";
-import { getLead } from "@/mocks/leadsDb";
 
 export async function GET(
   _req: Request,
@@ -14,12 +12,6 @@ export async function GET(
   }
   const { leadId } = await params;
 
-  if (!siteConfig.useMocks) {
-    const r = await djangoFetch(`/leads/${leadId}/`);
-    return djangoJson(r);
-  }
-
-  const lead = getLead(leadId);
-  if (!lead) return NextResponse.json({ detail: "Not found" }, { status: 404 });
-  return NextResponse.json(lead);
+  const r = await djangoFetch(`/leads/${leadId}/`);
+  return djangoJson(r);
 }

@@ -1,9 +1,7 @@
 import { NextResponse } from "next/server";
 
-import { siteConfig } from "@/config/site.config";
 import { getSessionUser } from "@/lib/server/session";
 import { notImplementedOnBackend } from "@/lib/server/proxy";
-import { getCustomerNextAction, recordCommercialOverride } from "@/mocks/nbaDb";
 
 /**
  * The customer-first next-best-action for one customer.
@@ -13,25 +11,15 @@ import { getCustomerNextAction, recordCommercialOverride } from "@/mocks/nbaDb";
  * see contradictory guidance. This route must never re-rank or filter the
  * result it gets back.
  */
-export async function GET(
-  _req: Request,
-  { params }: { params: Promise<{ clientId: string }> },
-) {
+export async function GET() {
   if (!(await getSessionUser())) {
     return NextResponse.json({ detail: "Unauthorized" }, { status: 401 });
   }
-  const { clientId } = await params;
 
-  if (!siteConfig.useMocks) {
-    return notImplementedOnBackend(
-      "The customer-first next best action",
-      "GET/POST cockpit/customers/{id}/next-action/ (the lead-plane NBA is mounted; the customer-plane one is not yet)",
-    );
-  }
-
-  const nba = getCustomerNextAction(clientId);
-  if (!nba) return NextResponse.json({ detail: "Not found" }, { status: 404 });
-  return NextResponse.json(nba);
+  return notImplementedOnBackend(
+    "The customer-first next best action",
+    "GET/POST cockpit/customers/{id}/next-action/ (the lead-plane NBA is mounted; the customer-plane one is not yet)",
+  );
 }
 
 /**
@@ -42,31 +30,14 @@ export async function GET(
  * visible afterwards, which is the point — an override is an exception on the
  * record, not a way to make the rule go away.
  */
-export async function POST(
-  req: Request,
-  { params }: { params: Promise<{ clientId: string }> },
-) {
+export async function POST() {
   const user = await getSessionUser();
   if (!user) {
     return NextResponse.json({ detail: "Unauthorized" }, { status: 401 });
   }
-  const { clientId } = await params;
-  const body = await req.json().catch(() => ({}));
-  const reason = String(body?.reason ?? "");
 
-  if (!siteConfig.useMocks) {
-    return notImplementedOnBackend(
-      "Logging a commercial override",
-      "POST cockpit/customers/{id}/next-action/ (not mounted yet)",
-    );
-  }
-
-  const entry = recordCommercialOverride(clientId, reason, user.name ?? user.email);
-  if (!entry) {
-    return NextResponse.json(
-      { detail: "An override requires a reason." },
-      { status: 409 },
-    );
-  }
-  return NextResponse.json(entry);
+  return notImplementedOnBackend(
+    "Logging a commercial override",
+    "POST cockpit/customers/{id}/next-action/ (not mounted yet)",
+  );
 }

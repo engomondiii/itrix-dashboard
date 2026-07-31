@@ -1,9 +1,7 @@
 import { NextResponse } from "next/server";
 
-import { siteConfig } from "@/config/site.config";
 import { getSessionUser } from "@/lib/server/session";
 import { djangoFetch, djangoJson } from "@/lib/server/proxy";
-import { listSupportRequests, supportQueueSummary } from "@/mocks/supportDb";
 
 /**
  * The support queue.
@@ -22,19 +20,10 @@ export async function GET(req: Request) {
 
   const clientId = new URL(req.url).searchParams.get("clientId") ?? undefined;
 
-  if (!siteConfig.useMocks) {
-    // The shipped backend mounts the team-plane queue under cockpit/ —
-    // /cockpit/support/queue/ — not at the spec's /support/queue/. The shipped
-    // name binds (the same rule Backend v7.2 §14 applies to client/auth/*).
-    const qs = clientId ? `?clientId=${encodeURIComponent(clientId)}` : "";
-    const r = await djangoFetch(`/cockpit/support/queue/${qs}`);
-    return djangoJson(r);
-  }
-
-  const results = listSupportRequests(clientId);
-  return NextResponse.json({
-    results,
-    count: results.length,
-    summary: supportQueueSummary(),
-  });
+  // The shipped backend mounts the team-plane queue under cockpit/ —
+  // /cockpit/support/queue/ — not at the spec's /support/queue/. The shipped
+  // name binds (the same rule Backend v7.2 §14 applies to client/auth/*).
+  const qs = clientId ? `?clientId=${encodeURIComponent(clientId)}` : "";
+  const r = await djangoFetch(`/cockpit/support/queue/${qs}`);
+  return djangoJson(r);
 }

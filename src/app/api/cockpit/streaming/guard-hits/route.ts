@@ -1,10 +1,7 @@
 import { NextResponse } from "next/server";
 
-import { siteConfig } from "@/config/site.config";
 import { getSessionUser } from "@/lib/server/session";
 import { djangoFetch, djangoJson } from "@/lib/server/proxy";
-import { canAdminGovernance } from "@/constants/permissions";
-import { getStreamingGovernance } from "@/mocks/streamingDb";
 
 /**
  * Stream-guard halts, envelope downgrades and the approvals currently blocking
@@ -20,35 +17,6 @@ export async function GET() {
     return NextResponse.json({ detail: "Unauthorized" }, { status: 401 });
   }
 
-  if (!siteConfig.useMocks) {
-    const r = await djangoFetch("/cockpit/streaming/guard-hits/");
-    return djangoJson(r);
-  }
-
-  const data = getStreamingGovernance();
-
-  /**
-   * matchedText IS FILTERED BY ROLE HERE, NOT IN THE COMPONENT. Backend v7.0
-   * §3.2: a non-elevated token never receives the field — server-side, not a
-   * dashboard courtesy. The mock layer honours the same contract so a
-   * non-elevated session in mock mode cannot see the wording in the network
-   * tab that the UI declined to render. They still get `pattern`, which is
-   * enough to understand the event without reproducing the claim.
-   *
-   * The key is ABSENT, not null (Surface 2 v7.1 §05) — a null still admits
-   * the field exists, and the contract is that an unauthorized response
-   * carries no trace of it.
-   */
-  if (!canAdminGovernance(user.role)) {
-    return NextResponse.json({
-      ...data,
-      guardHits: data.guardHits.map((hit) => {
-        const rest = { ...hit };
-        delete rest.matchedText;
-        return rest;
-      }),
-    });
-  }
-
-  return NextResponse.json(data);
+  const r = await djangoFetch("/cockpit/streaming/guard-hits/");
+  return djangoJson(r);
 }

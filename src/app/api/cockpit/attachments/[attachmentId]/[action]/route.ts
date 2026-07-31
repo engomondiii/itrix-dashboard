@@ -1,10 +1,8 @@
 import { NextResponse } from "next/server";
 
-import { siteConfig } from "@/config/site.config";
 import { getSessionUser } from "@/lib/server/session";
 import { djangoFetch, djangoJson } from "@/lib/server/proxy";
 import { canAdminGovernance } from "@/constants/permissions";
-import { setAttachmentStatus } from "@/mocks/attachmentsDb";
 
 const ACTIONS = new Set(["quarantine", "release"]);
 
@@ -41,24 +39,10 @@ export async function POST(
   }
 
   const body = await req.json().catch(() => ({}));
-  const reason = String(body?.reason ?? "");
 
-  if (!siteConfig.useMocks) {
-    const r = await djangoFetch(`/cockpit/attachments/${attachmentId}/${action}/`, {
-      method: "POST",
-      body: JSON.stringify(body),
-    });
-    return djangoJson(r);
-  }
-
-  const outcome = setAttachmentStatus(
-    attachmentId,
-    action as "quarantine" | "release",
-    user.name ?? user.email,
-    reason,
-  );
-  if (!outcome.ok) {
-    return NextResponse.json({ detail: outcome.detail }, { status: outcome.status });
-  }
-  return NextResponse.json(outcome.attachment);
+  const r = await djangoFetch(`/cockpit/attachments/${attachmentId}/${action}/`, {
+    method: "POST",
+    body: JSON.stringify(body),
+  });
+  return djangoJson(r);
 }

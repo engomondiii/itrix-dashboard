@@ -1,9 +1,7 @@
 import { NextResponse } from "next/server";
 
-import { siteConfig } from "@/config/site.config";
 import { getSessionUser } from "@/lib/server/session";
 import { notImplementedOnBackend } from "@/lib/server/proxy";
-import { listAccounts } from "@/mocks/accountsDb";
 
 /**
  * Accounts · no conversation yet — TEAM PLANE ONLY.
@@ -19,13 +17,8 @@ export async function GET() {
     return NextResponse.json({ detail: "Unauthorized" }, { status: 401 });
   }
 
-  if (!siteConfig.useMocks) {
-    return notImplementedOnBackend(
-      "Accounts with no conversation yet",
-      "GET cockpit/accounts/ (Backend v7.2 Phase 4)",
-    );
-  }
-
-  const results = listAccounts();
-  return NextResponse.json({ results, count: results.length });
+  return notImplementedOnBackend(
+    "Accounts with no conversation yet",
+    "GET cockpit/accounts/ (Backend v7.2 Phase 4)",
+  );
 }

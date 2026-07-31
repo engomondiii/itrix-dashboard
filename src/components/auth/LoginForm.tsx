@@ -8,12 +8,11 @@ import { Label } from "@/components/ui/label";
 import { ErrorMessage } from "@/components/ui/error-message";
 import { Spinner } from "@/components/ui/spinner";
 import { useAuth } from "@/hooks/useAuth";
-import { siteConfig } from "@/config/site.config";
 
 export function LoginForm() {
   const { login } = useAuth();
-  const [email, setEmail] = useState(siteConfig.useMocks ? "naomi@itrix.example" : "");
-  const [password, setPassword] = useState(siteConfig.useMocks ? "demo" : "");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
 
   function onSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -68,12 +67,6 @@ export function LoginForm() {
         Sign in
       </Button>
 
-      {siteConfig.useMocks && (
-        <p className="rounded-md border border-tint/25 bg-tint/10 px-3 py-2 text-caption text-tint">
-          Mock mode — any credentials sign you in. Try{" "}
-          <span className="font-mono text-soft">admin@itrix.example</span>.
-        </p>
-      )}
     </form>
   );
 }

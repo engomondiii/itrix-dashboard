@@ -1,10 +1,7 @@
 import { NextResponse } from "next/server";
 
-import { siteConfig } from "@/config/site.config";
 import { getSessionUser } from "@/lib/server/session";
 import { djangoFetch, djangoJson } from "@/lib/server/proxy";
-import { removePoCRisk, updatePoCRisk } from "@/mocks/dealsDb";
-import { RISK_SEVERITIES, type RiskSeverity } from "@/types/poc";
 
 export async function PATCH(
   req: Request,
@@ -16,27 +13,12 @@ export async function PATCH(
   const { pocId, riskId } = await params;
   const body = await req.json().catch(() => ({}));
 
-  if (!siteConfig.useMocks) {
-    // v3: PoC update-risk endpoint
-    const r = await djangoFetch(`/pocs/${pocId}/risks/${riskId}/`, {
-      method: "PATCH",
-      body: JSON.stringify(body),
-    });
-    return djangoJson(r);
-  }
-
-  const rawSeverity = body?.severity != null ? String(body.severity) : undefined;
-  const severity =
-    rawSeverity && (RISK_SEVERITIES as readonly string[]).includes(rawSeverity)
-      ? (rawSeverity as RiskSeverity)
-      : undefined;
-  const poc = updatePoCRisk(pocId, riskId, {
-    description: body?.description,
-    severity,
-    mitigation: body?.mitigation,
+  // v3: PoC update-risk endpoint
+  const r = await djangoFetch(`/pocs/${pocId}/risks/${riskId}/`, {
+    method: "PATCH",
+    body: JSON.stringify(body),
   });
-  if (!poc) return NextResponse.json({ detail: "Not found" }, { status: 404 });
-  return NextResponse.json(poc);
+  return djangoJson(r);
 }
 
 export async function DELETE(
@@ -48,15 +30,9 @@ export async function DELETE(
   }
   const { pocId, riskId } = await params;
 
-  if (!siteConfig.useMocks) {
-    // v3: PoC remove-risk endpoint
-    const r = await djangoFetch(`/pocs/${pocId}/risks/${riskId}/`, {
-      method: "DELETE",
-    });
-    return djangoJson(r);
-  }
-
-  const poc = removePoCRisk(pocId, riskId);
-  if (!poc) return NextResponse.json({ detail: "Not found" }, { status: 404 });
-  return NextResponse.json(poc);
+  // v3: PoC remove-risk endpoint
+  const r = await djangoFetch(`/pocs/${pocId}/risks/${riskId}/`, {
+    method: "DELETE",
+  });
+  return djangoJson(r);
 }

@@ -1,9 +1,7 @@
 import { NextResponse } from "next/server";
 
-import { siteConfig } from "@/config/site.config";
 import { getSessionUser } from "@/lib/server/session";
 import { notImplementedOnBackend } from "@/lib/server/proxy";
-import { listSuccessReviews } from "@/mocks/customersDb";
 
 /**
  * Scheduled success reviews with their assembled agenda.
@@ -18,13 +16,8 @@ export async function GET() {
     return NextResponse.json({ detail: "Unauthorized" }, { status: 401 });
   }
 
-  if (!siteConfig.useMocks) {
-    return notImplementedOnBackend(
-      "Scheduled success reviews",
-      "GET success/reviews/ (not mounted yet)",
-    );
-  }
-
-  const results = listSuccessReviews();
-  return NextResponse.json({ results, count: results.length });
+  return notImplementedOnBackend(
+    "Scheduled success reviews",
+    "GET success/reviews/ (not mounted yet)",
+  );
 }

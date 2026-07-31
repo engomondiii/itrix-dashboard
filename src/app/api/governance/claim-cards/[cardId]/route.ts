@@ -1,10 +1,8 @@
 import { NextResponse } from "next/server";
 
-import { siteConfig } from "@/config/site.config";
 import { getSessionUser } from "@/lib/server/session";
 import { djangoFetch, djangoJson } from "@/lib/server/proxy";
 import { canAdminGovernance } from "@/constants/permissions";
-import { getClaimCard, updateClaimCard } from "@/mocks/claimCardsDb";
 
 export async function GET(
   _req: Request,
@@ -15,15 +13,9 @@ export async function GET(
   }
   const { cardId } = await params;
 
-  if (!siteConfig.useMocks) {
-    // v3: claim-card detail — GET governance/claim-cards/{id}/
-    const r = await djangoFetch(`/governance/claim-cards/${cardId}/`);
-    return djangoJson(r);
-  }
-
-  const card = getClaimCard(cardId);
-  if (!card) return NextResponse.json({ detail: "Not found" }, { status: 404 });
-  return NextResponse.json(card);
+  // v3: claim-card detail — GET governance/claim-cards/{id}/
+  const r = await djangoFetch(`/governance/claim-cards/${cardId}/`);
+  return djangoJson(r);
 }
 
 export async function PATCH(
@@ -41,16 +33,10 @@ export async function PATCH(
   const { cardId } = await params;
   const body = await req.json().catch(() => ({}));
 
-  if (!siteConfig.useMocks) {
-    // v3: claim-card update — PATCH governance/claim-cards/{id}/
-    const r = await djangoFetch(`/governance/claim-cards/${cardId}/`, {
-      method: "PATCH",
-      body: JSON.stringify(body),
-    });
-    return djangoJson(r);
-  }
-
-  const card = updateClaimCard(cardId, body);
-  if (!card) return NextResponse.json({ detail: "Not found" }, { status: 404 });
-  return NextResponse.json(card);
+  // v3: claim-card update — PATCH governance/claim-cards/{id}/
+  const r = await djangoFetch(`/governance/claim-cards/${cardId}/`, {
+    method: "PATCH",
+    body: JSON.stringify(body),
+  });
+  return djangoJson(r);
 }

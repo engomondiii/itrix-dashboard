@@ -1,9 +1,7 @@
 import { NextResponse } from "next/server";
 
-import { siteConfig } from "@/config/site.config";
 import { getSessionUser } from "@/lib/server/session";
 import { djangoFetch, djangoJson } from "@/lib/server/proxy";
-import { listThreads } from "@/mocks/threadsDb";
 
 /**
  * Live conversation oversight — TEAM PLANE ONLY.
@@ -23,19 +21,6 @@ export async function GET(req: Request) {
 
   const sp = new URL(req.url).searchParams;
 
-  if (!siteConfig.useMocks) {
-    const r = await djangoFetch(`/cockpit/threads/?${sp}`);
-    return djangoJson(r);
-  }
-
-  const results = listThreads({
-    identity: sp.get("identity") ?? undefined,
-    state: sp.get("state") ?? undefined,
-    liveOnly: sp.get("liveOnly") === "true",
-    hasAttachments: sp.get("hasAttachments") === "true",
-    blockedOnApproval: sp.get("blockedOnApproval") === "true",
-    guardHalted: sp.get("guardHalted") === "true",
-  });
-
-  return NextResponse.json({ results, count: results.length });
+  const r = await djangoFetch(`/cockpit/threads/?${sp}`);
+  return djangoJson(r);
 }

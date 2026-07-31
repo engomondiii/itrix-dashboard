@@ -22,7 +22,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useLeadActions } from "@/hooks/useLeadActions";
-import { MOCK_TEAM } from "@/mocks/users";
+import { useTeam } from "@/hooks/useTeam";
 
 const UNASSIGNED = "__none__";
 
@@ -34,6 +34,9 @@ export function LeadOwnerControl({
   owner: string | null;
 }) {
   const { assign } = useLeadActions(leadId);
+  // The real roster, not a fixture — assigning to a name the backend does not
+  // know is a write that fails after the dialog, which is the worst time.
+  const { data: team } = useTeam();
   // The chosen owner waits in `pending` until the handoff note is confirmed,
   // so the Select visually reverts if the dialog is cancelled.
   const [pending, setPending] = useState<string | null | undefined>(undefined);
@@ -56,7 +59,7 @@ export function LeadOwnerControl({
         </SelectTrigger>
         <SelectContent>
           <SelectItem value={UNASSIGNED}>Unassigned</SelectItem>
-          {MOCK_TEAM.map((m) => (
+          {(team?.results ?? []).map((m) => (
             <SelectItem key={m.id} value={m.name}>
               {m.name}
             </SelectItem>

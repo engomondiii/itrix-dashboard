@@ -1,13 +1,7 @@
 import { NextResponse } from "next/server";
 
-import { siteConfig } from "@/config/site.config";
 import { getSessionUser } from "@/lib/server/session";
 import { notImplementedOnBackend } from "@/lib/server/proxy";
-import {
-  assignSupportRequest,
-  escalateSupportRequest,
-  resolveSupportRequest,
-} from "@/mocks/supportDb";
 
 const ACTIONS = new Set(["assign", "resolve", "escalate"]);
 
@@ -30,29 +24,13 @@ export async function POST(
     return NextResponse.json({ detail: "Unauthorized" }, { status: 401 });
   }
 
-  const { requestId, action } = await params;
+  const { action } = await params;
   if (!ACTIONS.has(action)) {
     return NextResponse.json({ detail: "Unknown action" }, { status: 404 });
   }
 
-  const body = await req.json().catch(() => ({}));
-
-  if (!siteConfig.useMocks) {
-    return notImplementedOnBackend(
-      "Support actions",
-      "POST cockpit/support/queue/{id}/{assign|resolve|escalate}/ (the queue reads are mounted; the write actions are not yet)",
-    );
-  }
-
-  const outcome =
-    action === "assign"
-      ? assignSupportRequest(requestId, String(body?.owner ?? user.name ?? user.email))
-      : action === "escalate"
-        ? escalateSupportRequest(requestId, String(body?.reason ?? ""))
-        : resolveSupportRequest(requestId, String(body?.resolution ?? ""));
-
-  if (!outcome.ok) {
-    return NextResponse.json({ detail: outcome.detail }, { status: outcome.status });
-  }
-  return NextResponse.json(outcome.request);
+  return notImplementedOnBackend(
+    "Support actions",
+    "POST cockpit/support/queue/{id}/{assign|resolve|escalate}/ (the queue reads are mounted; the write actions are not yet)",
+  );
 }
