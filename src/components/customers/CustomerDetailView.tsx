@@ -51,12 +51,21 @@ export function CustomerDetailView({ clientId }: { clientId: string }) {
             <CardContent className="space-y-2">
               <div className="flex flex-wrap items-center gap-2">
                 <CustomerHealthBadge healthClass={detail.customer.healthClass} />
-                <Badge variant="neutral">
-                  {detail.customer.journeyNumber} · {detail.customer.stateLabel}
-                </Badge>
-                <Badge variant="neutral">
-                  {detail.customer.adoptionPercent}% adoption
-                </Badge>
+                {(detail.customer.journeyNumber != null || detail.customer.stateLabel) && (
+                  <Badge variant="neutral">
+                    {[detail.customer.journeyNumber, detail.customer.stateLabel]
+                      .filter((v) => v != null)
+                      .join(" · ")}
+                  </Badge>
+                )}
+                {detail.customer.adoptionPercent != null && (
+                  <Badge variant="neutral">
+                    {detail.customer.adoptionPercent}% adoption
+                  </Badge>
+                )}
+                {detail.customer.expansionAllowed === false && (
+                  <Badge variant="warning">expansion suppressed</Badge>
+                )}
                 <AccountOriginBadge origin={detail.customer.accountOrigin} />
                 <VerificationBadge
                   verified={detail.customer.emailVerified}
@@ -68,25 +77,33 @@ export function CustomerDetailView({ clientId }: { clientId: string }) {
                   {detail.customer.reasons.join(" · ")}
                 </p>
               )}
-              <p className="text-caption text-ink-secondary">
-                Customer since first payment on {formatDate(detail.customer.firstPaymentAt)}
-                {detail.customer.nextReviewDate && (
-                  <> · next success review {formatDate(detail.customer.nextReviewDate)}</>
-                )}
-              </p>
+              {detail.customer.firstPaymentAt && (
+                <p className="text-caption text-ink-secondary">
+                  Customer since first payment on {formatDate(detail.customer.firstPaymentAt)}
+                  {detail.customer.nextReviewDate && (
+                    <> · next success review {formatDate(detail.customer.nextReviewDate)}</>
+                  )}
+                </p>
+              )}
             </CardContent>
           </Card>
 
+          {/* Each panel renders only when the wire actually served its data.
+              The shipped v7.1 detail is a flat health summary — an absent
+              panel means "not served yet", and rendering an empty list
+              instead would claim "none exist", which is a different fact. */}
           <div className="grid gap-4 lg:grid-cols-[minmax(0,1.5fr)_minmax(0,1fr)]">
             <div className="space-y-4">
-              <Card>
-                <CardHeader>
-                  <CardTitle>Outcomes</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <OutcomeStatusTable outcomes={detail.outcomes} />
-                </CardContent>
-              </Card>
+              {detail.outcomes && (
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Outcomes</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <OutcomeStatusTable outcomes={detail.outcomes} />
+                  </CardContent>
+                </Card>
+              )}
 
               <Card>
                 <CardHeader>
@@ -97,27 +114,31 @@ export function CustomerDetailView({ clientId }: { clientId: string }) {
                 </CardContent>
               </Card>
 
-              <Card>
-                <CardHeader>
-                  <CardTitle>Deployment health</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <ul className="space-y-2">
-                    {detail.deployments.map((d) => (
-                      <DeploymentHealthRow key={d.id} deployment={d} />
-                    ))}
-                  </ul>
-                </CardContent>
-              </Card>
+              {detail.deployments && (
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Deployment health</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <ul className="space-y-2">
+                      {detail.deployments.map((d) => (
+                        <DeploymentHealthRow key={d.id} deployment={d} />
+                      ))}
+                    </ul>
+                  </CardContent>
+                </Card>
+              )}
 
-              <Card>
-                <CardHeader>
-                  <CardTitle>Shared plan</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <SuccessPlanPanel plan={detail.plan} />
-                </CardContent>
-              </Card>
+              {detail.plan && (
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Shared plan</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <SuccessPlanPanel plan={detail.plan} />
+                  </CardContent>
+                </Card>
+              )}
             </div>
 
             <div className="space-y-4">
@@ -125,32 +146,46 @@ export function CustomerDetailView({ clientId }: { clientId: string }) {
                   "do not sell right now". */}
               <NextBestAction clientId={clientId} />
 
-              <Card>
-                <CardHeader>
-                  <CardTitle>Relationship team</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <RelationshipTeamPanel team={detail.team} />
-                </CardContent>
-              </Card>
+              {detail.team && (
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Relationship team</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <RelationshipTeamPanel team={detail.team} />
+                  </CardContent>
+                </Card>
+              )}
 
-              <Card>
-                <CardHeader>
-                  <CardTitle>Private feedback</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <FeedbackRiskAlert feedback={detail.feedback} />
-                </CardContent>
-              </Card>
+              {detail.feedback && (
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Private feedback</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <FeedbackRiskAlert feedback={detail.feedback} />
+                  </CardContent>
+                </Card>
+              )}
 
-              <Card>
-                <CardHeader>
-                  <CardTitle>Changes since their last visit</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <ChangeDigestPreview changes={detail.changes} />
-                </CardContent>
-              </Card>
+              {detail.changes && (
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Changes since their last visit</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <ChangeDigestPreview changes={detail.changes} />
+                  </CardContent>
+                </Card>
+              )}
+
+              {!detail.outcomes && !detail.deployments && !detail.plan && (
+                <p className="text-caption text-ink-secondary">
+                  Outcomes, deployments, the shared plan, team, feedback and the
+                  change digest are not served by this backend yet — the health
+                  summary above is what the wire carries today.
+                </p>
+              )}
             </div>
           </div>
         </>

@@ -118,6 +118,13 @@ export interface AttachmentScan {
   scannedAt: string | null; // ISO
 }
 
+/**
+ * A queue row. The shipped v7.1 wire (`apps/cockpit/services/
+ * attachment_review.py`) is flatter than this — `scanVerdict`/`scanDetail`
+ * instead of a `scan` object, no `threadTitle`, no `identityState`, a nullable
+ * `threadId` — and the boundary normaliser in `attachmentsApi` maps it. Fields
+ * the wire may not carry are optional and render as a dash.
+ */
 export interface AttachmentListItem {
   id: string;
   filename: string;
@@ -126,16 +133,21 @@ export interface AttachmentListItem {
   status: AttachmentStatus;
   scan: AttachmentScan;
   extraction: AttachmentExtraction | null;
-  threadId: string;
-  threadTitle: string;
-  /** The identity plane of the thread that owns it. */
-  identityState: "anonymous" | "identified" | "authenticated_customer";
+  threadId: string | null;
+  threadTitle?: string;
+  /** The identity plane of the thread that owns it. Absent on the v7.1 wire. */
+  identityState?: "anonymous" | "identified" | "authenticated_customer";
   /** Restricted handling: shorter retention, encryption at rest, thread-scoped access. */
   preNda: boolean;
   retentionExpiresAt: string | null; // ISO
   /** TEAM PLANE ONLY. Never included in any payload this surface sends onward. */
   riskFlags: string[];
   createdAt: string; // ISO
+  /* ── v7.1 wire extras, passed through when present ───────────────────────── */
+  declaredMime?: string;
+  visitorNote?: string;
+  uploadedByKind?: string;
+  needsReview?: boolean;
 }
 
 /** One audited action against an attachment. */
@@ -149,6 +161,9 @@ export interface AttachmentAuditEntry {
 }
 
 export interface AttachmentDetail extends AttachmentListItem {
-  sha256: string;
+  /** Absent on the v7.1 wire — the field renders only when served. */
+  sha256?: string;
   audit: AttachmentAuditEntry[];
+  /** Full scan history, newest first, when the wire serves it (v7.1 detail). */
+  scans?: AttachmentScan[];
 }

@@ -67,9 +67,11 @@ export function ThreadTranscript({ threadId }: { threadId: string }) {
               <div className="flex flex-wrap items-center gap-2">
                 <AnonymousBadge identityState={detail.thread.identityState} />
                 <StateBadge state={detail.thread.state} />
-                <Badge variant="neutral">
-                  {DISCLOSURE_CEILING_LABEL[detail.disclosureCeiling]}
-                </Badge>
+                {detail.disclosureCeiling && (
+                  <Badge variant="neutral">
+                    {DISCLOSURE_CEILING_LABEL[detail.disclosureCeiling]}
+                  </Badge>
+                )}
                 {detail.thread.live && <Badge variant="success">Live now</Badge>}
                 {detail.thread.blocking && (
                   <Badge variant="error" className="tabular-nums">
@@ -140,30 +142,41 @@ export function ThreadTranscript({ threadId }: { threadId: string }) {
                     intervention.
                   </p>
 
-                  <div className="space-y-2">
-                    <SectionLabel>Loop</SectionLabel>
-                    <div className="flex flex-wrap items-center gap-2">
-                      {detail.thread.loop.open ? (
-                        <Badge variant="info">Open</Badge>
-                      ) : (
-                        <StopReasonBadge stopReason={detail.thread.loop.stopReason} />
+                  {/* The shipped v7.1 detail serves no loop or coverage overlay.
+                      Absent means "not served", and this section says so rather
+                      than rendering a zeroed meter. */}
+                  {(detail.thread.loop || detail.thread.coverage) && (
+                    <div className="space-y-2">
+                      <SectionLabel>Loop</SectionLabel>
+                      {detail.thread.loop && (
+                        <div className="flex flex-wrap items-center gap-2">
+                          {detail.thread.loop.open ? (
+                            <Badge variant="info">Open</Badge>
+                          ) : (
+                            <StopReasonBadge stopReason={detail.thread.loop.stopReason} />
+                          )}
+                          <span className="text-caption tabular-nums text-ink-secondary">
+                            {detail.thread.loop.questionsAsked} asked ·{" "}
+                            {detail.thread.loop.budgetRemaining} of budget left
+                          </span>
+                        </div>
                       )}
-                      <span className="text-caption tabular-nums text-ink-secondary">
-                        {detail.thread.loop.questionsAsked} asked ·{" "}
-                        {detail.thread.loop.budgetRemaining} of budget left
-                      </span>
+                      {detail.thread.coverage && (
+                        <CoverageMeter
+                          covered={detail.thread.coverage.covered}
+                          partial={detail.thread.coverage.partial}
+                          unknown={detail.thread.coverage.unknown}
+                        />
+                      )}
                     </div>
-                    <CoverageMeter
-                      covered={detail.thread.coverage.covered}
-                      partial={detail.thread.coverage.partial}
-                      unknown={detail.thread.coverage.unknown}
-                    />
-                  </div>
+                  )}
 
-                  <div className="space-y-2">
-                    <SectionLabel>Coverage map</SectionLabel>
-                    <CoverageMap entries={detail.coverageMap} />
-                  </div>
+                  {detail.coverageMap.length > 0 && (
+                    <div className="space-y-2">
+                      <SectionLabel>Coverage map</SectionLabel>
+                      <CoverageMap entries={detail.coverageMap} />
+                    </div>
+                  )}
 
                   {/* v6.0 content-pane oversight (§6.2). Each block renders
                       only when the wire carries it — a v5.0 backend serves

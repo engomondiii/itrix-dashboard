@@ -94,7 +94,36 @@ appear (fields are typed optional and the UI omits their sections until then):
 - on the read: `guardHitRate` (halts per 100 streamed turns — the drift
   signal), envelope `downgrades`, `blocking` approvals with visitor wait
 
-### 4.3 Older serializer gaps (carried from WORKFLOW_AUDIT.md, still open)
+### 4.3 The v7.1 row-level rows are THINNER than the v7.0 §3.1 shapes — adapted, crash fixed (31 Jul 2026)
+
+The §6 caveat bit in production: the seed creates no customers/threads/support/
+attachments, so every row-level board was verified against its EMPTY state.
+With real rows, four pages crashed to the route error boundary ("this page
+failed to render") because the dashboard cast the wire unchecked and then
+dereferenced nested objects the v7.1 rows do not carry:
+
+| Route | Shipped row (tree) | Dashboard expected (v7.0 §3.1) |
+|---|---|---|
+| `cockpit/customers/` | flat: `outcomesOffPlan, blockingSupport, negativePulse, degradedDeployments` | `outcomes{…}`, `journeyNumber`, `stateLabel`, `openSupportCount`, `slaBreaching`, `adoptionPercent`, `nextReviewDate`, `owner`, `firstPaymentAt` |
+| `cockpit/customers/{id}/` | the flat row + `contractState` | `{ customer, outcomes, deployments, plan, team, feedback, changes }` |
+| `cockpit/threads/` | flat: `threadId, anonymous, company, journeyState, turnCount, visitorTurns, working` | `id`, `identityState`, `state`, `live`, `coverage{…}`, `loop{…}`, `attachments{…}`, `blocking`, `guardHalted`, `humanOwner` |
+| `cockpit/attachments/` | flat: `attachmentId, scanVerdict, scanDetail, declaredMime…` | `id`, `scan{…}`, `threadTitle`, `identityState` |
+| `cockpit/support/queue/` | `requestId`, status `in_progress\|waiting_on_customer`, urgency `critical` + separate `blocking` bool | `id`, status `assigned\|waiting`, urgency `blocking` as top rank |
+
+The dashboard now normalises ALL of these at the boundary (`src/lib/api/
+{customers,threads,attachments,support}Api.ts`): shipped names map to surface
+names, shipped vocabularies map to rendered vocabularies, and fields the wire
+does not carry stay `undefined` — the boards render "—" for them rather than
+fabricating zeros. **Do not "fix" the dashboard back to the §3.1 cast.**
+
+Still open backend-side (columns light up on arrival, no dashboard change
+needed): the customer board's outcome counts/adoption/owner/SLA fields, the
+thread board's coverage/loop/attachment overlay and `live`, the detail reads'
+panel arrays (`outcomes, deployments, plan, team, feedback, changes`), thread
+detail's `disclosureCeiling`, attachment rows' `threadTitle`/`identityState`/
+`extraction`, and support rows' `body` on the queue row.
+
+### 4.4 Older serializer gaps (carried from WORKFLOW_AUDIT.md, still open)
 
 - `ApprovalRequest` → no `conversationId`; `Conversation` summary → no
   `leadId`. The approval-queue ⇄ thread ⇄ lead cross-links silently vanish in

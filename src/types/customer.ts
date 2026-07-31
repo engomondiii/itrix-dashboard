@@ -170,9 +170,13 @@ export interface ChangeLogEntry {
 export interface CustomerListItem {
   clientId: string;
   company: string;
-  /** The journey state — 7 upward, because success starts at first payment. */
-  journeyNumber: number;
-  stateLabel: string;
+  /**
+   * The journey state — 7 upward, because success starts at first payment.
+   * OPTIONAL: the shipped v7.1 row (`apps/cockpit/services/customers.py`) does
+   * not carry it yet. The board renders the line only when the wire does.
+   */
+  journeyNumber?: number;
+  stateLabel?: string;
   healthClass: HealthClass;
   /**
    * Why the class is what it is. Always rendered beside the badge — a health
@@ -185,15 +189,28 @@ export interface CustomerListItem {
    * flips this — the condition stays true, a human acted against it on record.
    */
   expansionAllowed: boolean;
-  outcomes: { total: number; onPlan: number; atRisk: number; offPlan: number; achieved: number };
-  openSupportCount: number;
+  /**
+   * The v7.0 §3.1 outcome counts. OPTIONAL: the shipped v7.1 row serves only
+   * the flat `outcomesOffPlan` count below. When this object is absent the
+   * board falls back to that count and renders "—" for the rest, rather than
+   * inventing zeros the backend never asserted.
+   */
+  outcomes?: { total: number; onPlan: number; atRisk: number; offPlan: number; achieved: number };
+  openSupportCount?: number;
   /** True when any open request has breached or is about to breach its SLA. */
-  slaBreaching: boolean;
-  adoptionPercent: number;
-  lastFeedbackScore: number | null;
-  nextReviewDate: string | null; // ISO
-  firstPaymentAt: string; // ISO
-  owner: string | null;
+  slaBreaching?: boolean;
+  adoptionPercent?: number;
+  lastFeedbackScore?: number | null;
+  nextReviewDate?: string | null; // ISO
+  firstPaymentAt?: string; // ISO
+  owner?: string | null;
+  /* ── The thin v7.1 wire fields, verbatim (services/customers.py) ────────── */
+  /** Count of outcomes off plan — the only outcome number the v7.1 row carries. */
+  outcomesOffPlan?: number;
+  /** Truthy while an open blocking support request suppresses expansion. */
+  blockingSupport?: number | boolean;
+  negativePulse?: number | boolean;
+  degradedDeployments?: number;
   /**
    * How this account was opened (Backend v7.2 §15.7). `string` so an
    * unrecognised value reaches the badge raw. Absent pre-v7.2. Team-plane only.
@@ -210,14 +227,24 @@ export interface CustomerListItem {
   emailVerifiedAt?: string | null; // ISO
 }
 
+/**
+ * The customer detail read. Everything beyond `customer` is OPTIONAL because
+ * the shipped v7.1 detail (`services/customers.py detail()`) is a flat health
+ * summary with none of these panels — the dashboard normalises the flat shape
+ * into `{ customer }` at the boundary and each panel renders only when its
+ * data actually arrived. An absent panel means "not served yet", and rendering
+ * an empty list instead would claim "none exist", which is a different fact.
+ */
 export interface CustomerDetail {
   customer: CustomerListItem;
-  outcomes: Outcome[];
-  deployments: DeploymentHealth[];
-  plan: SuccessPlan;
-  team: RelationshipTeamMember[];
-  feedback: FeedbackPulse[];
-  changes: ChangeLogEntry[];
+  outcomes?: Outcome[];
+  deployments?: DeploymentHealth[];
+  plan?: SuccessPlan;
+  team?: RelationshipTeamMember[];
+  feedback?: FeedbackPulse[];
+  changes?: ChangeLogEntry[];
+  /** v7.1 flat-detail extra, passed through when present. */
+  contractState?: string;
 }
 
 /** A scheduled success review and the agenda assembled for it. */

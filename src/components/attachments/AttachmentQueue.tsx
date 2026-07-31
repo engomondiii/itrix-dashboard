@@ -139,13 +139,19 @@ export function AttachmentQueue() {
                     </div>
                   </TableCell>
                   <TableCell className="max-w-[22ch]">
-                    <Link
-                      href={ROUTES.thread(a.threadId)}
-                      className="line-clamp-1 text-sec text-ink-secondary hover:underline"
-                    >
-                      {a.threadTitle}
-                    </Link>
-                    <div className="text-micro text-ink-secondary">{a.identityState}</div>
+                    {a.threadId ? (
+                      <Link
+                        href={ROUTES.thread(a.threadId)}
+                        className="line-clamp-1 text-sec text-ink-secondary hover:underline"
+                      >
+                        {a.threadTitle || "Open thread"}
+                      </Link>
+                    ) : (
+                      <span className="text-micro text-ink-muted">—</span>
+                    )}
+                    {a.identityState && (
+                      <div className="text-micro text-ink-secondary">{a.identityState}</div>
+                    )}
                   </TableCell>
                   <TableCell>
                     <span className="flex flex-col items-start gap-1">

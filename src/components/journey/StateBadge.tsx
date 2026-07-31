@@ -21,7 +21,13 @@ import {
  * and deliberately never numbered (Playbook v1.6 §16E) — a visitor is never
  * shown a stage number, a tier or a score.
  */
-export function StateBadge({ state }: { state: JourneyState }) {
+export function StateBadge({ state }: { state?: JourneyState }) {
+  // A row whose wire carried no state (or an unrecognised one) renders a dash
+  // rather than a guessed rung — this is the team plane, and a wrong number
+  // here is repeated out loud to a visitor.
+  if (!state || !(state in JOURNEY_NUMBER)) {
+    return <span className="text-micro text-ink-muted">—</span>;
+  }
   const n = JOURNEY_NUMBER[state];
 
   if (n === null) {

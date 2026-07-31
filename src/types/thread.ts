@@ -84,28 +84,43 @@ export interface BlockingApproval {
   waitingSeconds: number;
 }
 
-/** Row on the thread board. */
+/**
+ * Row on the thread board.
+ *
+ * MOST OVERLAY FIELDS ARE OPTIONAL because the shipped v7.1 row
+ * (`apps/cockpit/services/threads.py`) is flat — `threadId, title, anonymous,
+ * company, journeyState, turnCount, visitorTurns, working, ownerKind` — and
+ * carries no coverage, loop, attachment or approval overlay at all. The
+ * boundary normaliser in `threadsApi` maps what the wire has; the board
+ * renders "—" for what it doesn't. Nothing here is fabricated.
+ */
 export interface ThreadListItem {
   id: string;
   title: string;
-  ownerKind: ThreadOwnerKind;
-  context: ThreadContext;
-  identityState: IdentityState;
-  state: JourneyState;
-  journeyNumber: number | null;
+  ownerKind: ThreadOwnerKind | string;
+  context?: ThreadContext;
+  identityState?: IdentityState;
+  state?: JourneyState;
+  journeyNumber?: number | null;
   /** Whether the visitor is connected to this thread right now. */
-  live: boolean;
-  coverage: { covered: number; partial: number; unknown: number };
-  loop: LoopState;
-  attachments: { count: number; worstScan: ScanVerdict | null };
-  blocking: BlockingApproval | null;
+  live?: boolean;
+  coverage?: { covered: number; partial: number; unknown: number };
+  loop?: LoopState;
+  attachments?: { count: number; worstScan: ScanVerdict | null };
+  blocking?: BlockingApproval | null;
   /** Whether a stream-guard halt has fired on this thread. */
-  guardHalted: boolean;
-  humanOwner: string | null;
+  guardHalted?: boolean;
+  humanOwner?: string | null;
   /** The CRM record, once one exists. Null for an unqualified anonymous thread. */
   leadId: string | null;
   createdAt: string; // ISO
   lastActivityAt: string; // ISO
+  /* ── The thin v7.1 wire fields, verbatim ────────────────────────────────── */
+  company?: string;
+  turnCount?: number;
+  visitorTurns?: number;
+  /** The visitor has at least one turn — `shell_mode`'s own threshold as data. */
+  working?: boolean;
 }
 
 /** One turn in the transcript, as the operator sees it. */
@@ -194,7 +209,12 @@ export interface ThreadDetail {
   artifacts: ThreadArtifact[];
   coverageMap: CoverageEntry[];
   questionHistory: QuestionHistoryEntry[];
-  disclosureCeiling: DisclosureCeiling;
+  /**
+   * OPTIONAL: the shipped v7.1 detail does not state a ceiling. The header
+   * badge renders only when the wire carries one — a guessed ceiling on an
+   * oversight surface is a governance bug, not a fallback.
+   */
+  disclosureCeiling?: DisclosureCeiling;
   /**
    * THE v6.0 OVERSIGHT FIELDS ARE OPTIONAL — the running backend serves the
    * v5.0 detail without them, and the overlays render only when the wire

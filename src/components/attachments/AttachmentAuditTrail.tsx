@@ -48,8 +48,10 @@ export function AttachmentAuditTrail({ entries }: { entries: AttachmentAuditEntr
           <li key={entry.id} className="border-l border-border-soft pl-3">
             <div className="flex flex-wrap items-baseline justify-between gap-2">
               <span className="flex items-center gap-2">
-                <Badge variant={ACTION_INTENT[entry.action]}>
-                  {ACTION_LABEL[entry.action]}
+                {/* An action outside the closed vocabulary renders raw rather
+                    than blank — drift should be visible, not invisible. */}
+                <Badge variant={ACTION_INTENT[entry.action] ?? "neutral"}>
+                  {ACTION_LABEL[entry.action] ?? entry.action}
                 </Badge>
                 <span className="text-sec text-ink-primary">{entry.actor}</span>
                 <span className="font-mono text-micro text-ink-secondary">

@@ -20,16 +20,21 @@ export function SupportSlaTimer({
   dueAt,
   resolved,
 }: {
-  dueAt: string;
+  dueAt: string | null;
   resolved: boolean;
 }) {
   // `useSLATimer` returns a ticking `now`, so the countdown is derived here.
   // The hook is called unconditionally — bailing out before it on a resolved
   // request would change the hook order between renders.
   const now = useSLATimer();
-  const remainingMs = Date.parse(dueAt) - now;
+  const remainingMs = dueAt ? Date.parse(dueAt) - now : Number.NaN;
 
   if (resolved) return null;
+
+  // No SLA on the wire → no countdown. A NaN badge would read as a fault.
+  if (!dueAt || Number.isNaN(remainingMs)) {
+    return <span className="text-micro text-ink-muted">—</span>;
+  }
 
   const overdue = remainingMs <= 0;
   const soon = !overdue && remainingMs < 30 * 60_000;

@@ -64,16 +64,25 @@ export interface SupportRequest {
   clientId: string;
   company: string;
   subject: string;
-  body: string;
+  /** The customer's own words. Served by the detail read; absent on queue rows. */
+  body?: string;
   status: SupportStatus;
   urgency: SupportUrgency;
   owner: string | null;
-  /** When a first response is due. Drives the SLA timer. */
-  slaDueAt: string; // ISO
+  /** When a first response is due. Drives the SLA timer. Null when no SLA is set. */
+  slaDueAt: string | null; // ISO
   createdAt: string; // ISO
   resolvedAt: string | null; // ISO
   /** Set after resolution — "did this actually resolve it for you?" */
   customerConfirmedResolved: boolean | null;
+  /* ── v7.1 wire extras, passed through when present ───────────────────────── */
+  /** THE FIELD THE CUSTOMER-FIRST RULE READS (§18.7). */
+  blocking?: boolean;
+  /** Whether this row is currently suppressing expansion for its customer. */
+  suppressesExpansion?: boolean;
+  slaBreaching?: boolean;
+  threadId?: string | null;
+  resolutionNote?: string;
 }
 
 export interface SupportQueueSummary {

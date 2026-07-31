@@ -89,9 +89,11 @@ export function CustomerHealthBoard() {
                     >
                       {c.company}
                     </Link>
-                    <div className="text-micro text-ink-secondary">
-                      {c.journeyNumber} · {c.stateLabel}
-                    </div>
+                    {(c.journeyNumber != null || c.stateLabel) && (
+                      <div className="text-micro text-ink-secondary">
+                        {[c.journeyNumber, c.stateLabel].filter((v) => v != null).join(" · ")}
+                      </div>
+                    )}
                     {(c.accountOrigin !== undefined || c.emailVerified !== undefined) && (
                       <div className="mt-1 flex flex-wrap gap-1">
                         <AccountOriginBadge origin={c.accountOrigin} />
@@ -119,39 +121,49 @@ export function CustomerHealthBoard() {
                   </TableCell>
 
                   <TableCell>
-                    <span className="flex flex-wrap gap-1">
-                      {c.outcomes.offPlan > 0 && (
-                        <Badge variant="error">{c.outcomes.offPlan} off plan</Badge>
-                      )}
-                      {c.outcomes.atRisk > 0 && (
-                        <Badge variant="warning">{c.outcomes.atRisk} at risk</Badge>
-                      )}
-                      {c.outcomes.achieved > 0 && (
-                        <Badge variant="success">{c.outcomes.achieved} achieved</Badge>
-                      )}
-                      {c.outcomes.offPlan === 0 &&
-                        c.outcomes.atRisk === 0 &&
-                        c.outcomes.achieved === 0 && (
-                          <span className="text-caption text-ink-secondary">
-                            {c.outcomes.onPlan} on plan
-                          </span>
+                    {c.outcomes ? (
+                      <span className="flex flex-wrap gap-1">
+                        {c.outcomes.offPlan > 0 && (
+                          <Badge variant="error">{c.outcomes.offPlan} off plan</Badge>
                         )}
-                    </span>
+                        {c.outcomes.atRisk > 0 && (
+                          <Badge variant="warning">{c.outcomes.atRisk} at risk</Badge>
+                        )}
+                        {c.outcomes.achieved > 0 && (
+                          <Badge variant="success">{c.outcomes.achieved} achieved</Badge>
+                        )}
+                        {c.outcomes.offPlan === 0 &&
+                          c.outcomes.atRisk === 0 &&
+                          c.outcomes.achieved === 0 && (
+                            <span className="text-caption text-ink-secondary">
+                              {c.outcomes.onPlan} on plan
+                            </span>
+                          )}
+                      </span>
+                    ) : (c.outcomesOffPlan ?? 0) > 0 ? (
+                      /* The thin v7.1 row carries only the off-plan count. */
+                      <Badge variant="error">{c.outcomesOffPlan} off plan</Badge>
+                    ) : (
+                      <span className="text-micro text-ink-muted">—</span>
+                    )}
                   </TableCell>
 
                   <TableCell>
-                    {c.openSupportCount === 0 ? (
-                      <span className="text-micro text-ink-muted">—</span>
-                    ) : (
+                    {c.openSupportCount != null && c.openSupportCount > 0 ? (
                       <Badge variant={c.slaBreaching ? "error" : "warning"}>
                         {c.openSupportCount} open
                         {c.slaBreaching ? " · SLA breached" : ""}
                       </Badge>
+                    ) : c.blockingSupport ? (
+                      /* The thin row says only whether blocking support exists. */
+                      <Badge variant="error">blocking open</Badge>
+                    ) : (
+                      <span className="text-micro text-ink-muted">—</span>
                     )}
                   </TableCell>
 
                   <TableCell className="tabular-nums text-sec text-ink-secondary">
-                    {c.adoptionPercent}%
+                    {c.adoptionPercent != null ? `${c.adoptionPercent}%` : "—"}
                   </TableCell>
 
                   <TableCell className="text-sec text-ink-secondary">

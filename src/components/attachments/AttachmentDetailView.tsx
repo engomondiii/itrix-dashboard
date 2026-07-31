@@ -75,17 +75,23 @@ export function AttachmentDetailView({ attachmentId }: { attachmentId: string })
                 <ScanStatusBadge verdict={attachment.scan.verdict} />
                 {quarantined && <Badge variant="error">Quarantined</Badge>}
                 {attachment.preNda && <Badge variant="warning">Pre-NDA handling</Badge>}
-                <Badge variant="neutral">{attachment.identityState}</Badge>
+                {attachment.identityState && (
+                  <Badge variant="neutral">{attachment.identityState}</Badge>
+                )}
               </div>
 
               <div className="grid gap-4 sm:grid-cols-2">
                 <Field label="Thread">
-                  <Link
-                    href={ROUTES.thread(attachment.threadId)}
-                    className="hover:underline"
-                  >
-                    {attachment.threadTitle}
-                  </Link>
+                  {attachment.threadId ? (
+                    <Link
+                      href={ROUTES.thread(attachment.threadId)}
+                      className="hover:underline"
+                    >
+                      {attachment.threadTitle || "Open thread"}
+                    </Link>
+                  ) : (
+                    "—"
+                  )}
                 </Field>
                 <Field label="Uploaded">{formatDateTime(attachment.createdAt)}</Field>
                 <Field label="Extraction">
@@ -104,11 +110,13 @@ export function AttachmentDetailView({ attachmentId }: { attachmentId: string })
                     "Follows the client’s contractual retention."
                   )}
                 </Field>
-                <Field label="SHA-256">
-                  <code className="font-mono text-micro break-all text-ink-secondary">
-                    {attachment.sha256}
-                  </code>
-                </Field>
+                {attachment.sha256 && (
+                  <Field label="SHA-256">
+                    <code className="font-mono text-micro break-all text-ink-secondary">
+                      {attachment.sha256}
+                    </code>
+                  </Field>
+                )}
                 <Field label="Risk flags">
                   <RiskFlagList flags={attachment.riskFlags} />
                 </Field>

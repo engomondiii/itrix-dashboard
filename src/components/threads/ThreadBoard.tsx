@@ -27,7 +27,7 @@ import { CoverageMeter } from "./CoverageMeter";
 import { StopReasonBadge } from "./StopReasonBadge";
 import { ThreadFilters } from "./ThreadFilters";
 
-function LiveDot({ live }: { live: boolean }) {
+function LiveDot({ live }: { live?: boolean }) {
   if (!live) return <span className="text-micro text-ink-muted">—</span>;
   return (
     <span className="inline-flex items-center gap-1.5 text-micro font-medium text-success-text">
@@ -67,6 +67,7 @@ function ThreadRow({ thread }: { thread: ThreadListItem }) {
         <div className="text-micro text-ink-secondary">
           {formatTimeAgo(thread.lastActivityAt)}
           {thread.leadId ? null : " · no lead yet"}
+          {thread.company ? ` · ${thread.company}` : null}
         </div>
       </TableCell>
 
@@ -83,15 +84,27 @@ function ThreadRow({ thread }: { thread: ThreadListItem }) {
       </TableCell>
 
       <TableCell>
-        <CoverageMeter
-          covered={thread.coverage.covered}
-          partial={thread.coverage.partial}
-          unknown={thread.coverage.unknown}
-        />
+        {/* The shipped v7.1 row has no coverage/loop overlay — a dash, not a
+            zeroed meter, because "0 covered" is a measurement it never made. */}
+        {thread.coverage ? (
+          <CoverageMeter
+            covered={thread.coverage.covered}
+            partial={thread.coverage.partial}
+            unknown={thread.coverage.unknown}
+          />
+        ) : (
+          <span className="text-micro text-ink-muted">—</span>
+        )}
       </TableCell>
 
       <TableCell className="text-sec text-ink-secondary">
-        {thread.loop.open ? (
+        {!thread.loop ? (
+          thread.turnCount != null ? (
+            <span className="tabular-nums">{thread.turnCount} turns</span>
+          ) : (
+            <span className="text-micro text-ink-muted">—</span>
+          )
+        ) : thread.loop.open ? (
           <span className="tabular-nums">
             {thread.loop.questionsAsked} asked · {thread.loop.budgetRemaining} left
           </span>
@@ -101,7 +114,7 @@ function ThreadRow({ thread }: { thread: ThreadListItem }) {
       </TableCell>
 
       <TableCell>
-        {thread.attachments.count === 0 ? (
+        {!thread.attachments || thread.attachments.count === 0 ? (
           <span className="text-micro text-ink-muted">—</span>
         ) : (
           <span className="inline-flex items-center gap-1.5">

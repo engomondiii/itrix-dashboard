@@ -18,6 +18,12 @@ const INTENT: Record<IdentityState, "neutral" | "info" | "success"> = {
  * and it is the difference between "a visitor we know nothing about" and "a
  * contracted customer". It leads every row for that reason.
  */
-export function AnonymousBadge({ identityState }: { identityState: IdentityState }) {
+export function AnonymousBadge({ identityState }: { identityState?: IdentityState }) {
+  // No identity plane on the wire → a dash, not a guess. Claiming "anonymous"
+  // for a thread whose plane simply wasn't served would be the exact wrong-in-
+  // either-direction error this badge exists to prevent.
+  if (!identityState || !(identityState in IDENTITY_STATE_LABEL)) {
+    return <span className="text-micro text-ink-muted">—</span>;
+  }
   return <Badge variant={INTENT[identityState]}>{IDENTITY_STATE_LABEL[identityState]}</Badge>;
 }

@@ -330,9 +330,14 @@ export function CustomerAnalytics() {
   const critical = (rows ?? []).filter((c) => c.healthClass === "critical").length;
   const atRisk = (rows ?? []).filter((c) => c.healthClass === "at_risk").length;
   const unknown = (rows ?? []).filter((c) => c.healthClass === "unknown").length;
-  const avgAdoption = total
-    ? Math.round((rows ?? []).reduce((s, c) => s + c.adoptionPercent, 0) / total)
-    : 0;
+  // Averaged over the rows that actually carry the number — the shipped v7.1
+  // row does not, and a mean padded with invented zeros would be a lie.
+  const withAdoption = (rows ?? []).filter((c) => c.adoptionPercent != null);
+  const avgAdoption = withAdoption.length
+    ? Math.round(
+        withAdoption.reduce((s, c) => s + (c.adoptionPercent ?? 0), 0) / withAdoption.length,
+      )
+    : null;
 
   return (
     <div className="space-y-4">
@@ -370,7 +375,7 @@ export function CustomerAnalytics() {
             </CardHeader>
             <CardContent className="space-y-2">
               <p className="text-kpi font-semibold tabular-nums text-ink-primary">
-                {avgAdoption}%
+                {avgAdoption != null ? `${avgAdoption}%` : "—"}
               </p>
               <p className="text-caption text-ink-secondary">
                 Mean adoption across the book. Below-plan adoption suppresses commercial
