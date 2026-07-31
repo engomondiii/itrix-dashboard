@@ -208,7 +208,13 @@ export interface ThreadDetail {
   turns: ThreadTurn[];
   artifacts: ThreadArtifact[];
   coverageMap: CoverageEntry[];
-  questionHistory: QuestionHistoryEntry[];
+  /**
+   * OPTIONAL, and absence is preserved: the shipped v7.1 detail does not serve
+   * the question-loop telemetry, which is a different fact from "no questions
+   * were asked" — the transcript may visibly contain questions. The panel says
+   * which of the two is true.
+   */
+  questionHistory?: QuestionHistoryEntry[];
   /**
    * OPTIONAL: the shipped v7.1 detail does not state a ceiling. The header
    * badge renders only when the wire carries one — a guessed ceiling on an

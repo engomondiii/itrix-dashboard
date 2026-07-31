@@ -102,7 +102,9 @@ function normalizeThreadDetail(raw: WireThreadDetail): ThreadDetail {
     turns: (raw.turns ?? []).map(normalizeTurn),
     artifacts: raw.artifacts ?? [],
     coverageMap: raw.coverageMap ?? [],
-    questionHistory: raw.questionHistory ?? [],
+    // Absence preserved on purpose — "telemetry not served" and "nothing
+    // asked" are different facts, and the panel renders them differently.
+    questionHistory: raw.questionHistory,
     disclosureCeiling: raw.disclosureCeiling,
   };
 }
