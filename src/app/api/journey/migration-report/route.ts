@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 
 import { siteConfig } from "@/config/site.config";
 import { getSessionUser } from "@/lib/server/session";
-import { notImplementedOnBackend } from "@/lib/server/proxy";
+import { djangoFetch, djangoJson } from "@/lib/server/proxy";
 import { getMigrationReport } from "@/mocks/journeyDb";
 
 /**
@@ -19,10 +19,8 @@ export async function GET() {
   }
 
   if (!siteConfig.useMocks) {
-    return notImplementedOnBackend(
-      "The ENGAGED-split dry run",
-      "GET journey/migration-report/",
-    );
+    const r = await djangoFetch("/journey/migration-report/");
+    return djangoJson(r);
   }
 
   return NextResponse.json(getMigrationReport());

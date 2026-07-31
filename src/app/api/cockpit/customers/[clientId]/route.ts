@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 
 import { siteConfig } from "@/config/site.config";
 import { getSessionUser } from "@/lib/server/session";
-import { notImplementedOnBackend } from "@/lib/server/proxy";
+import { djangoFetch, djangoJson } from "@/lib/server/proxy";
 import { getCustomer } from "@/mocks/customersDb";
 
 export async function GET(
@@ -15,10 +15,8 @@ export async function GET(
   const { clientId } = await params;
 
   if (!siteConfig.useMocks) {
-    return notImplementedOnBackend(
-      "The per-customer read",
-      "GET cockpit/customers/{id}/",
-    );
+    const r = await djangoFetch(`/cockpit/customers/${clientId}/`);
+    return djangoJson(r);
   }
 
   const detail = getCustomer(clientId);

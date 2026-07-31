@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 
 import { siteConfig } from "@/config/site.config";
 import { getSessionUser } from "@/lib/server/session";
-import { notImplementedOnBackend } from "@/lib/server/proxy";
+import { djangoFetch, djangoJson } from "@/lib/server/proxy";
 import { canAdminGovernance } from "@/constants/permissions";
 import { setAttachmentStatus } from "@/mocks/attachmentsDb";
 
@@ -44,10 +44,11 @@ export async function POST(
   const reason = String(body?.reason ?? "");
 
   if (!siteConfig.useMocks) {
-    return notImplementedOnBackend(
-      "Quarantine and release",
-      "POST cockpit/attachments/{id}/{quarantine|release}/",
-    );
+    const r = await djangoFetch(`/cockpit/attachments/${attachmentId}/${action}/`, {
+      method: "POST",
+      body: JSON.stringify(body),
+    });
+    return djangoJson(r);
   }
 
   const outcome = setAttachmentStatus(

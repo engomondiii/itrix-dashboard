@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 
 import { siteConfig } from "@/config/site.config";
 import { getSessionUser } from "@/lib/server/session";
-import { notImplementedOnBackend } from "@/lib/server/proxy";
+import { djangoFetch, djangoJson } from "@/lib/server/proxy";
 import { listAttachments } from "@/mocks/attachmentsDb";
 
 /**
@@ -20,10 +20,8 @@ export async function GET(req: Request) {
   const sp = new URL(req.url).searchParams;
 
   if (!siteConfig.useMocks) {
-    return notImplementedOnBackend(
-      "The attachment review queue",
-      "GET cockpit/attachments/queue/ (cockpit/attachments/ currently returns metrics)",
-    );
+    const r = await djangoFetch(`/cockpit/attachments/queue/?${sp}`);
+    return djangoJson(r);
   }
 
   const results = listAttachments({

@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 
 import { siteConfig } from "@/config/site.config";
 import { getSessionUser } from "@/lib/server/session";
-import { notImplementedOnBackend } from "@/lib/server/proxy";
+import { djangoFetch, djangoJson } from "@/lib/server/proxy";
 import { getThread } from "@/mocks/threadsDb";
 
 export async function GET(
@@ -15,10 +15,8 @@ export async function GET(
   const { threadId } = await params;
 
   if (!siteConfig.useMocks) {
-    return notImplementedOnBackend(
-      "The thread transcript",
-      "GET cockpit/threads/{id}/",
-    );
+    const r = await djangoFetch(`/cockpit/threads/${threadId}/`);
+    return djangoJson(r);
   }
 
   const detail = getThread(threadId);

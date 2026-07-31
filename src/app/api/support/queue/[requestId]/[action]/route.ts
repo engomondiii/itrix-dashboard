@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 
 import { siteConfig } from "@/config/site.config";
 import { getSessionUser } from "@/lib/server/session";
-import { notImplementedOnBackend } from "@/lib/server/proxy";
+import { djangoFetch, djangoJson } from "@/lib/server/proxy";
 import {
   assignSupportRequest,
   escalateSupportRequest,
@@ -38,10 +38,11 @@ export async function POST(
   const body = await req.json().catch(() => ({}));
 
   if (!siteConfig.useMocks) {
-    return notImplementedOnBackend(
-      "Support actions",
-      "POST support/queue/{id}/{assign|resolve|escalate}/",
-    );
+    const r = await djangoFetch(`/support/queue/${requestId}/${action}/`, {
+      method: "POST",
+      body: JSON.stringify(body),
+    });
+    return djangoJson(r);
   }
 
   const outcome =

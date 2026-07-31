@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 
 import { siteConfig } from "@/config/site.config";
 import { getSessionUser } from "@/lib/server/session";
-import { notImplementedOnBackend } from "@/lib/server/proxy";
+import { djangoFetch, djangoJson } from "@/lib/server/proxy";
 import { getCoverageOverview } from "@/mocks/threadsDb";
 
 /**
@@ -18,10 +18,8 @@ export async function GET() {
   }
 
   if (!siteConfig.useMocks) {
-    return notImplementedOnBackend(
-      "Loop productivity",
-      "GET cockpit/threads/coverage/",
-    );
+    const r = await djangoFetch("/cockpit/threads/coverage/");
+    return djangoJson(r);
   }
 
   return NextResponse.json(getCoverageOverview());
