@@ -1,5 +1,5 @@
 import { PageHeader } from "@/components/layout/PageHeader";
-import { AttachmentAnalytics } from "@/components/analytics/V5AnalyticsPanels";
+import { AttachmentAnalytics } from "@/components/analytics/OperationalAnalyticsPanels";
 
 export default function AttachmentAnalyticsPage() {
   return (

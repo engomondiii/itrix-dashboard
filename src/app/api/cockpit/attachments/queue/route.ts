@@ -20,7 +20,10 @@ export async function GET(req: Request) {
   const sp = new URL(req.url).searchParams;
 
   if (!siteConfig.useMocks) {
-    const r = await djangoFetch(`/cockpit/attachments/queue/?${sp}`);
+    // The shipped backend serves the queue at /cockpit/attachments/ itself —
+    // the aggregate moved to analytics/attachments/, so the bare name IS the
+    // row-level resource. The shipped name binds.
+    const r = await djangoFetch(`/cockpit/attachments/?${sp}`);
     return djangoJson(r);
   }
 

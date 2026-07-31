@@ -52,20 +52,25 @@ export function StreamGuardHitTable() {
 
       {data && (
         <>
-          <Card>
-            <CardHeader>
-              <CardTitle>Guard-hit rate</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-2">
-              <p className="text-kpi font-semibold tabular-nums text-ink-primary">
-                {data.guardHitRate}%
-              </p>
-              <p className="text-caption text-ink-secondary">
-                of streamed turns halted. A rising rate means retrieval or prompting has
-                drifted — the guard is working, but it should not have this much to do.
-              </p>
-            </CardContent>
-          </Card>
+          {/* The rate is a spec field the shipped route does not serve yet —
+              the card is omitted rather than rendering a zero that means
+              "not served". */}
+          {data.guardHitRate !== undefined && (
+            <Card>
+              <CardHeader>
+                <CardTitle>Guard-hit rate</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-2">
+                <p className="text-kpi font-semibold tabular-nums text-ink-primary">
+                  {data.guardHitRate}%
+                </p>
+                <p className="text-caption text-ink-secondary">
+                  of streamed turns halted. A rising rate means retrieval or prompting has
+                  drifted — the guard is working, but it should not have this much to do.
+                </p>
+              </CardContent>
+            </Card>
+          )}
 
           <Card>
             <CardHeader>
@@ -118,7 +123,7 @@ export function StreamGuardHitTable() {
                               href={ROUTES.thread(hit.threadId)}
                               className="line-clamp-1 text-sec text-ink-primary hover:underline"
                             >
-                              {hit.threadTitle}
+                              {hit.threadTitle ?? hit.threadId}
                             </Link>
                           </TableCell>
                           <TableCell>
@@ -146,13 +151,15 @@ export function StreamGuardHitTable() {
                             <MatchedTextReveal text={hit.matchedText} />
                           </TableCell>
                           <TableCell className="text-sec text-ink-secondary">
-                            {hit.agent}
+                            {hit.agent ?? hit.agentKey ?? "—"}
                           </TableCell>
                           <TableCell className="text-sec text-ink-secondary">
                             {hit.plane}
                           </TableCell>
                           <TableCell className="tabular-nums text-sec text-ink-secondary">
-                            {hit.discardedChars} chars
+                            {hit.discardedChars !== undefined
+                              ? `${hit.discardedChars} chars`
+                              : "—"}
                           </TableCell>
                           <TableCell className="text-micro text-ink-secondary">
                             {formatDateTime(hit.at)}
@@ -166,27 +173,31 @@ export function StreamGuardHitTable() {
             </CardContent>
           </Card>
 
-          <Card>
-            <CardHeader>
-              <CardTitle>Envelope downgrades</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-2">
-              <p className="text-caption text-ink-secondary">
-                Turns the pre-flight envelope refused to stream. Not failures — a
-                level-4+ claim never streams, so the visitor saw the approved
-                under-review wording immediately.
-              </p>
-              {data.downgrades.length === 0 ? (
-                <p className="text-sec text-ink-secondary">None.</p>
-              ) : (
-                <ul className="space-y-1.5">
-                  {data.downgrades.map((d) => (
-                    <EnvelopeDowngradeRow key={d.id} downgrade={d} />
-                  ))}
-                </ul>
-              )}
-            </CardContent>
-          </Card>
+          {/* Omitted, not empty, when the connected backend does not serve
+              downgrades at this route yet. */}
+          {data.downgrades !== undefined && (
+            <Card>
+              <CardHeader>
+                <CardTitle>Envelope downgrades</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-2">
+                <p className="text-caption text-ink-secondary">
+                  Turns the pre-flight envelope refused to stream. Not failures — a
+                  level-4+ claim never streams, so the visitor saw the approved
+                  under-review wording immediately.
+                </p>
+                {data.downgrades.length === 0 ? (
+                  <p className="text-sec text-ink-secondary">None.</p>
+                ) : (
+                  <ul className="space-y-1.5">
+                    {data.downgrades.map((d) => (
+                      <EnvelopeDowngradeRow key={d.id} downgrade={d} />
+                    ))}
+                  </ul>
+                )}
+              </CardContent>
+            </Card>
+          )}
         </>
       )}
     </div>

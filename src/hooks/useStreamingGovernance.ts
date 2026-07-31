@@ -2,9 +2,7 @@
 
 import { useQuery } from "@tanstack/react-query";
 
-import { apiGet } from "@/lib/api/client";
-import { API } from "@/constants/routes";
-import type { StreamingGovernanceRead } from "@/types/streaming";
+import { getStreamingGovernance } from "@/lib/api/streamingApi";
 
 /**
  * Polled at the live cadence: a blocking approval means a visitor is sitting in
@@ -16,7 +14,7 @@ const LIVE_POLL_MS = 10_000;
 export function useStreamingGovernance() {
   return useQuery({
     queryKey: ["streaming-governance"],
-    queryFn: () => apiGet<StreamingGovernanceRead>(API.cockpitGuardHits),
+    queryFn: getStreamingGovernance,
     refetchInterval: LIVE_POLL_MS,
   });
 }

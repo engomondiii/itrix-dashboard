@@ -23,8 +23,11 @@ export async function GET(req: Request) {
   const clientId = new URL(req.url).searchParams.get("clientId") ?? undefined;
 
   if (!siteConfig.useMocks) {
+    // The shipped backend mounts the team-plane queue under cockpit/ —
+    // /cockpit/support/queue/ — not at the spec's /support/queue/. The shipped
+    // name binds (the same rule Backend v7.2 §14 applies to client/auth/*).
     const qs = clientId ? `?clientId=${encodeURIComponent(clientId)}` : "";
-    const r = await djangoFetch(`/support/queue/${qs}`);
+    const r = await djangoFetch(`/cockpit/support/queue/${qs}`);
     return djangoJson(r);
   }
 

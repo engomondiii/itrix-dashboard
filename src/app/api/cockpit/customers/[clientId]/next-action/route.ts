@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 
 import { siteConfig } from "@/config/site.config";
 import { getSessionUser } from "@/lib/server/session";
-import { djangoFetch, djangoJson } from "@/lib/server/proxy";
+import { notImplementedOnBackend } from "@/lib/server/proxy";
 import { getCustomerNextAction, recordCommercialOverride } from "@/mocks/nbaDb";
 
 /**
@@ -23,8 +23,10 @@ export async function GET(
   const { clientId } = await params;
 
   if (!siteConfig.useMocks) {
-    const r = await djangoFetch(`/cockpit/customers/${clientId}/next-action/`);
-    return djangoJson(r);
+    return notImplementedOnBackend(
+      "The customer-first next best action",
+      "GET/POST cockpit/customers/{id}/next-action/ (the lead-plane NBA is mounted; the customer-plane one is not yet)",
+    );
   }
 
   const nba = getCustomerNextAction(clientId);
@@ -53,11 +55,10 @@ export async function POST(
   const reason = String(body?.reason ?? "");
 
   if (!siteConfig.useMocks) {
-    const r = await djangoFetch(`/cockpit/customers/${clientId}/next-action/`, {
-      method: "POST",
-      body: JSON.stringify(body),
-    });
-    return djangoJson(r);
+    return notImplementedOnBackend(
+      "Logging a commercial override",
+      "POST cockpit/customers/{id}/next-action/ (not mounted yet)",
+    );
   }
 
   const entry = recordCommercialOverride(clientId, reason, user.name ?? user.email);

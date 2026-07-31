@@ -15,7 +15,8 @@ export async function GET(
   const { requestId } = await params;
 
   if (!siteConfig.useMocks) {
-    const r = await djangoFetch(`/support/queue/${requestId}/`);
+    // Shipped name: the team-plane queue lives under cockpit/.
+    const r = await djangoFetch(`/cockpit/support/queue/${requestId}/`);
     return djangoJson(r);
   }
 

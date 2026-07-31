@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 
 import { siteConfig } from "@/config/site.config";
 import { getSessionUser } from "@/lib/server/session";
-import { djangoFetch, djangoJson } from "@/lib/server/proxy";
+import { notImplementedOnBackend } from "@/lib/server/proxy";
 import {
   assignSupportRequest,
   escalateSupportRequest,
@@ -38,11 +38,10 @@ export async function POST(
   const body = await req.json().catch(() => ({}));
 
   if (!siteConfig.useMocks) {
-    const r = await djangoFetch(`/support/queue/${requestId}/${action}/`, {
-      method: "POST",
-      body: JSON.stringify(body),
-    });
-    return djangoJson(r);
+    return notImplementedOnBackend(
+      "Support actions",
+      "POST cockpit/support/queue/{id}/{assign|resolve|escalate}/ (the queue reads are mounted; the write actions are not yet)",
+    );
   }
 
   const outcome =

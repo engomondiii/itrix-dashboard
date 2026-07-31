@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 
 import { siteConfig } from "@/config/site.config";
 import { getSessionUser } from "@/lib/server/session";
-import { djangoFetch, djangoJson } from "@/lib/server/proxy";
+import { notImplementedOnBackend } from "@/lib/server/proxy";
 import { listAllOutcomes } from "@/mocks/customersDb";
 
 /** Every agreed outcome across the book — "are we delivering what we promised?" */
@@ -12,8 +12,10 @@ export async function GET() {
   }
 
   if (!siteConfig.useMocks) {
-    const r = await djangoFetch("/cockpit/customers/outcomes/");
-    return djangoJson(r);
+    return notImplementedOnBackend(
+      "Outcomes across the book",
+      "GET cockpit/customers/outcomes/ (not mounted yet)",
+    );
   }
 
   const results = listAllOutcomes();

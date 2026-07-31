@@ -22,7 +22,8 @@ import { SCAN_VERDICT_LABEL } from "@/types/attachment";
 import { useAllOutcomes } from "@/hooks/useCustomers";
 
 /**
- * The six v5.0 analytics panels.
+ * The operational analytics panels — conversations, attachments, streaming,
+ * customers, support and outcomes.
  *
  * These are INTERNAL TELEMETRY, like every other number on this surface. They
  * are grouped in one module because they share a shape — a small aggregate over
@@ -246,20 +247,22 @@ export function StreamingAnalytics() {
 
       {data && (
         <div className="grid gap-4 md:grid-cols-2">
-          <Card>
-            <CardHeader>
-              <CardTitle>Guard-hit rate</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-2">
-              <p className="text-kpi font-semibold tabular-nums text-ink-primary">
-                {data.guardHitRate}%
-              </p>
-              <p className="text-caption text-ink-secondary">
-                Treated as retrieval or prompt drift, not noise. The guard is a hard stop
-                — it should rarely have anything to do.
-              </p>
-            </CardContent>
-          </Card>
+          {data.guardHitRate !== undefined && (
+            <Card>
+              <CardHeader>
+                <CardTitle>Guard-hit rate</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-2">
+                <p className="text-kpi font-semibold tabular-nums text-ink-primary">
+                  {data.guardHitRate}%
+                </p>
+                <p className="text-caption text-ink-secondary">
+                  Treated as retrieval or prompt drift, not noise. The guard is a hard stop
+                  — it should rarely have anything to do.
+                </p>
+              </CardContent>
+            </Card>
+          )}
 
           <Card>
             <CardHeader>
@@ -267,8 +270,12 @@ export function StreamingAnalytics() {
             </CardHeader>
             <CardContent className="space-y-1.5">
               <StatRow label="Halts" value={data.guardHits.length} />
-              <StatRow label="Envelope downgrades" value={data.downgrades.length} />
-              <StatRow label="Blocking a live visitor" value={data.blocking.length} />
+              {data.downgrades !== undefined && (
+                <StatRow label="Envelope downgrades" value={data.downgrades.length} />
+              )}
+              {data.blocking !== undefined && (
+                <StatRow label="Blocking a live visitor" value={data.blocking.length} />
+              )}
             </CardContent>
           </Card>
 

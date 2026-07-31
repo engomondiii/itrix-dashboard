@@ -64,13 +64,28 @@ export const GUARD_PATTERN_DESCRIPTION: Record<GuardPattern, string> = {
   inferred_identity: "The turn was about to tell the visitor what we infer about them.",
 };
 
-/** One halted stream. */
+/**
+ * One halted stream.
+ *
+ * FIELDS BEYOND THE SHIPPED WIRE ARE OPTIONAL. The backend's row
+ * (`apps/cockpit/services/guard_hits.py`) carries id, kind, category, pattern,
+ * agentKey, plane, journeyState, threadId, at and — role-permitting —
+ * matchedText. threadTitle, stateKey, discardedChars and matchedPass are
+ * spec fields (v7.0 §3.2) the row does not serve yet; the table renders what
+ * arrives and falls back rather than inventing.
+ */
 export interface GuardHit {
   id: string;
   threadId: string;
-  threadTitle: string;
-  agent: string;
-  stateKey: string;
+  threadTitle?: string;
+  /** Mock / spec name for the agent. */
+  agent?: string;
+  /** Shipped wire name for the agent. */
+  agentKey?: string;
+  stateKey?: string;
+  journeyState?: number | string;
+  kind?: string;
+  category?: string;
   plane: "anonymous" | "client" | "team";
   pattern: GuardPattern;
   /**
@@ -101,7 +116,7 @@ export interface GuardHit {
    */
   matchedPass?: "raw" | "normalized";
   /** How much provisional text was discarded from the client. */
-  discardedChars: number;
+  discardedChars?: number;
   at: string; // ISO
 }
 
@@ -141,12 +156,24 @@ export interface GuardHitTrendPoint {
   normalized: number;
 }
 
+/**
+ * The combined streaming-governance read.
+ *
+ * The shipped `cockpit/streaming/guard-hits/` serves `{ results, count,
+ * matchedTextVisible, interpretation }` — halts only. blocking, downgrades and
+ * the rate are spec fields the route does not carry yet, so they are OPTIONAL
+ * and the UI omits their sections rather than rendering zeros that mean
+ * "not served". `normalizeStreamingGovernance` maps the shipped envelope onto
+ * this shape at the boundary; the mock serves it in full.
+ */
 export interface StreamingGovernanceRead {
-  blocking: BlockingApprovalItem[];
+  blocking?: BlockingApprovalItem[];
   guardHits: GuardHit[];
-  downgrades: EnvelopeDowngrade[];
+  downgrades?: EnvelopeDowngrade[];
   /** Guard hits per 100 streamed turns, for the drift signal. */
-  guardHitRate: number;
+  guardHitRate?: number;
+  /** Stated by the backend: whether matchedText was included for this role. */
+  matchedTextVisible?: boolean;
   /**
    * Daily halt counts split raw vs normalised (Surface 2 v6.0 Phase 3). The
    * split matters because a rising NORMALISED share means models are learning

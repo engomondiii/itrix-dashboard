@@ -1,5 +1,5 @@
 import { PageHeader } from "@/components/layout/PageHeader";
-import { ConversationAnalytics } from "@/components/analytics/V5AnalyticsPanels";
+import { ConversationAnalytics } from "@/components/analytics/OperationalAnalyticsPanels";
 
 export default function ConversationAnalyticsPage() {
   return (

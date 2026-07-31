@@ -1,5 +1,5 @@
 import { PageHeader } from "@/components/layout/PageHeader";
-import { CustomerAnalytics } from "@/components/analytics/V5AnalyticsPanels";
+import { CustomerAnalytics } from "@/components/analytics/OperationalAnalyticsPanels";
 
 export default function CustomerAnalyticsPage() {
   return (

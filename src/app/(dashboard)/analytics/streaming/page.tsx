@@ -1,5 +1,5 @@
 import { PageHeader } from "@/components/layout/PageHeader";
-import { StreamingAnalytics } from "@/components/analytics/V5AnalyticsPanels";
+import { StreamingAnalytics } from "@/components/analytics/OperationalAnalyticsPanels";
 
 export default function StreamingAnalyticsPage() {
   return (

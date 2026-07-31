@@ -140,5 +140,5 @@ export function getStreamingGovernance(): StreamingGovernanceRead {
 
 /** Blocking approvals only — used by the queue banner without the rest. */
 export function listBlockingApprovals(): BlockingApprovalItem[] {
-  return getStreamingGovernance().blocking;
+  return getStreamingGovernance().blocking ?? [];
 }
