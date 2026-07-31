@@ -73,7 +73,7 @@ src/
   store/             Zustand stores            context/   React contexts
   lib/               api/ · sla/ · formatting/ · export/ · server/
   types/             DTOs mirroring the backend            constants/  enums & routes
-  config/            site / navigation / dashboard         mocks/      fixtures + handlers
+  config/            site / navigation / dashboard
   app/globals.css    Atelier Indigo tokens (Tailwind v4 @theme)
 ```
 
