@@ -6,18 +6,46 @@ import { NextResponse } from "next/server";
 import { siteConfig } from "@/config/site.config";
 import { SESSION_COOKIE } from "@/lib/server/session";
 
+/**
+ * How long an upstream call may take before the dashboard stops waiting.
+ *
+ * Without this, a hung Django request hangs the Next route, which hangs the
+ * client fetch, which leaves the page on a spinner FOREVER — observed live on
+ * 31 Jul 2026 (`/governance/claim-cards` pending indefinitely while the same
+ * URL answered instantly a moment later). A bounded wait turns "the backend is
+ * stuck" into a visible 504 the UI can say out loud, and frees the connection
+ * instead of letting stalled upstreams pile up until the server starts 503ing.
+ */
+const UPSTREAM_TIMEOUT_MS = 20_000;
+
 /** Forward a request to Django with the session JWT as a Bearer token. */
 export async function djangoFetch(path: string, init?: RequestInit) {
   const token = (await cookies()).get(SESSION_COOKIE)?.value;
-  return fetch(`${siteConfig.djangoApiUrl}${path}`, {
-    ...init,
-    cache: "no-store",
-    headers: {
-      ...(init?.headers ?? {}),
-      ...(token ? { Authorization: `Bearer ${token}` } : {}),
-      ...(init?.body ? { "Content-Type": "application/json" } : {}),
-    },
-  });
+  try {
+    return await fetch(`${siteConfig.djangoApiUrl}${path}`, {
+      ...init,
+      cache: "no-store",
+      signal: init?.signal ?? AbortSignal.timeout(UPSTREAM_TIMEOUT_MS),
+      headers: {
+        ...(init?.headers ?? {}),
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        ...(init?.body ? { "Content-Type": "application/json" } : {}),
+      },
+    });
+  } catch (error) {
+    // A synthetic Response rather than a throw, so every route's existing
+    // `djangoJson(r)` path handles it unchanged and the client renders its
+    // normal error state instead of an opaque 500.
+    const timedOut = error instanceof DOMException && error.name === "TimeoutError";
+    return new Response(
+      JSON.stringify({
+        detail: timedOut
+          ? `The backend did not respond within ${UPSTREAM_TIMEOUT_MS / 1000}s. Try again in a moment.`
+          : "The backend could not be reached.",
+      }),
+      { status: 504, headers: { "Content-Type": "application/json" } },
+    );
+  }
 }
 
 /**
