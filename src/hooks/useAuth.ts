@@ -13,6 +13,22 @@ async function fetchMe(): Promise<SessionUser | null> {
   return (await r.json()).user as SessionUser;
 }
 
+/**
+ * The proxy sends an unauthenticated visitor to `/login?next=<path>` so they
+ * can land back where they were headed. Honor it on sign-in — but only for
+ * same-origin paths: an absolute URL or a protocol-relative `//host` in `next`
+ * would turn the login page into an open redirect, and `/login` itself would
+ * loop. Anything unsafe falls back to the overview.
+ */
+function safeNextPath(): string | null {
+  if (typeof window === "undefined") return null;
+  const next = new URLSearchParams(window.location.search).get("next");
+  if (!next || !next.startsWith("/") || next.startsWith("//") || next.startsWith("/login")) {
+    return null;
+  }
+  return next;
+}
+
 export function useAuth() {
   const qc = useQueryClient();
   const router = useRouter();
@@ -31,7 +47,7 @@ export function useAuth() {
     },
     onSuccess: (user) => {
       qc.setQueryData(["me"], user);
-      router.push(ROUTES.overview);
+      router.push(safeNextPath() ?? ROUTES.overview);
     },
   });
 
