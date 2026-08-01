@@ -1,11 +1,21 @@
+import Image from "next/image";
+
 import { LoginForm } from "@/components/auth/LoginForm";
 
 export default function LoginPage() {
   return (
     <div className="animate-fade-up">
-      {/* Brand mark above the card, in inverse white like the sidebar */}
-      <div className="mb-6 flex items-center justify-center gap-2 text-section font-semibold tracking-tight text-ink-inverse">
-        itri<span className="text-tint">X</span>
+      {/* Brand mark above the card — the supplied itriX wordmark (reversed cut,
+          for the deep background), not a typed approximation of it. */}
+      <div className="mb-6 flex items-center justify-center gap-2">
+        <Image
+          src="/brand/itrix-logo-inverse.png"
+          alt="itriX"
+          width={66}
+          height={30}
+          unoptimized
+          priority
+        />
         <span className="text-micro font-medium uppercase tracking-[0.1em] text-ink-muted">
           Ops
         </span>
