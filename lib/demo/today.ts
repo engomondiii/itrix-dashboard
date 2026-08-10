@@ -283,6 +283,54 @@ interface DemoConsoleMessage {
 
 const consoleMessages = makeStore<DemoConsoleMessage>('demo:today:console-messages', () => []);
 
+const customers = makeStore('demo:today:customers', () => [
+  {
+    clientId: 'cl-01', company: 'Daehan Survey Co.', healthClass: 'at_risk',
+    reasons: ['Blocking support request open past its window', 'Usage dipped 30% this month'],
+    blockingSupport: true, outcomesOffPlan: 1, negativePulse: false,
+    degradedDeployments: 0, expansionAllowed: false,
+  },
+  {
+    clientId: 'cl-02', company: 'GeoField Ltda.', healthClass: 'stable',
+    reasons: [], blockingSupport: false, outcomesOffPlan: 0, negativePulse: false,
+    degradedDeployments: 0, expansionAllowed: true,
+  },
+  {
+    clientId: 'cl-03', company: 'Pohjola Kartta', healthClass: 'unknown',
+    reasons: ['No pulse data yet'], blockingSupport: false, outcomesOffPlan: 0,
+    negativePulse: false, degradedDeployments: 1, expansionAllowed: true,
+  },
+]);
+
+const evaluations = makeStore('demo:today:evaluations', () => [
+  {
+    id: 'ev-01', leadId: 'ld-03', leadName: 'H. Cho', company: 'Daehan Survey Co.',
+    pkg: 'ALPHA Compute Bottleneck Assessment', status: 'in_progress',
+    kpis: [
+      { id: 'kpi-1', category: 'throughput', metric: 'Batch correction time', target: '< 60 min', result: '' },
+      { id: 'kpi-2', category: 'quality', metric: 'Rework rate', target: '< 3%', result: '2.1%' },
+    ],
+    scope: 'Weekly 40k-point batches', fee: '₩12,000,000', timeline: '4 weeks',
+    createdAt: hoursAgo(300), updatedAt: hoursAgo(20),
+  },
+]);
+
+const pocs = makeStore('demo:today:pocs', () => [
+  {
+    id: 'poc-01', leadId: 'ld-08', leadName: 'R. Silva', company: 'TopoBras',
+    status: 'active',
+    milestones: [
+      { id: 'ms-1', label: 'Data pipeline connected', status: 'done' },
+      { id: 'ms-2', label: 'First corrected batch delivered', status: 'in_progress' },
+      { id: 'ms-3', label: 'Side-by-side accuracy review', status: 'pending' },
+    ],
+    kpis: [{ id: 'kpi-3', category: 'accuracy', metric: 'Deviation vs manual', baseline: '', target: '< 2cm', result: '' }],
+    risks: [{ id: 'r1'.padEnd(32, '0'), description: 'Field data arrives in a legacy format', severity: 'medium', mitigation: 'Converter script in progress' }],
+    scope: 'Two survey teams, 6 weeks', durationWeeks: 6, successMetrics: 'Accuracy parity at half the turnaround',
+    startDate: hoursAgo(24 * 14), createdAt: hoursAgo(24 * 20), updatedAt: hoursAgo(48),
+  },
+]);
+
 function logActivity(leadId: string, type: string, label: string): void {
   const rows = leadActivity.load();
   rows.unshift({
@@ -852,12 +900,144 @@ export const todayHandlers = [
     });
   }),
 
+  // --- Customers board + thin detail (no writes on the team plane) ----------
+  http.get(`${V1}/cockpit/customers/`, async ({ request }) => {
+    await delay(LATENCY);
+    const denied = requireAuth(request);
+    if (denied) return denied;
+    const results = customers.load();
+    return HttpResponse.json({
+      results,
+      count: results.length,
+      healthClasses: ['stable', 'at_risk', 'critical', 'unknown'],
+    });
+  }),
+
+  http.get(`${V1}/cockpit/customers/:clientId/`, async ({ request, params }) => {
+    await delay(LATENCY);
+    const denied = requireAuth(request);
+    if (denied) return denied;
+    const row = customers.load().find((c) => c.clientId === params.clientId);
+    if (!row) return errorEnvelope(404, 'not_found', 'Not found.');
+    return HttpResponse.json({ ...row, contractState: 'active' });
+  }),
+
+  // --- Evaluations ({results,count}; PATCH detail + KPI returns full obj) ---
+  http.get(`${V1}/evaluations/`, async ({ request }) => {
+    await delay(LATENCY);
+    const denied = requireAuth(request);
+    if (denied) return denied;
+    const results = evaluations.load();
+    return HttpResponse.json({ results, count: results.length });
+  }),
+
+  http.patch(`${V1}/evaluations/:id/`, async ({ request, params }) => {
+    await delay(LATENCY);
+    const denied = requireAuth(request);
+    if (denied) return denied;
+    const rows = evaluations.load();
+    const row = rows.find((e) => e.id === params.id);
+    if (!row) return errorEnvelope(404, 'not_found', 'Not found.');
+    const patch = (await request.json().catch(() => ({}))) as Record<string, unknown>;
+    Object.assign(row, patch, { updatedAt: new Date().toISOString() });
+    evaluations.save(rows);
+    return HttpResponse.json(row);
+  }),
+
+  http.patch(`${V1}/evaluations/:id/kpis/:kpiId/`, async ({ request, params }) => {
+    await delay(LATENCY);
+    const denied = requireAuth(request);
+    if (denied) return denied;
+    const rows = evaluations.load();
+    const row = rows.find((e) => e.id === params.id);
+    if (!row) return errorEnvelope(404, 'not_found', 'Not found.');
+    const kpi = row.kpis.find((k) => k.id === params.kpiId);
+    if (!kpi) return errorEnvelope(400, 'itrix_error', 'KPI not found.');
+    const patch = (await request.json().catch(() => ({}))) as { target?: string; result?: string };
+    if (patch.target !== undefined) kpi.target = patch.target;
+    if (patch.result !== undefined) kpi.result = patch.result;
+    evaluations.save(rows);
+    return HttpResponse.json(row);
+  }),
+
+  // --- PoCs -----------------------------------------------------------------
+  http.get(`${V1}/pocs/`, async ({ request }) => {
+    await delay(LATENCY);
+    const denied = requireAuth(request);
+    if (denied) return denied;
+    const results = pocs.load();
+    return HttpResponse.json({ results, count: results.length });
+  }),
+
+  http.patch(`${V1}/pocs/:id/`, async ({ request, params }) => {
+    await delay(LATENCY);
+    const denied = requireAuth(request);
+    if (denied) return denied;
+    const rows = pocs.load();
+    const row = rows.find((p) => p.id === params.id);
+    if (!row) return errorEnvelope(404, 'not_found', 'Not found.');
+    const patch = (await request.json().catch(() => ({}))) as Record<string, unknown>;
+    Object.assign(row, patch, { updatedAt: new Date().toISOString() });
+    pocs.save(rows);
+    return HttpResponse.json(row);
+  }),
+
+  http.patch(`${V1}/pocs/:id/milestones/:milestoneId/`, async ({ request, params }) => {
+    await delay(LATENCY);
+    const denied = requireAuth(request);
+    if (denied) return denied;
+    const rows = pocs.load();
+    const row = rows.find((p) => p.id === params.id);
+    if (!row) return errorEnvelope(404, 'not_found', 'Not found.');
+    const milestone = row.milestones.find((m) => m.id === params.milestoneId);
+    if (!milestone) return errorEnvelope(400, 'itrix_error', 'Milestone not found.');
+    const patch = (await request.json().catch(() => ({}))) as { status?: string; label?: string };
+    if (patch.status) {
+      if (!['pending', 'in_progress', 'done', 'missed'].includes(patch.status)) {
+        return errorEnvelope(400, 'itrix_error', 'Invalid milestone status.');
+      }
+      milestone.status = patch.status as typeof milestone.status;
+    }
+    if (patch.label) milestone.label = patch.label;
+    pocs.save(rows);
+    return HttpResponse.json(row);
+  }),
+
+  http.post(`${V1}/pocs/:id/risks/`, async ({ request, params }) => {
+    await delay(LATENCY);
+    const denied = requireAuth(request);
+    if (denied) return denied;
+    const rows = pocs.load();
+    const row = rows.find((p) => p.id === params.id);
+    if (!row) return errorEnvelope(404, 'not_found', 'Not found.');
+    const body = (await request.json().catch(() => ({}))) as {
+      description?: string;
+      severity?: string;
+      mitigation?: string;
+    };
+    if (!body.description || !body.severity) {
+      return errorEnvelope(400, 'invalid', 'description and severity are required.');
+    }
+    row.risks.push({
+      id: Date.now().toString(16).padEnd(32, '0'),
+      description: body.description,
+      severity: body.severity as 'low' | 'medium' | 'high',
+      mitigation: body.mitigation ?? '',
+    });
+    pocs.save(rows);
+    return HttpResponse.json(row, { status: 201 });
+  }),
+
   // --- Support (read-only; there are deliberately NO action handlers) -------
   http.get(`${V1}/cockpit/support/queue/`, async ({ request }) => {
     await delay(LATENCY);
     const denied = requireAuth(request);
     if (denied) return denied;
-    const rows = support.load().filter((r) => r.status !== 'resolved');
+    const params = new URL(request.url).searchParams;
+    const includeResolved = params.get('includeResolved') === 'true';
+    const clientId = params.get('clientId');
+    let rows = support.load().filter((r) => includeResolved || r.status !== 'resolved');
+    if (clientId) rows = rows.filter((r) => r.clientId === clientId);
     // Blocking first → urgency → most overdue, like the server.
     const urgencyRank = { critical: 0, high: 1, normal: 2, low: 3 } as const;
     const results = [...rows].sort(
