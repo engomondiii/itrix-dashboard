@@ -273,6 +273,16 @@ interface DemoActivity {
 const leadNotes = makeStore<DemoNote>('demo:today:lead-notes', () => []);
 const leadActivity = makeStore<DemoActivity>('demo:today:lead-activity', () => []);
 
+interface DemoConsoleMessage {
+  id: string;
+  conversationId: string;
+  body: string;
+  governanceStatus: 'auto_approved' | 'pending' | 'blocked';
+  at: string;
+}
+
+const consoleMessages = makeStore<DemoConsoleMessage>('demo:today:console-messages', () => []);
+
 function logActivity(leadId: string, type: string, label: string): void {
   const rows = leadActivity.load();
   rows.unshift({
@@ -459,6 +469,114 @@ export const todayHandlers = [
     }
     followUps.save(rows);
     return HttpResponse.json(row);
+  }),
+
+  // --- Thread detail (real bodies, incl. held) ------------------------------
+  http.get(`${V1}/cockpit/threads/:threadId/`, async ({ request, params }) => {
+    await delay(LATENCY);
+    const denied = requireAuth(request);
+    if (denied) return denied;
+    const row = threads.load().find((t) => t.threadId === params.threadId);
+    if (!row) return errorEnvelope(404, 'not_found', 'Not found.');
+    const mk = (
+      seq: number, senderKind: string, body: string, extras: Record<string, unknown> = {},
+    ) => ({
+      id: `${row.threadId}-t${seq}`, seq, senderKind,
+      agentKey: senderKind === 'agent' ? 'pitch' : null, body,
+      governanceStatus: 'auto_approved', claimLevel: 1, streamingStatus: 'settled',
+      citedChunkIds: [], at: hoursAgo(6 - seq), ...extras,
+    });
+    return HttpResponse.json({
+      threadId: row.threadId, title: row.title, anonymous: row.anonymous,
+      leadId: row.leadId, company: row.company, journeyState: row.journeyState,
+      ownerKind: row.ownerKind, createdAt: row.createdAt, lastActivityAt: row.lastActivityAt,
+      turns: [
+        mk(1, 'visitor', 'How fast can your pipeline process a full survey correction batch?'),
+        mk(2, 'agent', 'For a typical batch the automated pass completes well within a working day — the exact figure depends on point density. Could you share your usual batch size?'),
+        mk(3, 'visitor', 'Around 40k points, weekly. And what does that cost us?'),
+        mk(4, 'agent',
+          'In our internal benchmark the current pipeline processed a full survey batch in under 40 minutes — I can share the methodology note if useful.',
+          { governanceStatus: 'pending', claimLevel: 3, streamingStatus: 'under_review' }),
+      ],
+      guardHits: row.threadId === 'th-01'
+        ? [{ id: 'gh-01', kind: 'claim', category: 'performance-claim', pattern: 'benchmark',
+             agentKey: 'pitch', plane: 'visitor', at: hoursAgo(1) }]
+        : [],
+      coverage: null,
+      attachments: [],
+    });
+  }),
+
+  // --- Console conversations (separate model; held bodies BLANK here) -------
+  http.get(`${V1}/console/conversations/`, async ({ request }) => {
+    await delay(LATENCY);
+    const denied = requireAuth(request);
+    if (denied) return denied;
+    return HttpResponse.json(
+      threads
+        .load()
+        .filter((t) => t.leadId)
+        .map((t, i) => ({
+          id: `cv-${t.threadId}`, context: 'review', title: t.title,
+          lastMessageAt: t.lastActivityAt, unreadCount: i === 0 ? 1 : 0,
+          lastPreview: 'And what does that cost us?', leadId: t.leadId,
+        })),
+    );
+  }),
+
+  http.get(`${V1}/conversations/:id/`, async ({ request, params }) => {
+    await delay(LATENCY);
+    const denied = requireAuth(request);
+    if (denied) return denied;
+    const threadId = String(params.id).replace(/^cv-/, '');
+    const row = threads.load().find((t) => t.threadId === threadId);
+    if (!row) return errorEnvelope(404, 'not_found', 'Not found.');
+    const posted = consoleMessages.load().filter((m) => m.conversationId === params.id);
+    return HttpResponse.json({
+      id: params.id, context: 'review', title: row.title, leadId: row.leadId,
+      messages: [
+        { id: 'cm-1', senderKind: 'visitor', agentKey: null, body: 'Around 40k points, weekly. And what does that cost us?', citedChunkIds: [], governanceStatus: 'auto_approved', underReview: false, at: hoursAgo(3) },
+        // Held on this plane = blank body, underReview true.
+        { id: 'cm-2', senderKind: 'agent', agentKey: 'pitch', body: '', citedChunkIds: [], governanceStatus: 'pending', underReview: true, at: hoursAgo(1) },
+        ...posted.map((m) => ({
+          id: m.id, senderKind: 'team', agentKey: null,
+          body: m.governanceStatus === 'pending' ? '' : m.body,
+          citedChunkIds: [], governanceStatus: m.governanceStatus,
+          underReview: m.governanceStatus === 'pending', at: m.at,
+        })),
+      ],
+    });
+  }),
+
+  http.post(`${V1}/console/conversations/:id/message/`, async ({ request, params }) => {
+    await delay(LATENCY);
+    const denied = requireAuth(request);
+    if (denied) return denied;
+    const body = (await request.json().catch(() => ({}))) as { body?: string; message?: string; claimLevel?: number };
+    const text = body.body ?? body.message ?? '';
+    if (!text) return errorEnvelope(400, 'invalid', 'body is required.');
+    const level = body.claimLevel ?? 1;
+    const governanceStatus = level >= 3 ? 'pending' : 'auto_approved';
+    const rows = consoleMessages.load();
+    rows.push({
+      id: `cm-${Date.now()}`, conversationId: String(params.id), body: text,
+      governanceStatus, at: new Date().toISOString(),
+    });
+    consoleMessages.save(rows);
+    if (governanceStatus === 'pending') {
+      const q = approvals.load();
+      q.unshift({
+        id: `ap-${Date.now()}`, leadId: null, conversationId: String(params.id),
+        agentKey: 'console', claimLevel: level as 3 | 4 | 5, draftBody: text, finalBody: '',
+        status: 'pending', reason: '', requiresSecondApprover: level >= 4,
+        firstApprover: null, at: new Date().toISOString(),
+      });
+      approvals.save(q);
+    }
+    return HttpResponse.json(
+      { messageId: `cm-${Date.now()}`, governanceStatus },
+      { status: 201 },
+    );
   }),
 
   // --- Threads --------------------------------------------------------------
