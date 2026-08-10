@@ -302,6 +302,53 @@ const customers = makeStore('demo:today:customers', () => [
   },
 ]);
 
+const templates = makeStore('demo:today:templates', () => [
+  {
+    id: 'tp-01', kind: 'email', name: 'Intro after submission',
+    body: 'Hi {{name}},\n\nThanks for telling us about {{company}}’s correction workload. Based on what you shared, the fastest way to see fit is a short call — does {{proposed_time}} work?\n\nBest,\n{{sender}}',
+    variables: ['name', 'company', 'proposed_time', 'sender'], updatedAt: hoursAgo(200),
+  },
+  {
+    id: 'tp-02', kind: 'follow-up', name: 'Nudge after silence',
+    body: 'Hi {{name}}, circling back on the correction throughput question — happy to share the methodology note if that helps the internal case.',
+    variables: ['name'], updatedAt: hoursAgo(400),
+  },
+  {
+    id: 'tp-03', kind: 'handoff', name: 'Evaluation handoff memo',
+    body: 'Owner: {{owner}}\nScope: {{scope}}\nSuccess bar: {{success}}\nWatch for: {{risks}}',
+    variables: ['owner', 'scope', 'success', 'risks'], updatedAt: hoursAgo(600),
+  },
+]);
+
+const personas = makeStore('demo:today:personas', () => [
+  {
+    id: 'pe-01', personaId: 'P-OPS-01', company: 'Daehan Survey Co.', department: 'Operations',
+    primary_persona: 'Head of Survey Operations', functionalFamily: 'Operations',
+    pitchArchetype: 'Efficiency case', priority: 1, validationStatus: 'validated',
+    decisionLens: 'Throughput per won contract', departmentMandate: 'Deliver corrections inside SLA',
+    triggerEvent: 'Season peak overload', primaryKpi: 'Batch turnaround time',
+    supportingKpis: ['Rework rate', 'Overtime hours'], workloadEnvironment: 'Weekly 40k-point batches',
+    boundaryWasteHypothesis: 'Manual QA rechecks eat 30% of senior time',
+    desiredGain: 'Same-day turnaround without added headcount',
+    likelyChampion: 'Ops lead drowning in QA', likelyBlocker: 'Senior surveyor who owns the manual process',
+    likelyObjection: 'Automation will miss edge cases our people catch',
+    responseAngle: 'Side-by-side accuracy review on their own data', disclosureCeiling: 'L2',
+  },
+  {
+    id: 'pe-02', personaId: 'P-CTO-01', company: 'Hanul Engineering', department: 'Technology',
+    primary_persona: 'CTO', functionalFamily: 'Technical', pitchArchetype: 'Proof-driven',
+    priority: 2, validationStatus: 'draft',
+    decisionLens: 'Integration cost vs. gain', departmentMandate: 'Modernise the field-to-office pipeline',
+    triggerEvent: 'Board pressure on delivery dates', primaryKpi: 'End-to-end cycle time',
+    supportingKpis: ['Error escape rate'], workloadEnvironment: 'Mixed legacy formats',
+    boundaryWasteHypothesis: 'Format conversion is the hidden bottleneck',
+    desiredGain: 'A pipeline his team doesn’t babysit',
+    likelyChampion: 'Platform engineer', likelyBlocker: 'Procurement',
+    likelyObjection: 'Another vendor lock-in', responseAngle: 'Open export formats + exit path',
+    disclosureCeiling: 'L3',
+  },
+]);
+
 const evaluations = makeStore('demo:today:evaluations', () => [
   {
     id: 'ev-01', leadId: 'ld-03', leadName: 'H. Cho', company: 'Daehan Survey Co.',
@@ -1056,6 +1103,123 @@ export const todayHandlers = [
         unowned: results.filter((r) => !r.owner).length,
         resolvedButNotConfirmed: 0,
       },
+    });
+  }),
+
+  // --- Templates ({results,count}; CRUD; variables derived on save) ---------
+  http.get(`${V1}/templates/`, async ({ request }) => {
+    await delay(LATENCY);
+    const denied = requireAuth(request);
+    if (denied) return denied;
+    const kind = new URL(request.url).searchParams.get('kind');
+    const results = templates.load().filter((t) => !kind || t.kind === kind);
+    return HttpResponse.json({ results, count: results.length });
+  }),
+
+  http.post(`${V1}/templates/`, async ({ request }) => {
+    await delay(LATENCY);
+    const denied = requireAuth(request);
+    if (denied) return denied;
+    const body = (await request.json().catch(() => ({}))) as { kind?: string; name?: string; body?: string };
+    if (!body.kind || !body.name || !body.body) {
+      return errorEnvelope(400, 'invalid', 'kind, name and body are required.');
+    }
+    const rows = templates.load();
+    const row = {
+      id: `tp-${Date.now()}`, kind: body.kind, name: body.name, body: body.body,
+      variables: [...new Set([...body.body.matchAll(/\{\{(\w+)\}\}/g)].map((m) => m[1]))],
+      updatedAt: new Date().toISOString(),
+    };
+    rows.push(row);
+    templates.save(rows);
+    return HttpResponse.json(row, { status: 201 });
+  }),
+
+  http.patch(`${V1}/templates/:id/`, async ({ request, params }) => {
+    await delay(LATENCY);
+    const denied = requireAuth(request);
+    if (denied) return denied;
+    const rows = templates.load();
+    const row = rows.find((t) => t.id === params.id);
+    if (!row) return errorEnvelope(404, 'not_found', 'Not found.');
+    const patch = (await request.json().catch(() => ({}))) as { name?: string; body?: string };
+    if (patch.name) row.name = patch.name;
+    if (patch.body) {
+      row.body = patch.body;
+      row.variables = [...new Set([...patch.body.matchAll(/\{\{(\w+)\}\}/g)].map((m) => m[1]))];
+    }
+    row.updatedAt = new Date().toISOString();
+    templates.save(rows);
+    return HttpResponse.json(row);
+  }),
+
+  // --- Personas ({personas, total}; read-only registry) ---------------------
+  http.get(`${V1}/personas/`, async ({ request }) => {
+    await delay(LATENCY);
+    const denied = requireAuth(request);
+    if (denied) return denied;
+    const rows = personas.load();
+    return HttpResponse.json({
+      personas: rows.map((p) => ({
+        id: p.id, personaId: p.personaId, company: p.company, department: p.department,
+        primary_persona: p.primary_persona, functionalFamily: p.functionalFamily,
+        pitchArchetype: p.pitchArchetype, priority: p.priority,
+        validationStatus: p.validationStatus, pitchRoomId: null,
+      })),
+      total: rows.length,
+    });
+  }),
+
+  http.get(`${V1}/personas/:personaId/`, async ({ request, params }) => {
+    await delay(LATENCY);
+    const denied = requireAuth(request);
+    if (denied) return denied;
+    const row = personas.load().find((p) => p.personaId === params.personaId);
+    if (!row) return errorEnvelope(404, 'not_found', 'Not found.');
+    return HttpResponse.json(row);
+  }),
+
+  // --- Analytics (one endpoint; snake top-level keys, camel inside) ---------
+  http.get(`${V1}/analytics/`, async ({ request }) => {
+    await delay(LATENCY);
+    const denied = requireAuth(request);
+    if (denied) return denied;
+    const days = Math.min(365, Math.max(1, Number(new URL(request.url).searchParams.get('days')) || 30));
+    const trend = Array.from({ length: Math.min(days, 30) }, (_, i) => ({
+      date: new Date(Date.now() - (Math.min(days, 30) - 1 - i) * 86_400_000).toISOString().slice(0, 10),
+      count: [0, 1, 2, 1, 3, 2, 4][i % 7],
+    }));
+    return HttpResponse.json({
+      overview: {
+        newLeads: 9, tier1Count: 3, tier2Count: 4, overdueFollowUps: 2,
+        tierDistribution: { 1: 3, 2: 4, 3: 2, 4: 1 },
+        routeDistribution: { 'ALPHA Compute': 6, 'ALPHA Core': 2, Both: 2 },
+        weeklySubmissions: trend.slice(-14),
+      },
+      funnel: [
+        { stage: 'Submitted', count: 42 },
+        { stage: 'Contacted', count: 28, conversion: 0.667 },
+        { stage: 'Meeting / NDA', count: 14, conversion: 0.5 },
+        { stage: 'Evaluation / PoC', count: 6, conversion: 0.429 },
+        { stage: 'Licensed', count: 2, conversion: 0.333 },
+      ],
+      sla_compliance: {
+        tier1AvgHours: 3.2, tier2AvgHours: 9.8, tier1Breaches: 1, tier2Breaches: 3,
+        complianceRate: 0.871,
+      },
+      patterns: [
+        { phrase: 'correction backlog', count: 11 },
+        { phrase: 'turnaround time', count: 8 },
+        { phrase: 'pricing per batch', count: 6 },
+      ],
+      industry_breakdown: [
+        { industry: 'Geodetic surveying', count: 18 },
+        { industry: 'Civil engineering', count: 9 },
+        { industry: 'Mapping / GIS', count: 7 },
+        { industry: 'Construction', count: 4 },
+      ],
+      route_distribution: { 'ALPHA Compute': 24, 'ALPHA Core': 10, Both: 8 },
+      submission_trend: trend,
     });
   }),
 
