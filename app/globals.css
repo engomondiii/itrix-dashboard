@@ -1,0 +1,374 @@
+@import 'tailwindcss';
+
+/*
+ * Tailwind v4, CSS-first configuration. There is no tailwind.config.ts —
+ * this file is the whole theming surface: design tokens below, and the
+ * @theme block that turns them into utilities (bg-primary, text-muted-foreground…).
+ *
+ * Dark mode is class-based (`.dark` on <html>), toggled by
+ * components/theme-provider.tsx. The @custom-variant line is what makes
+ * `dark:` utilities follow that class instead of the OS preference.
+ */
+@custom-variant dark (&:is(.dark *));
+
+/*
+ * Design tokens — itriX brand (Brand Manual v2.0 §8.1, matching itrix.co.kr's
+ * "mathematical-glass" light theme). Semantic HSL triplets in the shadcn/ui
+ * convention: values are written without the `hsl()` wrapper so Tailwind can
+ * compose opacity against a token (`bg-primary/10`).
+ *
+ * Light theme = the brand palette verbatim (canvas #F8FAFC, ink #1F2937,
+ * soft #EAF0FF, tint #D6E6FF, signature accent #8FA8EA).
+ * Dark theme = DERIVED — the brand defines no dark mode; surfaces come from
+ * the brand's own structure ramp (#1F2937–#3C4A5E) and ink-inverse #F8FAFC.
+ *
+ * Tier tokens are internal-only (no brand manual defines them); values match
+ * itrix-dashboard/itrix-web exactly.
+ */
+@layer base {
+  :root {
+    --background: 210 40% 98%; /* canvas #F8FAFC */
+    --foreground: 215 28% 17%; /* ink-primary #1F2937 */
+
+    --card: 0 0% 100%; /* surface #FFFFFF */
+    --card-foreground: 215 28% 17%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 215 28% 17%;
+
+    --primary: 215 28% 17%; /* structure-900 #1F2937 */
+    --primary-foreground: 210 40% 98%;
+
+    --secondary: 223 100% 96%; /* soft #EAF0FF */
+    --secondary-foreground: 215 28% 17%;
+
+    --muted: 223 100% 96%;
+    --muted-foreground: 215 14% 34%; /* ink-secondary #4B5563 */
+
+    --accent: 217 100% 92%; /* tint #D6E6FF (hover/selection surface) */
+    --accent-foreground: 215 28% 17%;
+
+    /* Success / confirmation. Named by role, not hue. */
+    --positive: 155 90% 24%; /* #067647 */
+    --positive-foreground: 0 0% 98%;
+
+    --destructive: 4 76% 40%; /* #B42318 (border #D92D20 via /80) */
+    --destructive-foreground: 0 0% 98%;
+
+    --border: 214 22% 87%; /* border-soft rgba(148,163,184,.32) flattened on canvas */
+    --input: 214 22% 87%;
+    --ring: 215 20% 65%; /* focus-ring base #94A3B8 */
+
+    --radius: 0.875rem; /* brand --radius-button/input 14px */
+
+    /* Site chart palette: structure, signature, success, slate-blue, warning. */
+    --chart-1: 215 28% 24%; /* #2C3A4E */
+    --chart-2: 224 68% 74%; /* #8FA8EA */
+    --chart-3: 155 90% 24%; /* #067647 */
+    --chart-4: 226 25% 55%; /* #6E7CA8 */
+    --chart-5: 22 92% 37%; /* #B54708 */
+
+    /*
+     * Sidebar family — the main site's LIGHT rail (canvas ground, soft
+     * hover, ink text). Active nav items tint from `--sidebar-primary`.
+     */
+    --sidebar: 210 40% 98%;
+    --sidebar-foreground: 215 28% 17%;
+    --sidebar-primary: 215 28% 17%;
+    --sidebar-primary-foreground: 210 40% 98%;
+    --sidebar-accent: 223 100% 96%;
+    --sidebar-accent-foreground: 215 28% 17%;
+    --sidebar-border: 214 22% 87%;
+    --sidebar-ring: 215 20% 65%;
+
+    /* itriX extensions (exposed in @theme inline below). */
+    --brand-accent: 224 68% 74%; /* signature #8FA8EA */
+    --brand-accent-soft: 220 74% 84%; /* #B7CBF4 */
+    --warning: 22 92% 37%; /* #B54708 */
+    --warning-foreground: 0 0% 98%;
+    --warning-soft: 45 100% 96%; /* #FFFAEB */
+    --positive-soft: 145 81% 96%; /* #ECFDF3 */
+    --destructive-soft: 5 86% 97%; /* #FEF3F2 */
+    --tier-1: 215 28% 24%; /* #2C3A4E */
+    --tier-2: 215 18% 43%; /* #5B6B82 */
+    --tier-3: 215 16% 47%; /* #64748B */
+    --tier-4: 215 20% 65%; /* #94A3B8 */
+  }
+
+  .dark {
+    --background: 219 29% 12%; /* below structure-900 */
+    --foreground: 210 40% 98%; /* ink-inverse #F8FAFC */
+
+    --card: 215 28% 17%; /* structure-900 #1F2937 */
+    --card-foreground: 210 40% 98%;
+
+    --popover: 215 28% 17%;
+    --popover-foreground: 210 40% 98%;
+
+    --primary: 210 40% 98%;
+    --primary-foreground: 215 28% 17%;
+
+    --secondary: 214 26% 21%; /* structure-800 #273343 */
+    --secondary-foreground: 210 40% 98%;
+
+    --muted: 214 26% 21%;
+    --muted-foreground: 215 20% 65%; /* ink-muted #94A3B8 */
+
+    --accent: 215 24% 25%; /* structure-700 #313E50 */
+    --accent-foreground: 210 40% 98%;
+
+    --positive: 155 55% 42%;
+    --positive-foreground: 219 29% 12%;
+
+    --destructive: 4 70% 55%;
+    --destructive-foreground: 219 29% 12%;
+
+    --border: 215 22% 30%; /* structure-600 #3C4A5E */
+    --input: 215 22% 30%;
+    --ring: 224 68% 74%; /* signature accent carries focus in the dark */
+
+    --chart-1: 215 25% 72%;
+    --chart-2: 224 68% 74%;
+    --chart-3: 155 50% 55%;
+    --chart-4: 226 35% 70%;
+    --chart-5: 22 85% 60%;
+
+    /* Sidebar sits between --background and --card in depth. */
+    --sidebar: 218 29% 14%;
+    --sidebar-foreground: 210 40% 98%;
+    --sidebar-primary: 224 68% 74%;
+    --sidebar-primary-foreground: 215 28% 17%;
+    --sidebar-accent: 214 26% 21%;
+    --sidebar-accent-foreground: 210 40% 98%;
+    --sidebar-border: 215 24% 22%;
+    --sidebar-ring: 224 68% 74%;
+
+    --brand-accent: 224 68% 74%;
+    --brand-accent-soft: 220 74% 84%;
+    --warning: 30 90% 55%;
+    --warning-foreground: 219 29% 12%;
+    --warning-soft: 30 50% 18%;
+    --positive-soft: 155 45% 14%;
+    --destructive-soft: 4 45% 16%;
+    --tier-1: 215 25% 75%;
+    --tier-2: 215 20% 62%;
+    --tier-3: 215 16% 52%;
+    --tier-4: 215 18% 42%;
+  }
+}
+
+/*
+ * The @theme block is Tailwind v4's replacement for tailwind.config.ts:
+ * every `--color-*` here becomes a full utility family (bg-*, text-*,
+ * border-*, ring-* …). `inline` matters: the tokens above change value under
+ * `.dark`, so utilities must reference the var() expression itself, not a
+ * value captured at build time.
+ */
+@theme inline {
+  /*
+   * itriX brand faces, shipped hermetically as @fontsource/pretendard npm
+   * packages (imported in app/layout.tsx — no build-time network).
+   * Display = Space Grotesk (headings), UI = Inter, numeric = IBM Plex Mono,
+   * Korean fallback = Pretendard throughout (Brand Manual v2.0 §8.1).
+   */
+  --font-sans:
+    'Inter Variable', 'Pretendard Variable', ui-sans-serif, system-ui,
+    -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue',
+    Arial, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji';
+  --font-display:
+    'Space Grotesk Variable', 'Pretendard Variable', 'Inter Variable',
+    ui-sans-serif, system-ui, sans-serif;
+  --font-mono:
+    'IBM Plex Mono', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas,
+    'Liberation Mono', 'Courier New', monospace;
+
+  --color-border: hsl(var(--border));
+  --color-input: hsl(var(--input));
+  --color-ring: hsl(var(--ring));
+  --color-background: hsl(var(--background));
+  --color-foreground: hsl(var(--foreground));
+
+  --color-primary: hsl(var(--primary));
+  --color-primary-foreground: hsl(var(--primary-foreground));
+  --color-secondary: hsl(var(--secondary));
+  --color-secondary-foreground: hsl(var(--secondary-foreground));
+  --color-destructive: hsl(var(--destructive));
+  --color-destructive-foreground: hsl(var(--destructive-foreground));
+  --color-positive: hsl(var(--positive));
+  --color-positive-foreground: hsl(var(--positive-foreground));
+  --color-muted: hsl(var(--muted));
+  --color-muted-foreground: hsl(var(--muted-foreground));
+  --color-accent: hsl(var(--accent));
+  --color-accent-foreground: hsl(var(--accent-foreground));
+  --color-popover: hsl(var(--popover));
+  --color-popover-foreground: hsl(var(--popover-foreground));
+  --color-card: hsl(var(--card));
+  --color-card-foreground: hsl(var(--card-foreground));
+
+  /* itriX extensions: signature accent, warning triad, tier scale. */
+  --color-brand-accent: hsl(var(--brand-accent));
+  --color-brand-accent-soft: hsl(var(--brand-accent-soft));
+  --color-warning: hsl(var(--warning));
+  --color-warning-foreground: hsl(var(--warning-foreground));
+  --color-warning-soft: hsl(var(--warning-soft));
+  --color-positive-soft: hsl(var(--positive-soft));
+  --color-destructive-soft: hsl(var(--destructive-soft));
+  --color-tier-1: hsl(var(--tier-1));
+  --color-tier-2: hsl(var(--tier-2));
+  --color-tier-3: hsl(var(--tier-3));
+  --color-tier-4: hsl(var(--tier-4));
+
+  --color-chart-1: hsl(var(--chart-1));
+  --color-chart-2: hsl(var(--chart-2));
+  --color-chart-3: hsl(var(--chart-3));
+  --color-chart-4: hsl(var(--chart-4));
+  --color-chart-5: hsl(var(--chart-5));
+
+  /* Consumed by components/ui/sidebar.tsx (shadcn sidebar convention). */
+  --color-sidebar: hsl(var(--sidebar));
+  --color-sidebar-foreground: hsl(var(--sidebar-foreground));
+  --color-sidebar-primary: hsl(var(--sidebar-primary));
+  --color-sidebar-primary-foreground: hsl(var(--sidebar-primary-foreground));
+  --color-sidebar-accent: hsl(var(--sidebar-accent));
+  --color-sidebar-accent-foreground: hsl(var(--sidebar-accent-foreground));
+  --color-sidebar-border: hsl(var(--sidebar-border));
+  --color-sidebar-ring: hsl(var(--sidebar-ring));
+
+  --radius-lg: var(--radius);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-sm: calc(var(--radius) - 4px);
+}
+
+/*
+ * Motion tokens. Each `--animate-*` becomes an `animate-*` utility; overlays
+ * (dialogs, menus, toasts) use them for enter transitions. Durations are
+ * deliberately short — motion here is feedback, not decoration. Anything over
+ * ~200ms on a hover or popover starts to feel like the UI is lagging.
+ *
+ * Exit animations are deliberately absent: Radix unmounts on close unless you
+ * gate with forceMount, and blocking unmount to play an exit animation costs
+ * more complexity than the effect is worth in an admin surface.
+ */
+@theme {
+  --animate-fade-in: fade-in 120ms ease-out;
+  --animate-zoom-in: zoom-in 140ms ease-out;
+  --animate-slide-up-in: slide-up-in 160ms ease-out;
+  --animate-toast-in: toast-in 180ms ease-out;
+
+  @keyframes fade-in {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+  @keyframes zoom-in {
+    from { opacity: 0; transform: scale(0.97); }
+    to { opacity: 1; transform: scale(1); }
+  }
+  @keyframes slide-up-in {
+    from { opacity: 0; transform: translateY(4px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  @keyframes toast-in {
+    from { opacity: 0; transform: translateX(12px); }
+    to { opacity: 1; transform: translateX(0); }
+  }
+}
+
+@layer base {
+  /*
+   * v4 changed the default border colour from gray-200 to currentColor, so
+   * this rule is now load-bearing twice over: it keeps every un-annotated
+   * `border` on the token, and it keeps v3-era markup rendering identically.
+   */
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground font-sans;
+    font-feature-settings:
+      'rlig' 1,
+      'calt' 1;
+  }
+
+  /*
+   * Tabular figures for anything numeric-columnar (tables of amounts, IDs,
+   * timestamps). Proportional figures make columns ragged and genuinely
+   * harder to scan for an anomaly.
+   */
+  .font-mono,
+  [data-numeric] {
+    font-variant-numeric: tabular-nums;
+  }
+
+  /*
+   * Vestibular-safety valve: users who set "reduce motion" get state changes
+   * without travel. Collapsing durations to near-zero (rather than `none`)
+   * keeps `transitionend`/`animationend` events firing, so any logic waiting
+   * on them still runs.
+   */
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    ::before,
+    ::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+    }
+  }
+}
+
+/*
+ * Theme-switch reveal (components/theme-provider.tsx).
+ *
+ * The provider wraps theme changes in `document.startViewTransition` and
+ * scripts a circle clip-path on the new snapshot, expanding from the click
+ * point. These rules suppress the API's default cross-fade so that scripted
+ * circle is the only motion — without them the fade and the circle run at
+ * once and the effect turns to mush. Browsers without the API ignore both
+ * the pseudo-elements and the provider's guard takes the plain path.
+ */
+::view-transition-old(root),
+::view-transition-new(root) {
+  animation: none;
+  mix-blend-mode: normal;
+}
+
+/*
+ * itriX "mathematical-glass" surface treatment (matches itrix.co.kr).
+ * Background + border + blur always travel together; the @supports guard
+ * gives browsers without backdrop-filter an opaque card instead of soup.
+ */
+@layer components {
+  .glass-surface {
+    background: rgba(248, 250, 252, 0.72);
+    border: 1px solid rgba(214, 230, 255, 0.88);
+    backdrop-filter: blur(18px);
+  }
+  .dark .glass-surface {
+    background: rgba(31, 41, 55, 0.72);
+    border-color: rgba(60, 74, 94, 0.6);
+  }
+  @supports not (backdrop-filter: blur(1px)) {
+    .glass-surface {
+      background: hsl(var(--card));
+    }
+  }
+
+  /* The site's vertical canvas wash — apply to a page's main pane. */
+  .canvas-wash {
+    background: linear-gradient(180deg, hsl(var(--background)) 0%, rgba(234, 240, 255, 0.34) 100%);
+  }
+  .dark .canvas-wash {
+    background: linear-gradient(180deg, hsl(var(--background)) 0%, rgba(39, 51, 67, 0.34) 100%);
+  }
+}
+
+/*
+ * Deliberately no element-level styling below this line.
+ *
+ * The previous version of this file styled `button`, `input`, `table`, `nav`,
+ * `h1`-`h6` and more directly. That fights Tailwind utilities and shadcn/ui
+ * components on specificity, and every component ships its own styles anyway.
+ * If you need a global primitive, add a component class under @layer
+ * components — never bare element selectors.
+ */
