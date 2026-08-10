@@ -10,10 +10,11 @@
  * empty approvals band is genuinely reassuring).
  */
 
-import { useState, type ReactNode } from 'react';
+import { type ReactNode } from 'react';
 import { ChevronDown } from 'lucide-react';
 
 import { cn } from '@/lib/utils';
+import { useStoredState } from './use-stored';
 
 interface TodayBandProps {
   title: string;
@@ -43,7 +44,11 @@ export function TodayBand({
   tone = 'neutral',
   children,
 }: TodayBandProps) {
-  const [open, setOpen] = useState(true);
+  // Collapse choice persists per band — someone who folds "Due today" away
+  // shouldn't have to re-fold it on every visit.
+  const [stored, setStored] = useStoredState(`today.band.${title}`, 'open');
+  const open = stored !== 'closed';
+  const toggle = () => setStored(open ? 'closed' : 'open');
 
   if (!alwaysShow && !isLoading && count === 0) return null;
 
@@ -51,7 +56,7 @@ export function TodayBand({
     <section className="mb-6">
       <button
         type="button"
-        onClick={() => setOpen((v) => !v)}
+        onClick={toggle}
         aria-expanded={open}
         className="flex w-full items-center gap-2 rounded-md px-1 py-1 text-left hover:bg-muted/60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
       >

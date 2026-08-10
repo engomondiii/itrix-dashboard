@@ -13,11 +13,14 @@
 import { useToast } from '@/components/ui/toast';
 import { Button } from '@/components/ui/button';
 import { normalizeError } from '@/lib/api/errors';
+import { useAuth } from '@/lib/auth/auth-context';
 import { useFollowUp, useFollowUpAction } from '@/lib/today/hooks';
 import { formatRelative } from '@/lib/entity/format';
 import type { FollowUpRow } from '@/lib/today/types';
 import { QueueCard } from '../queue-card';
+import { inScope, type TodayScope } from '../scope';
 import { TodayBand } from '../today-band';
+import { ShowMore, useCapped } from '../use-capped';
 
 function FollowUpCard({ row, urgent }: { row: FollowUpRow; urgent: boolean }) {
   const { toast } = useToast();
@@ -78,10 +81,20 @@ function FollowUpCard({ row, urgent }: { row: FollowUpRow; urgent: boolean }) {
   );
 }
 
-export function FollowUpBand({ scope }: { scope: 'overdue' | 'today' }) {
+export function FollowUpBand({
+  scope,
+  ownerScope,
+}: {
+  scope: 'overdue' | 'today';
+  ownerScope: TodayScope;
+}) {
+  const { user } = useAuth();
   const list = useFollowUp(scope);
-  const rows = list.data?.results ?? [];
+  const rows = (list.data?.results ?? []).filter((row) =>
+    inScope(ownerScope, row.owner, user?.name),
+  );
   const urgent = scope === 'overdue';
+  const { visible, remaining, showMore } = useCapped(rows);
 
   return (
     <TodayBand
@@ -91,9 +104,10 @@ export function FollowUpBand({ scope }: { scope: 'overdue' | 'today' }) {
       isLoading={list.isLoading}
       tone={urgent ? 'urgent' : 'neutral'}
     >
-      {rows.map((row) => (
+      {visible.map((row) => (
         <FollowUpCard key={row.id} row={row} urgent={urgent} />
       ))}
+      <ShowMore remaining={remaining} onClick={showMore} />
     </TodayBand>
   );
 }

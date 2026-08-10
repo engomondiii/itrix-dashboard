@@ -14,6 +14,7 @@ import { formatRelative } from '@/lib/entity/format';
 import type { ThreadRow } from '@/lib/today/types';
 import { QueueCard } from '../queue-card';
 import { TodayBand } from '../today-band';
+import { ShowMore, useCapped } from '../use-capped';
 
 const ACTIVE_WINDOW_MS = 24 * 60 * 60 * 1000;
 
@@ -26,6 +27,7 @@ function probablyWaiting(row: ThreadRow): boolean {
 export function ThreadsBand() {
   const board = useThreadBoard();
   const rows = (board.data?.results ?? []).filter(probablyWaiting);
+  const { visible, remaining, showMore } = useCapped(rows);
 
   return (
     <TodayBand
@@ -35,7 +37,7 @@ export function ThreadsBand() {
       isLoading={board.isLoading}
       tone="warn"
     >
-      {rows.map((row) => (
+      {visible.map((row) => (
         <QueueCard
           key={row.threadId}
           tone="warn"
@@ -55,6 +57,7 @@ export function ThreadsBand() {
           }
         />
       ))}
+      <ShowMore remaining={remaining} onClick={showMore} />
     </TodayBand>
   );
 }

@@ -10,10 +10,12 @@ import { useNdaInFlight } from '@/lib/today/hooks';
 import { formatRelative } from '@/lib/entity/format';
 import { QueueCard } from '../queue-card';
 import { TodayBand } from '../today-band';
+import { ShowMore, useCapped } from '../use-capped';
 
 export function NdaBand() {
   const nda = useNdaInFlight();
   const rows = nda.data?.results ?? [];
+  const { visible, remaining, showMore } = useCapped(rows);
 
   return (
     <TodayBand
@@ -23,7 +25,7 @@ export function NdaBand() {
       isLoading={nda.isLoading}
       tone="neutral"
     >
-      {rows.map((row) => (
+      {visible.map((row) => (
         <QueueCard
           key={row.id}
           tone="neutral"
@@ -48,6 +50,7 @@ export function NdaBand() {
           }
         />
       ))}
+      <ShowMore remaining={remaining} onClick={showMore} />
     </TodayBand>
   );
 }

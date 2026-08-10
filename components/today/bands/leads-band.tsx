@@ -14,7 +14,9 @@ import { useNewLeads, useTakeLead } from '@/lib/today/hooks';
 import { formatRelative } from '@/lib/entity/format';
 import type { LeadRow } from '@/lib/today/types';
 import { QueueCard } from '../queue-card';
+import { inScope, type TodayScope } from '../scope';
 import { TodayBand } from '../today-band';
+import { ShowMore, useCapped } from '../use-capped';
 
 function LeadCard({ row }: { row: LeadRow }) {
   const { toast } = useToast();
@@ -64,12 +66,14 @@ function LeadCard({ row }: { row: LeadRow }) {
   );
 }
 
-export function NewLeadsBand() {
+export function NewLeadsBand({ ownerScope }: { ownerScope: TodayScope }) {
+  const { user } = useAuth();
   const leads = useNewLeads();
   // Priority 1 first, then newest within a priority.
-  const rows = [...(leads.data?.results ?? [])].sort(
-    (a, b) => a.tier - b.tier || b.submittedAt.localeCompare(a.submittedAt),
-  );
+  const rows = [...(leads.data?.results ?? [])]
+    .filter((row) => inScope(ownerScope, row.owner, user?.name))
+    .sort((a, b) => a.tier - b.tier || b.submittedAt.localeCompare(a.submittedAt));
+  const { visible, remaining, showMore } = useCapped(rows);
 
   return (
     <TodayBand
@@ -79,9 +83,10 @@ export function NewLeadsBand() {
       isLoading={leads.isLoading}
       tone="neutral"
     >
-      {rows.map((row) => (
+      {visible.map((row) => (
         <LeadCard key={row.id} row={row} />
       ))}
+      <ShowMore remaining={remaining} onClick={showMore} />
     </TodayBand>
   );
 }

@@ -18,6 +18,7 @@ import type { AttachmentRow } from '@/lib/today/types';
 import { QueueCard } from '../queue-card';
 import { ReasonAction } from '../reason-action';
 import { TodayBand } from '../today-band';
+import { ShowMore, useCapped } from '../use-capped';
 
 function AttachmentCard({ row }: { row: AttachmentRow }) {
   const { toast } = useToast();
@@ -89,6 +90,7 @@ function AttachmentCard({ row }: { row: AttachmentRow }) {
 export function AttachmentsBand() {
   const queue = useAttachmentQueue();
   const rows = queue.data?.results ?? [];
+  const { visible, remaining, showMore } = useCapped(rows);
 
   return (
     <TodayBand
@@ -98,9 +100,10 @@ export function AttachmentsBand() {
       isLoading={queue.isLoading}
       tone="warn"
     >
-      {rows.map((row) => (
+      {visible.map((row) => (
         <AttachmentCard key={row.attachmentId} row={row} />
       ))}
+      <ShowMore remaining={remaining} onClick={showMore} />
     </TodayBand>
   );
 }

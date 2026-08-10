@@ -22,6 +22,7 @@ import type { ApprovalRow } from '@/lib/today/types';
 import { QueueCard } from '../queue-card';
 import { ReasonAction } from '../reason-action';
 import { TodayBand } from '../today-band';
+import { ShowMore, useCapped } from '../use-capped';
 
 /** Staff-facing risk vocabulary (spec: claim level). */
 const RISK_LABEL: Record<number, string> = {
@@ -101,6 +102,7 @@ function ApprovalCard({ row }: { row: ApprovalRow }) {
 export function ApprovalsBand() {
   const queue = useApprovalQueue();
   const rows = queue.data ?? [];
+  const { visible, remaining, showMore } = useCapped(rows);
 
   return (
     <TodayBand
@@ -116,7 +118,12 @@ export function ApprovalsBand() {
           Nothing waiting — the AI has no held drafts right now.
         </p>
       ) : (
-        rows.map((row) => <ApprovalCard key={row.id} row={row} />)
+        <>
+          {visible.map((row) => (
+            <ApprovalCard key={row.id} row={row} />
+          ))}
+          <ShowMore remaining={remaining} onClick={showMore} />
+        </>
       )}
     </TodayBand>
   );

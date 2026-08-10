@@ -6,11 +6,14 @@
  * a heads-up that routes to the customer.
  */
 
+import { useAuth } from '@/lib/auth/auth-context';
 import { useSupportQueue } from '@/lib/today/hooks';
 import { formatRelative } from '@/lib/entity/format';
 import type { SupportRow } from '@/lib/today/types';
 import { QueueCard } from '../queue-card';
+import { inScope, type TodayScope } from '../scope';
 import { TodayBand } from '../today-band';
+import { ShowMore, useCapped } from '../use-capped';
 
 function tone(row: SupportRow): 'urgent' | 'warn' | 'neutral' {
   if (row.blocking || row.slaBreaching || row.urgency === 'critical') return 'urgent';
@@ -18,9 +21,13 @@ function tone(row: SupportRow): 'urgent' | 'warn' | 'neutral' {
   return 'neutral';
 }
 
-export function SupportBand() {
+export function SupportBand({ ownerScope }: { ownerScope: TodayScope }) {
+  const { user } = useAuth();
   const queue = useSupportQueue();
-  const rows = queue.data?.results ?? [];
+  const rows = (queue.data?.results ?? []).filter((row) =>
+    inScope(ownerScope, row.owner, user?.name),
+  );
+  const { visible, remaining, showMore } = useCapped(rows);
 
   return (
     <TodayBand
@@ -30,7 +37,7 @@ export function SupportBand() {
       isLoading={queue.isLoading}
       tone="warn"
     >
-      {rows.map((row) => (
+      {visible.map((row) => (
         <QueueCard
           key={row.requestId}
           tone={tone(row)}
@@ -52,6 +59,7 @@ export function SupportBand() {
           }
         />
       ))}
+      <ShowMore remaining={remaining} onClick={showMore} />
     </TodayBand>
   );
 }
