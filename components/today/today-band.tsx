@@ -58,7 +58,7 @@ export function TodayBand({
         <ChevronDown
           className={cn('h-4 w-4 shrink-0 text-muted-foreground transition-transform', !open && '-rotate-90')}
         />
-        <h2 className="font-display text-sm font-semibold tracking-tight">{title}</h2>
+        <h2 className="font-display tracking-display text-sm font-semibold">{title}</h2>
         <span
           className={cn(
             'ml-1 rounded-full px-2 py-0.5 text-[11px] font-semibold tabular-nums',

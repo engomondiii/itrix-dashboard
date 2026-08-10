@@ -182,6 +182,15 @@
     'IBM Plex Mono', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas,
     'Liberation Mono', 'Courier New', monospace;
 
+  /* Brand Manual v2.0 §8.1: display tracking −0.03em, label tracking 0.04em. */
+  --tracking-display: -0.03em;
+  --tracking-label: 0.04em;
+
+  /* Brand shadow scale — cool ink-tinted long shadows, per the manual. */
+  --shadow-brand-1: 0 18px 48px rgba(31, 41, 55, 0.08);
+  --shadow-brand-2: 0 24px 72px rgba(31, 41, 55, 0.12);
+  --shadow-brand-3: 0 28px 80px rgba(31, 41, 55, 0.16);
+
   --color-border: hsl(var(--border));
   --color-input: hsl(var(--input));
   --color-ring: hsl(var(--ring));
@@ -343,6 +352,7 @@
     background: rgba(248, 250, 252, 0.72);
     border: 1px solid rgba(214, 230, 255, 0.88);
     backdrop-filter: blur(18px);
+    box-shadow: var(--shadow-brand-1);
   }
   .dark .glass-surface {
     background: rgba(31, 41, 55, 0.72);
@@ -352,6 +362,16 @@
     .glass-surface {
       background: hsl(var(--card));
     }
+  }
+
+  /*
+   * Brand headings release their tracking for Korean text (§8.2 *--kr):
+   * -0.03em clips Hangul glyphs. Applies to any display-face element that
+   * is, or contains, Korean content.
+   */
+  .font-display:lang(ko),
+  .font-display :lang(ko) {
+    letter-spacing: 0;
   }
 
   /* The site's vertical canvas wash — apply to a page's main pane. */
