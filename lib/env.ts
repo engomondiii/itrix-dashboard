@@ -66,16 +66,24 @@ function readRuntime(key: RuntimeEnvKey): string | undefined {
  * - A trailing slash. Endpoints are joined as `${base}${path}` where paths
  *   start with `/`, so `http://host/` yields `http://host//api/...`. Some
  *   servers normalise that, Django does not.
+ * - A base that already ends in `/api` or `/api/v1`. Endpoint paths in
+ *   `endpoints.ts` carry the full `/api/v1/...` prefix, so a base configured
+ *   as `https://backend.example/api/v1` produced
+ *   `https://backend.example/api/v1/api/v1/auth/login/` → 404 on every call.
+ *   (Found live on the Railway deployment — the env var is the natural place
+ *   to paste the full API root, so tolerate it instead of 404ing.)
  */
 function normalizeApiUrl(raw: string): string {
-  const trimmed = raw.trim().replace(/\/+$/, '');
+  const stripApiSuffix = (value: string) =>
+    value.replace(/\/+$/, '').replace(/\/api(\/v1)?$/i, '');
+  const trimmed = stripApiSuffix(raw.trim());
   try {
     const url = new URL(trimmed);
     url.hostname = url.hostname.replace(/\.+$/, '');
-    return url.toString().replace(/\/+$/, '');
+    return stripApiSuffix(url.toString());
   } catch {
-    // Not absolute — a same-origin path like "/api" is valid and common when
-    // a reverse proxy fronts both the app and the API.
+    // Not absolute — a same-origin base ('' = current origin) after the
+    // suffix strip is valid: endpoint paths supply /api/v1 themselves.
     return trimmed.replace(/\.+$/, '');
   }
 }
