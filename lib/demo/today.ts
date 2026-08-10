@@ -696,6 +696,14 @@ export const todayHandlers = [
     let rows = leads.load();
     const status = params.get('status');
     if (status) rows = rows.filter((l) => l.status.toLowerCase() === status.toLowerCase());
+    const tier = Number(params.get('tier'));
+    if (tier) rows = rows.filter((l) => l.tier === tier);
+    const search = (params.get('search') ?? '').toLowerCase();
+    if (search) {
+      rows = rows.filter((l) =>
+        [l.company, l.visitorName, l.primaryPain].some((v) => v.toLowerCase().includes(search)),
+      );
+    }
     rows = [...rows].sort((a, b) => b.submittedAt.localeCompare(a.submittedAt));
     return HttpResponse.json({
       results: rows,

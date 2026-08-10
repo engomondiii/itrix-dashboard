@@ -79,32 +79,6 @@ export const Endpoints = {
     MarkRead: (id: string | number) => `${V1}/notifications/${id}/read/`,
     MarkAllRead: `${V1}/notifications/read-all/`,
   },
-
-  /**
-   * Domain resources.
-   *
-   * Replace this block. It is here to show the shape: one entry per resource
-   * with `List` doubling as the create URL (DRF routers use the same path for
-   * `GET` and `POST`), and functions for anything parameterised.
-   *
-   * `List` is also the react-query cache key in `lib/api/hooks.ts`, so a
-   * mutation on `Detail(id)` invalidates the matching `List` automatically.
-   */
-  Example: {
-    List: `${V1}/example/items/`,
-    Detail: (id: string | number) => `${V1}/example/items/${id}/`,
-    // Provided by BaseModelViewSet on the Django side.
-    BulkCreate: `${V1}/example/items/bulk_create/`,
-    BulkUpdate: `${V1}/example/items/bulk_update/`,
-    BulkDelete: `${V1}/example/items/bulk_delete/`,
-    BulkRestore: `${V1}/example/items/bulk_restore/`,
-    BulkExport: `${V1}/example/items/bulk_export/`,
-    BulkImport: `${V1}/example/items/bulk_import/`,
-    ImportTemplate: `${V1}/example/items/bulk_import_template/`,
-    Statistics: `${V1}/example/items/statistics/`,
-    Restore: (id: string | number) => `${V1}/example/items/${id}/restore/`,
-    HardDelete: (id: string | number) => `${V1}/example/items/${id}/hard_delete/`,
-  },
 } as const;
 
 export default Endpoints;
