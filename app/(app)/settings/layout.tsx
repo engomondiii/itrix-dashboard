@@ -18,7 +18,7 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Palette, UserRound, type LucideIcon } from 'lucide-react';
+import { Palette, UserRound, UsersRound, type LucideIcon } from 'lucide-react';
 import type { ReactNode } from 'react';
 
 import { cn } from '@/lib/utils';
@@ -37,6 +37,12 @@ const SETTINGS_NAV: SettingsNavItem[] = [
     href: '/settings/profile',
     icon: UserRound,
     description: 'Your name and account details.',
+  },
+  {
+    label: 'Team',
+    href: '/settings/team',
+    icon: UsersRound,
+    description: 'Who has staff access, and their load.',
   },
   // No Security section: the team plane has no password-change endpoint —
   // password resets go through an admin. Restore when the backend grows one.

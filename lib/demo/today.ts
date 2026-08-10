@@ -1106,6 +1106,20 @@ export const todayHandlers = [
     });
   }),
 
+  // --- Team (read-only; paginated; POST/DELETE deliberately absent) ---------
+  http.get(`${V1}/team/`, async ({ request }) => {
+    await delay(LATENCY);
+    const denied = requireAuth(request);
+    if (denied) return denied;
+    const results = [
+      { id: 'tm-01', name: 'Demo User', email: 'demo@example.com', role: 'Operations', avatarUrl: null, active: true, openLeads: 4 },
+      { id: 'tm-02', name: 'Naomi Kim', email: 'naomi@example.com', role: 'Design', avatarUrl: null, active: true, openLeads: 0 },
+      { id: 'tm-03', name: 'Daehyuk Park', email: 'park@example.com', role: 'Strategy', avatarUrl: null, active: true, openLeads: 2 },
+      { id: 'tm-04', name: 'Former Staffer', email: 'gone@example.com', role: 'Ops', avatarUrl: null, active: false, openLeads: 0 },
+    ];
+    return HttpResponse.json({ results, count: results.length, page: 1, pageSize: 100, totalPages: 1 });
+  }),
+
   // --- Templates ({results,count}; CRUD; variables derived on save) ---------
   http.get(`${V1}/templates/`, async ({ request }) => {
     await delay(LATENCY);
