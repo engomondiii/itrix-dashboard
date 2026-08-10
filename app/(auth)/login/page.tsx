@@ -10,7 +10,6 @@
  * branching, no guessing at response shapes.
  */
 
-import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Suspense, useState, type FormEvent } from 'react';
 
@@ -104,7 +103,7 @@ function LoginForm() {
           <p>
             Demo mode — sign in with <code className="font-mono">demo@example.com</code> /{' '}
             <code className="font-mono">demo1234</code>. A wrong password shows the real
-            field-level error flow.
+            error flow (a 401, deliberately without saying which field was wrong).
           </p>
           <Button
             variant="outline"
@@ -156,14 +155,10 @@ function LoginForm() {
         </Button>
       </form>
 
-      <div className="mt-4 flex justify-between text-sm">
-        <Link href="/forgot-password" className="underline">
-          Forgot password?
-        </Link>
-        <Link href="/register" className="underline">
-          Create an account
-        </Link>
-      </div>
+      <p className="mt-4 text-sm text-muted-foreground">
+        Locked out? Ask an admin to reset your account — staff accounts are
+        provisioned, not self-served.
+      </p>
     </main>
   );
 }

@@ -74,16 +74,18 @@ beforeEach(() => {
 });
 
 describe('demo auth', () => {
-  it('rejects a wrong password with the backend error envelope', async () => {
+  it('rejects a wrong password with a 401 invalid_credentials envelope', async () => {
     const res = await post('/auth/login/', {
       email: DEMO_CREDENTIALS.email,
       password: 'wrong',
     });
 
-    expect(res.status).toBe(400);
+    // Mirrors itrix-backend: wrong credentials are a non-field 401 —
+    // deliberately not attributed to email or password (non-enumeration).
+    expect(res.status).toBe(401);
     const body = await res.json();
-    expect(body.error.type).toBe('validation_error');
-    expect(body.error.detail[0].field).toBe('password');
+    expect(body.error.code).toBe('invalid_credentials');
+    expect(typeof body.error.detail).toBe('string');
   });
 
   it('issues tokens and a user for the demo credentials', async () => {
@@ -110,7 +112,7 @@ describe('demo entity list', () => {
     const res = await fetch(`${BASE}/example/items/`);
     expect(res.status).toBe(401);
     const body = await res.json();
-    expect(body.error.type).toBe('not_authenticated');
+    expect(body.error.code).toBe('not_authenticated');
   });
 
   it('returns the StandardResultsSetPagination shape', async () => {
@@ -209,7 +211,7 @@ describe('demo entity list', () => {
 
     expect(res.status).toBe(400);
     const body = await res.json();
-    expect(body.error.detail[0].message).toContain('price');
+    expect(JSON.stringify(body.error.fields)).toContain('price');
   });
 
   it('rejects a duplicate SKU with a field error, like the real backend', async () => {
@@ -223,6 +225,6 @@ describe('demo entity list', () => {
     );
     expect(res.status).toBe(400);
     const body = await res.json();
-    expect(body.error.detail[0]).toMatchObject({ field: 'sku', code: 'unique' });
+    expect(body.error.fields.sku.join(' ')).toMatch(/exists|unique/i);
   });
 });

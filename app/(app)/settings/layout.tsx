@@ -18,7 +18,7 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { KeyRound, Palette, UserRound, type LucideIcon } from 'lucide-react';
+import { Palette, UserRound, type LucideIcon } from 'lucide-react';
 import type { ReactNode } from 'react';
 
 import { cn } from '@/lib/utils';
@@ -38,12 +38,8 @@ const SETTINGS_NAV: SettingsNavItem[] = [
     icon: UserRound,
     description: 'Your name and account details.',
   },
-  {
-    label: 'Security',
-    href: '/settings/security',
-    icon: KeyRound,
-    description: 'Password and sign-in protection.',
-  },
+  // No Security section: the team plane has no password-change endpoint —
+  // password resets go through an admin. Restore when the backend grows one.
   {
     label: 'Appearance',
     href: '/settings/appearance',

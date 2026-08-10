@@ -43,13 +43,7 @@ import {
 import { setAuthFailureHandler } from '@/lib/api/client';
 import { AuthAPI } from './auth-api';
 import { clearTokens } from './token-store';
-import type {
-  AuthContextValue,
-  AuthStatus,
-  AuthUser,
-  LoginCredentials,
-  RegisterPayload,
-} from './types';
+import type { AuthContextValue, AuthStatus, AuthUser, LoginCredentials } from './types';
 
 const AuthContext = createContext<AuthContextValue | undefined>(undefined);
 
@@ -110,11 +104,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return authenticated;
   }, []);
 
-  const register = useCallback(
-    (payload: RegisterPayload) => AuthAPI.register(payload),
-    [],
-  );
-
   const logout = useCallback(async () => {
     // Clear local state first so the UI responds immediately; the network
     // call is best-effort and must not gate the visible sign-out.
@@ -143,12 +132,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const hasPermission = useCallback(
-    (codename: string) => {
-      if (!user) return false;
-      // A superuser holds every permission implicitly; the server does not
-      // enumerate them.
-      if (user.is_superuser) return true;
-      return user.permissions?.includes(codename) ?? false;
+    (role: string | string[]) => {
+      if (!user?.permissionRole) return false;
+      // ADMIN holds every permission implicitly (itriX permission model).
+      if (user.permissionRole === 'ADMIN') return true;
+      const wanted = Array.isArray(role) ? role : [role];
+      return wanted.includes(user.permissionRole);
     },
     [user],
   );
@@ -160,13 +149,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       isLoading: status === 'loading',
       isAuthenticated: status === 'authenticated',
       login,
-      register,
       logout,
       refreshUser,
       updateProfile,
       hasPermission,
     }),
-    [user, status, login, register, logout, refreshUser, updateProfile, hasPermission],
+    [user, status, login, logout, refreshUser, updateProfile, hasPermission],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

@@ -56,10 +56,8 @@ function unauthenticated() {
   return HttpResponse.json(
     {
       error: {
-        type: 'not_authenticated',
-        message: 'Authentication credentials were not provided.',
-        detail: [],
-        request_id: `demo-${Date.now()}`,
+        detail: 'Authentication credentials were not provided.',
+        code: 'not_authenticated',
       },
     },
     { status: 401 },
@@ -75,31 +73,19 @@ function requireAuth(request: Request): Response | null {
 const NOTIFICATIONS = '*/api/v1/notifications';
 
 export const notificationHandlers = [
-  http.get(`${NOTIFICATIONS}/unread_count/`, async ({ request }) => {
-    await delay(LATENCY);
-    const denied = requireAuth(request);
-    if (denied) return denied;
-    const unread = load().filter((n) => !n.read).length;
-    return HttpResponse.json({ unread });
-  }),
-
-  http.post(`${NOTIFICATIONS}/mark_all_read/`, async ({ request }) => {
+  // Mirrors itrix-backend apps/notifications: POST {id}/read/, POST read-all/,
+  // and a list envelope of {results, count, unreadCount} (?unread=true filter).
+  http.post(`${NOTIFICATIONS}/read-all/`, async ({ request }) => {
     await delay(LATENCY);
     const denied = requireAuth(request);
     if (denied) return denied;
     const records = load();
-    let count = 0;
-    for (const record of records) {
-      if (!record.read) {
-        record.read = true;
-        count += 1;
-      }
-    }
+    for (const record of records) record.read = true;
     save(records);
-    return HttpResponse.json({ count });
+    return HttpResponse.json({ ok: true });
   }),
 
-  http.post(`${NOTIFICATIONS}/:id/mark_read/`, async ({ request, params }) => {
+  http.post(`${NOTIFICATIONS}/:id/read/`, async ({ request, params }) => {
     await delay(LATENCY);
     const denied = requireAuth(request);
     if (denied) return denied;
@@ -107,14 +93,7 @@ export const notificationHandlers = [
     const record = records.find((n) => n.id === params.id);
     if (!record) {
       return HttpResponse.json(
-        {
-          error: {
-            type: 'not_found',
-            message: 'Not found.',
-            detail: [],
-            request_id: `demo-${Date.now()}`,
-          },
-        },
+        { error: { detail: 'Not found.', code: 'not_found' } },
         { status: 404 },
       );
     }
@@ -128,18 +107,18 @@ export const notificationHandlers = [
     const denied = requireAuth(request);
     if (denied) return denied;
     const records = load();
-    // Newest first, like any inbox. One page is plenty for the demo, but the
-    // envelope is still the real pagination shape so the client code is
-    // exercised against the true contract.
-    const results = [...records].sort((a, b) => b.created_at.localeCompare(a.created_at));
+    const unreadOnly = ['1', 'true', 'yes'].includes(
+      (new URL(request.url).searchParams.get('unread') ?? '').toLowerCase(),
+    );
+    const unreadCount = records.filter((n) => !n.read).length;
+    // Newest first, like any inbox.
+    const results = [...records]
+      .filter((n) => !unreadOnly || !n.read)
+      .sort((a, b) => b.created_at.localeCompare(a.created_at));
     return HttpResponse.json({
-      count: results.length,
-      next: null,
-      previous: null,
-      page_size: results.length || 1,
-      total_pages: 1,
-      current_page: 1,
       results,
+      count: results.length,
+      unreadCount,
     });
   }),
 ];

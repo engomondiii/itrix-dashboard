@@ -58,7 +58,8 @@ const signedIn = {
 };
 
 // ---------------------------------------------------------------------------
-// Envelope helpers — mirror apps/core/exceptions.py exactly
+// Envelope helpers — mirror itrix-backend apps/core/exceptions.py exactly:
+// { error: { detail, code, fields? } } with fields as a DRF errors dict.
 // ---------------------------------------------------------------------------
 
 interface FieldIssue {
@@ -69,12 +70,23 @@ interface FieldIssue {
 
 function errorEnvelope(
   status: number,
-  type: string,
-  message: string,
-  detail: FieldIssue[] = [],
+  code: string,
+  detail: string,
+  fieldIssues: FieldIssue[] = [],
 ) {
+  const fields: Record<string, string[]> = {};
+  for (const issue of fieldIssues) {
+    const key = issue.field ?? 'non_field_errors';
+    (fields[key] ??= []).push(issue.message);
+  }
   return HttpResponse.json(
-    { error: { type, message, detail, request_id: `demo-${Date.now()}` } },
+    {
+      error: {
+        detail,
+        code,
+        ...(fieldIssues.length ? { fields } : {}),
+      },
+    },
     { status },
   );
 }
@@ -179,19 +191,25 @@ const LATENCY = 250;
 export const handlers = [
   // --- Auth ---------------------------------------------------------------
 
+  // Mirrors itrix-backend apps/authentication/views.py: field-shape problems
+  // are a 400 `invalid` with fields; wrong credentials are a 401
+  // `invalid_credentials` with NO field attribution (non-enumeration).
   http.post(`${AUTH}/login/`, async ({ request }) => {
     await delay(LATENCY);
     const body = (await request.json()) as { email?: string; password?: string };
 
-    if (body.email !== DEMO_CREDENTIALS.email) {
-      return errorEnvelope(400, 'validation_error', 'Unable to log in with provided credentials.', [
-        { field: 'email', code: 'invalid', message: `No account for this address. Demo mode accepts only ${DEMO_CREDENTIALS.email}.` },
+    if (!body.email || !body.password) {
+      return errorEnvelope(400, 'invalid', 'Validation failed.', [
+        ...(body.email ? [] : [{ field: 'email', code: 'required', message: 'This field is required.' }]),
+        ...(body.password ? [] : [{ field: 'password', code: 'required', message: 'This field is required.' }]),
       ]);
     }
-    if (body.password !== DEMO_CREDENTIALS.password) {
-      return errorEnvelope(400, 'validation_error', 'Unable to log in with provided credentials.', [
-        { field: 'password', code: 'invalid', message: 'Incorrect password. Demo mode accepts "demo1234".' },
-      ]);
+    if (body.email !== DEMO_CREDENTIALS.email || body.password !== DEMO_CREDENTIALS.password) {
+      return errorEnvelope(
+        401,
+        'invalid_credentials',
+        `Incorrect email or password. Demo mode accepts ${DEMO_CREDENTIALS.email} / ${DEMO_CREDENTIALS.password}.`,
+      );
     }
 
     signedIn.set(true);
@@ -202,60 +220,46 @@ export const handlers = [
     });
   }),
 
+  // SimpleJWT with rotation: a fresh refresh token comes back with the access.
   http.post(`${AUTH}/token/refresh/`, async () => {
     await delay(LATENCY);
     if (!signedIn.get()) {
-      return errorEnvelope(401, 'authentication_failed', 'No valid refresh token.');
+      return errorEnvelope(401, 'token_not_valid', 'Token is invalid or expired.');
     }
-    return HttpResponse.json({ access: `demo-access-${Date.now()}` });
+    return HttpResponse.json({
+      access: `demo-access-${Date.now()}`,
+      refresh: `demo-refresh-${Date.now()}`,
+    });
   }),
 
+  // Blacklists the refresh token; body is empty, status 205.
   http.post(`${AUTH}/logout/`, async () => {
     await delay(LATENCY);
     signedIn.set(false);
-    return HttpResponse.json({ detail: 'Successfully logged out.' });
+    return new HttpResponse(null, { status: 205 });
   }),
 
-  http.get(`${AUTH}/user/`, async ({ request }) => {
+  // `me` wraps the user; `profile` serves it bare — exactly like the backend.
+  http.get(`${AUTH}/me/`, async ({ request }) => {
+    await delay(LATENCY);
+    const denied = requireAuth(request);
+    if (denied) return denied;
+    return HttpResponse.json({ user: DEMO_USER });
+  }),
+
+  http.get(`${AUTH}/profile/`, async ({ request }) => {
     await delay(LATENCY);
     const denied = requireAuth(request);
     if (denied) return denied;
     return HttpResponse.json(DEMO_USER);
   }),
 
-  http.patch(`${AUTH}/user/`, async ({ request }) => {
+  http.patch(`${AUTH}/profile/`, async ({ request }) => {
     await delay(LATENCY);
     const denied = requireAuth(request);
     if (denied) return denied;
     const patch = (await request.json()) as Record<string, unknown>;
     return HttpResponse.json({ ...DEMO_USER, ...patch });
-  }),
-
-  // The remaining auth flows respond with the detail strings dj-rest-auth
-  // uses, so every page under app/(auth)/ completes its happy path.
-  http.post(`${AUTH}/registration/`, async () => {
-    await delay(LATENCY);
-    return HttpResponse.json({ detail: 'Verification e-mail sent.' }, { status: 201 });
-  }),
-  http.post(`${AUTH}/password/reset/`, async () => {
-    await delay(LATENCY);
-    return HttpResponse.json({ detail: 'Password reset e-mail has been sent.' });
-  }),
-  http.post(`${AUTH}/password/reset/confirm/`, async () => {
-    await delay(LATENCY);
-    return HttpResponse.json({ detail: 'Password has been reset with the new password.' });
-  }),
-  http.post(`${AUTH}/password/change/`, async () => {
-    await delay(LATENCY);
-    return HttpResponse.json({ detail: 'New password has been saved.' });
-  }),
-  http.post(`${AUTH}/registration/verify-email/`, async () => {
-    await delay(LATENCY);
-    return HttpResponse.json({ detail: 'ok' });
-  }),
-  http.post(`${AUTH}/registration/resend-email/`, async () => {
-    await delay(LATENCY);
-    return HttpResponse.json({ detail: 'ok' });
   }),
 
   // --- Example entity ------------------------------------------------------

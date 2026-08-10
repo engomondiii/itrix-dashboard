@@ -1,12 +1,23 @@
 'use client';
 
 /**
- * Auth endpoint wrappers.
+ * Auth endpoint wrappers for the itriX team plane.
  *
  * Thin on purpose: no state, no toasts, no navigation. Every function either
  * returns data or throws. The context above decides what that means for the
- * UI, and the caller decides what to show. Splitting it this way is what
- * makes these testable without a React tree.
+ * UI, and the caller decides what to show.
+ *
+ * The backend contract (itrix-backend `apps/authentication/views.py`):
+ *
+ *     POST  auth/login/           {email, password}  -> {access, refresh, user}
+ *     POST  auth/logout/          {refresh}          -> 205 (blacklists refresh)
+ *     GET   auth/me/                                 -> {user}   (wrapped!)
+ *     GET   auth/profile/                            -> SessionUser (bare)
+ *     PATCH auth/profile/         {name?, avatarUrl?}-> SessionUser (bare)
+ *     POST  auth/token/refresh/   {refresh}          -> {access, refresh?}
+ *
+ * No register / password-reset / verify-email: staff accounts are
+ * provisioned by an admin. See `lib/auth/types.ts`.
  */
 
 import { plainApi, http, setLoggingOut } from '@/lib/api/client';
@@ -17,17 +28,11 @@ import {
   setAccessToken,
   setRefreshToken,
 } from './token-store';
-import type {
-  AuthTokens,
-  AuthUser,
-  LoginCredentials,
-  RegisterPayload,
-} from './types';
+import type { AuthTokens, AuthUser, LoginCredentials } from './types';
 
-/** Persist whatever the server returned. */
+/** Persist whatever the server returned (rotation may include a new refresh). */
 function storeTokens(tokens: AuthTokens): void {
   if (tokens.access) setAccessToken(tokens.access);
-  // Absent in the recommended HttpOnly-cookie setup — the browser holds it.
   if (tokens.refresh) setRefreshToken(tokens.refresh);
 }
 
@@ -42,29 +47,19 @@ export const AuthAPI = {
    */
   async login(credentials: LoginCredentials): Promise<AuthUser> {
     const data = await plainApi
-      .post<AuthTokens & { user?: AuthUser }>(Endpoints.Auth.Login, credentials)
+      .post<AuthTokens & { user: AuthUser }>(Endpoints.Auth.Login, credentials)
       .then((r) => r.data);
 
     storeTokens(data);
-
-    // Some backends return the user with the tokens; others do not. Fetch it
-    // if it is missing rather than assuming either shape.
-    return data.user ?? (await AuthAPI.getCurrentUser());
-  },
-
-  async register(payload: RegisterPayload): Promise<{ detail: string }> {
-    return plainApi
-      .post<{ detail: string }>(Endpoints.Auth.Register, payload)
-      .then((r) => r.data);
+    return data.user;
   },
 
   /**
    * Sign out.
    *
    * Local tokens are cleared in `finally`, so a failing server call still
-   * signs the user out of this browser. The alternative — bailing out on
-   * error — leaves someone who clicked "Sign out" still logged in, which is
-   * the worse failure by a wide margin.
+   * signs the user out of this browser. The refresh token is sent so the
+   * server can blacklist it (best-effort; already-expired is still success).
    */
   async logout(): Promise<void> {
     setLoggingOut(true);
@@ -80,12 +75,15 @@ export const AuthAPI = {
     }
   },
 
+  /** `auth/me/` wraps the payload: `{user: SessionUser}`. */
   async getCurrentUser(): Promise<AuthUser> {
-    return http.get<AuthUser>(Endpoints.Auth.User);
+    const data = await http.get<{ user: AuthUser }>(Endpoints.Auth.Me);
+    return data.user;
   },
 
+  /** `auth/profile/` accepts `{name?, avatarUrl?}` and returns the bare user. */
   async updateProfile(payload: Partial<AuthUser> | FormData): Promise<AuthUser> {
-    return http.patch<AuthUser>(Endpoints.Auth.User, payload);
+    return http.patch<AuthUser>(Endpoints.Auth.Profile, payload);
   },
 
   /**
@@ -104,43 +102,6 @@ export const AuthAPI = {
 
     storeTokens(data);
     return data;
-  },
-
-  async requestPasswordReset(email: string): Promise<{ detail: string }> {
-    return plainApi
-      .post<{ detail: string }>(Endpoints.Auth.PasswordReset, { email })
-      .then((r) => r.data);
-  },
-
-  async confirmPasswordReset(payload: {
-    uid: string;
-    token: string;
-    new_password1: string;
-    new_password2: string;
-  }): Promise<{ detail: string }> {
-    return plainApi
-      .post<{ detail: string }>(Endpoints.Auth.PasswordResetConfirm, payload)
-      .then((r) => r.data);
-  },
-
-  async changePassword(payload: {
-    old_password: string;
-    new_password1: string;
-    new_password2: string;
-  }): Promise<{ detail: string }> {
-    return http.post<{ detail: string }>(Endpoints.Auth.PasswordChange, payload);
-  },
-
-  async verifyEmail(key: string): Promise<{ detail: string }> {
-    return plainApi
-      .post<{ detail: string }>(Endpoints.Auth.VerifyEmail, { key })
-      .then((r) => r.data);
-  },
-
-  async resendVerification(email: string): Promise<{ detail: string }> {
-    return plainApi
-      .post<{ detail: string }>(Endpoints.Auth.ResendVerification, { email })
-      .then((r) => r.data);
   },
 };
 

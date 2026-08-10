@@ -22,8 +22,7 @@ export default function ProfileSettingsPage() {
   const { user, updateProfile } = useAuth();
   const errors = useFieldErrors();
 
-  const [firstName, setFirstName] = useState(user?.first_name ?? '');
-  const [lastName, setLastName] = useState(user?.last_name ?? '');
+  const [name, setName] = useState(user?.name ?? '');
   const [saved, setSaved] = useState(false);
   const [saving, setSaving] = useState(false);
 
@@ -34,7 +33,7 @@ export default function ProfileSettingsPage() {
     setSaving(true);
 
     try {
-      await updateProfile({ first_name: firstName, last_name: lastName });
+      await updateProfile({ name });
       setSaved(true);
     } catch (error) {
       errors.absorb(error);
@@ -58,20 +57,12 @@ export default function ProfileSettingsPage() {
         {saved && <FormAlert tone="success" message="Profile updated." />}
 
         <Field
-          label="First name"
-          name="first_name"
-          autoComplete="given-name"
-          value={firstName}
-          onChange={(e) => setFirstName(e.target.value)}
-          error={errors.errorFor('first_name')}
-        />
-        <Field
-          label="Last name"
-          name="last_name"
-          autoComplete="family-name"
-          value={lastName}
-          onChange={(e) => setLastName(e.target.value)}
-          error={errors.errorFor('last_name')}
+          label="Name"
+          name="name"
+          autoComplete="name"
+          value={name}
+          onChange={(e) => setName(e.target.value)}
+          error={errors.errorFor('name')}
         />
       </SettingsSection>
     </form>

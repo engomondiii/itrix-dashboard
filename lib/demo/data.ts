@@ -74,20 +74,16 @@ export function seedProducts(): DemoProduct[] {
   ];
 }
 
+/** The itriX SessionUser shape (apps/authentication → UserSerializer). */
 export const DEMO_USER = {
   id: 'demo-user-0001',
+  name: 'Demo User',
   email: 'demo@example.com',
-  username: 'demo',
-  first_name: 'Demo',
-  last_name: 'User',
+  // Friendly team-role label for display; permissionRole drives gates.
+  role: 'Operations',
+  permissionRole: 'ADMIN',
+  avatarUrl: null,
   is_active: true,
-  is_staff: false,
-  is_superuser: false,
-  date_joined: daysAgo(365),
-  last_login: daysAgo(0),
-  // Grant the codenames the template's UI checks, so permission-gated
-  // elements render. Remove one to see `hasPermission` hide things.
-  permissions: ['example.view_item', 'example.add_item', 'example.change_item', 'example.delete_item'],
 };
 
 export const DEMO_CREDENTIALS = {

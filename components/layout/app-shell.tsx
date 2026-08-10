@@ -41,10 +41,15 @@ function UserMenu() {
 
   if (!user) return null;
 
-  const fullName = [user.first_name, user.last_name].filter(Boolean).join(' ');
+  const fullName = user.name;
   const initials =
-    `${user.first_name?.[0] ?? ''}${user.last_name?.[0] ?? ''}`.toUpperCase() ||
-    (user.email?.[0] ?? '?').toUpperCase();
+    user.name
+      .split(/\s+/)
+      .filter(Boolean)
+      .slice(0, 2)
+      .map((part) => part[0])
+      .join('')
+      .toUpperCase() || (user.email?.[0] ?? '?').toUpperCase();
 
   async function handleSignOut() {
     await logout();

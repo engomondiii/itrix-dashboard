@@ -19,7 +19,6 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
 import { http } from '@/lib/api/client';
 import { Endpoints } from '@/lib/api/endpoints';
-import type { Paginated } from '@/lib/api/types';
 
 export interface NotificationRecord {
   id: string;
@@ -31,6 +30,13 @@ export interface NotificationRecord {
   href?: string;
 }
 
+/** itriX list shape — no separate unread-count route on the backend. */
+export interface NotificationList {
+  results: NotificationRecord[];
+  count: number;
+  unreadCount: number;
+}
+
 const KEY = {
   all: ['notifications'] as const,
   list: ['notifications', 'list'] as const,
@@ -40,16 +46,22 @@ const KEY = {
 export function useNotifications(enabled = true) {
   return useQuery({
     queryKey: KEY.list,
-    queryFn: () => http.get<Paginated<NotificationRecord>>(Endpoints.Notifications.List),
+    queryFn: () => http.get<NotificationList>(Endpoints.Notifications.List),
     enabled,
   });
 }
 
+/**
+ * The bell's poll. `?unread=true` keeps the payload to unread rows only;
+ * `unreadCount` rides on the list envelope.
+ */
 export function useUnreadCount() {
   return useQuery({
     queryKey: KEY.unread,
-    queryFn: () => http.get<{ unread: number }>(Endpoints.Notifications.UnreadCount),
+    queryFn: () =>
+      http.get<NotificationList>(`${Endpoints.Notifications.List}?unread=true`),
     refetchInterval: 30_000,
+    select: (data) => ({ unread: data.unreadCount }),
   });
 }
 
@@ -65,7 +77,7 @@ export function useMarkRead() {
 export function useMarkAllRead() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: () => http.post<{ count: number }>(Endpoints.Notifications.MarkAllRead, {}),
+    mutationFn: () => http.post<{ ok: boolean }>(Endpoints.Notifications.MarkAllRead, {}),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: KEY.all }),
   });
 }

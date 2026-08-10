@@ -48,40 +48,36 @@ export function absoluteUrl(path: string): string {
 const V1 = '/api/v1';
 
 export const Endpoints = {
+  /**
+   * The itriX TEAM auth plane (itrix-backend `apps/authentication/`).
+   * There is no register / password-reset / verify-email here — staff
+   * accounts are provisioned; those routes on the backend belong to the
+   * public self-serve plane and must not be called from this app.
+   */
   Auth: {
     Login: `${V1}/auth/login/`,
     Logout: `${V1}/auth/logout/`,
-    Register: `${V1}/auth/registration/`,
     // Not called through the authenticated client — see `client.ts`.
     TokenRefresh: `${V1}/auth/token/refresh/`,
-    TokenVerify: `${V1}/auth/token/verify/`,
-    User: `${V1}/auth/user/`,
-    PasswordChange: `${V1}/auth/password/change/`,
-    PasswordReset: `${V1}/auth/password/reset/`,
-    PasswordResetConfirm: `${V1}/auth/password/reset/confirm/`,
-    VerifyEmail: `${V1}/auth/registration/verify-email/`,
-    ResendVerification: `${V1}/auth/registration/resend-email/`,
-    SocialGoogle: `${V1}/auth/google/`,
+    /** GET → `{user: SessionUser}` (note the wrapper). */
+    Me: `${V1}/auth/me/`,
+    /** GET/PATCH → bare SessionUser. */
+    Profile: `${V1}/auth/profile/`,
   },
 
   Core: {
     Health: '/health/',
-    Ready: '/readyz/',
-    Version: `${V1}/core/version/`,
-    CsrfToken: `${V1}/core/csrf-token/`,
-    TaskStatus: (taskId: string) => `${V1}/core/tasks/${taskId}/status/`,
   },
 
   /**
-   * In-app notifications (`lib/notifications/`). List is paginated like every
-   * other list endpoint; the unread count is separate so the bell can poll it
-   * cheaply without fetching bodies.
+   * In-app notifications (`lib/notifications/`). The backend has no separate
+   * unread-count route — list returns `{results, count, unreadCount}` and the
+   * bell polls it with `?unread=true` to keep the payload small.
    */
   Notifications: {
     List: `${V1}/notifications/`,
-    UnreadCount: `${V1}/notifications/unread_count/`,
-    MarkRead: (id: string | number) => `${V1}/notifications/${id}/mark_read/`,
-    MarkAllRead: `${V1}/notifications/mark_all_read/`,
+    MarkRead: (id: string | number) => `${V1}/notifications/${id}/read/`,
+    MarkAllRead: `${V1}/notifications/read-all/`,
   },
 
   /**

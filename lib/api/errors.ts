@@ -1,16 +1,15 @@
 /**
  * Turn any failure into one predictable object.
  *
- * The backend template guarantees a single error envelope for every non-2xx
- * response (see `apps/core/exceptions.py`), so the happy path here is a
- * direct read — no shape sniffing:
+ * The itriX backend guarantees a single error envelope for every non-2xx
+ * response (itrix-backend `apps/core/exceptions.py`), so the happy path here
+ * is a direct read — no shape sniffing:
  *
  *     {
  *       "error": {
- *         "type": "validation_error",
- *         "message": "Please correct the errors below.",
- *         "detail": [{ "field": "email", "code": "required", "message": "..." }],
- *         "request_id": "..."
+ *         "detail": "Validation failed.",
+ *         "code": "invalid",
+ *         "fields": { "email": ["This field is required."] }
  *       }
  *     }
  *
@@ -73,14 +72,58 @@ export interface NormalizedError {
   cause: unknown;
 }
 
+/**
+ * The itriX envelope (itrix-backend `apps/core/exceptions.py`):
+ *
+ *     { "error": { "detail": "Validation failed.", "code": "invalid",
+ *                  "fields": { "email": ["This field is required."] } } }
+ *
+ * `detail` is the human sentence, `code` the stable slug, `fields` a DRF
+ * serializer-errors dict present only on validation failures.
+ */
 interface ErrorEnvelope {
   error: {
-    type?: string;
-    message?: string;
-    detail?: Array<{ field?: string | null; code?: string | null; message?: string }>;
-    request_id?: string;
-    retry_after?: number;
+    detail?: string;
+    code?: string;
+    fields?: Record<string, unknown>;
   };
+}
+
+/** Backend `code` slugs → our stable ApiErrorType vocabulary. */
+const CODE_TO_TYPE: Record<string, ApiErrorType> = {
+  invalid: 'validation_error',
+  validation_error: 'validation_error',
+  invalid_credentials: 'authentication_failed',
+  authentication_failed: 'authentication_failed',
+  not_authenticated: 'not_authenticated',
+  token_not_valid: 'not_authenticated',
+  permission_denied: 'permission_denied',
+  not_found: 'not_found',
+  method_not_allowed: 'method_not_allowed',
+  parse_error: 'parse_error',
+  unsupported_media_type: 'unsupported_media_type',
+  throttled: 'throttled',
+  server_error: 'server_error',
+};
+
+/** Flatten the DRF `{field: [messages]}` dict into FieldError entries. */
+function envelopeFields(fields: Record<string, unknown> | undefined): FieldError[] {
+  if (!fields) return [];
+  const out: FieldError[] = [];
+  for (const [key, value] of Object.entries(fields)) {
+    const text = Array.isArray(value)
+      ? value.filter((v) => typeof v === 'string').join(' ')
+      : typeof value === 'string'
+        ? value
+        : null;
+    if (!text) continue;
+    out.push({
+      field: key === 'non_field_errors' ? null : key,
+      code: null,
+      message: text,
+    });
+  }
+  return out;
 }
 
 function isEnvelope(data: unknown): data is ErrorEnvelope {
@@ -207,19 +250,13 @@ export function normalizeError(error: unknown): NormalizedError {
 
   if (isEnvelope(data)) {
     const envelope = data.error;
-    const fieldErrors: FieldError[] = (envelope.detail ?? []).map((entry) => ({
-      field: entry.field ?? null,
-      code: entry.code ?? null,
-      message: entry.message ?? '',
-    }));
-
     return {
-      type: (envelope.type as ApiErrorType) ?? fallback.type,
-      message: envelope.message || fallback.message,
-      fieldErrors,
+      type: (envelope.code && CODE_TO_TYPE[envelope.code]) || fallback.type,
+      message: envelope.detail || fallback.message,
+      fieldErrors: envelopeFields(envelope.fields),
       status,
-      requestId: envelope.request_id ?? headerRequestId,
-      retryAfter: envelope.retry_after ?? headerRetryAfter,
+      requestId: headerRequestId,
+      retryAfter: headerRetryAfter,
       cause: error,
     };
   }

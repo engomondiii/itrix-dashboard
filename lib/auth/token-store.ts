@@ -49,10 +49,14 @@
 const REFRESH_STORAGE_KEY = 'auth.refresh_token';
 
 /**
- * Set to `true` only if the backend cannot issue an HttpOnly refresh cookie.
- * Read the note above before you do.
+ * `true` for itriX: the team-plane backend returns the refresh token in the
+ * login/refresh JSON body and does not set an HttpOnly cookie
+ * (`apps/authentication/views.py`). The trade-off documented above is
+ * accepted knowingly — sessions must survive a reload for a daily staff
+ * tool. Refresh rotation + blacklisting on the server bounds the exposure.
+ * If the backend ever grows a cookie-based refresh, flip this back to false.
  */
-export const PERSIST_REFRESH_TOKEN = false;
+export const PERSIST_REFRESH_TOKEN = true;
 
 /**
  * Access token. Module-scoped, never persisted.
