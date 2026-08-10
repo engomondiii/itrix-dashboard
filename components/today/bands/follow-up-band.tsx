@@ -46,7 +46,7 @@ function FollowUpCard({ row, urgent }: { row: FollowUpRow; urgent: boolean }) {
   return (
     <QueueCard
       tone={urgent ? 'urgent' : 'neutral'}
-      href="/leads"
+      href={`/leads/${row.leadId}`}
       title={
         <>
           {row.leadName || row.company}

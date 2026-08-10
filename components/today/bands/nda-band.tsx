@@ -27,7 +27,7 @@ export function NdaBand() {
         <QueueCard
           key={row.id}
           tone="neutral"
-          href="/leads"
+          href={`/leads/${row.leadId}`}
           title={
             <>
               {row.company || row.leadName}

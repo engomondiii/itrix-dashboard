@@ -5,8 +5,9 @@
  *
  *   List  — filterable table, priority/stage as CHIPS (the old dashboard had
  *           four tier pages and per-stage pages; they were filters all along)
- *   Board — the same leads grouped by stage, kanban-style, client-side
- *           (the backend has no pipeline endpoint)
+ *   Board — the real pipeline endpoint (GET /api/v1/pipeline/): all 8
+ *           visible stages with per-card overdue flags; parked statuses
+ *           (Qualifying/Nurture/Negotiation/Lost) exist only as list filters
  *
  * All view state lives in the URL (?view=board&stage=NDA&p=1&q=…) so a
  * filtered view can be pasted into chat and survives reload.
@@ -19,9 +20,16 @@ import { Suspense, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { formatRelative } from '@/lib/entity/format';
-import { useLeads } from '@/lib/leads/hooks';
-import { BOARD_STAGES, PARKED_STAGES } from '@/lib/leads/api';
+import { useLeads, usePipeline } from '@/lib/leads/hooks';
+import { PARKED_STAGES } from '@/lib/leads/api';
 import type { LeadRow, LeadStatus } from '@/lib/today/types';
+import type { PipelineStage } from '@/lib/leads/types';
+
+/** Stage chips shown on the list view (board columns come from the server). */
+const LIST_STAGES: LeadStatus[] = [
+  'New', 'Contacted', 'Meeting Booked', 'NDA', 'Evaluation', 'PoC',
+  'Negotiation', 'Licensed',
+];
 
 const PRIORITIES = [1, 2, 3, 4] as const;
 
@@ -100,16 +108,13 @@ function LeadsInner() {
     [router, pathname, searchParams],
   );
 
-  // The board needs the whole funnel; the list respects the filters.
-  const leads = useLeads(
-    view === 'board'
-      ? { pageSize: 200, sort: 'tier', dir: 'asc' }
-      : { status: stage, tier, search, page, sort: 'submittedAt', dir: 'desc' },
-  );
+  // List = filtered query; board = the real pipeline endpoint.
+  const leads = useLeads({ status: stage, tier, search, page, sort: 'submittedAt', dir: 'desc' });
+  const pipeline = usePipeline(view === 'board');
   const rows = leads.data?.results ?? [];
 
   return (
-    <section className="mx-auto max-w-6xl">
+    <section>
       <header className="mb-5 flex flex-wrap items-center justify-between gap-3">
         <div>
           <h1 className="font-display tracking-display text-2xl font-semibold">Leads</h1>
@@ -151,7 +156,7 @@ function LeadsInner() {
               </Chip>
             ))}
             <span className="mx-1 hidden h-5 w-px bg-border sm:block" />
-            {[...BOARD_STAGES, ...PARKED_STAGES].map((s) => (
+            {[...LIST_STAGES, ...PARKED_STAGES].map((s) => (
               <Chip key={s} active={stage === s} onClick={() => setParams({ stage: stage === s ? null : s })}>
                 {stageLabel(s)}
               </Chip>
@@ -183,7 +188,9 @@ function LeadsInner() {
         </>
       )}
 
-      {view === 'board' && <LeadBoard rows={rows} isLoading={leads.isLoading} />}
+      {view === 'board' && (
+        <LeadBoard stages={pipeline.data?.stages ?? []} isLoading={pipeline.isLoading} />
+      )}
     </section>
   );
 }
@@ -216,7 +223,7 @@ function LeadTable({ rows, isLoading }: { rows: LeadRow[]; isLoading: boolean })
           {rows.map((row) => (
             <tr key={row.id} className="border-b border-border/60 last:border-0 hover:bg-accent/40">
               <td className="px-4 py-2.5">
-                <Link href="/leads" className="font-medium hover:underline">
+                <Link href={`/leads/${row.id}`} className="font-medium hover:underline">
                   {row.company || row.visitorName || 'Unknown'}
                 </Link>
                 {row.primaryPain && (
@@ -242,53 +249,52 @@ function LeadTable({ rows, isLoading }: { rows: LeadRow[]; isLoading: boolean })
   );
 }
 
-function LeadBoard({ rows, isLoading }: { rows: LeadRow[]; isLoading: boolean }) {
-  if (isLoading && rows.length === 0) {
+function LeadBoard({ stages, isLoading }: { stages: PipelineStage[]; isLoading: boolean }) {
+  if (isLoading && stages.length === 0) {
     return <div className="glass-surface animate-pulse rounded-xl p-10 text-sm text-muted-foreground">Loading…</div>;
   }
-
-  const parked = rows.filter((r) => PARKED_STAGES.includes(r.status));
 
   return (
     <div className="overflow-x-auto pb-2">
       <div className="flex min-w-max gap-3">
-        {BOARD_STAGES.map((stage) => {
-          const cards = rows.filter((r) => r.status === stage);
-          return <BoardColumn key={stage} title={stageLabel(stage)} cards={cards} />;
-        })}
-        {parked.length > 0 && <BoardColumn title="Parked / closed" cards={parked} muted />}
-      </div>
-    </div>
-  );
-}
-
-function BoardColumn({ title, cards, muted = false }: { title: string; cards: LeadRow[]; muted?: boolean }) {
-  return (
-    <div className={cn('w-56 shrink-0 rounded-xl bg-muted/50 p-2', muted && 'opacity-70')}>
-      <div className="mb-2 flex items-center justify-between px-1">
-        <span className="text-xs font-semibold">{title}</span>
-        <span className="text-xs text-muted-foreground" data-numeric>
-          {cards.length}
-        </span>
-      </div>
-      <div className="space-y-2">
-        {cards.map((row) => (
-          <Link
-            key={row.id}
-            href="/leads"
-            className="glass-surface block rounded-lg p-2.5 text-xs hover:bg-accent/50"
-          >
-            <div className="flex items-center gap-1.5 font-medium">
-              <PriorityDot tier={row.tier} />
-              <span className="truncate">{row.company || row.visitorName || 'Unknown'}</span>
+        {stages.map((stage) => (
+          <div key={stage.status} className="w-56 shrink-0 rounded-xl bg-muted/50 p-2">
+            <div className="mb-2 flex items-center justify-between px-1">
+              <span className="text-xs font-semibold">{stageLabel(stage.status)}</span>
+              <span className="text-xs text-muted-foreground" data-numeric>
+                {stage.count}
+              </span>
             </div>
-            <div className="mt-1 flex justify-between text-muted-foreground">
-              <span>P{row.tier} · {row.score}</span>
-              <span>{row.owner ? row.owner.split(/\s+/)[0] : 'unowned'}</span>
+            <div className="space-y-2">
+              {stage.leads.map((row) => (
+                <Link
+                  key={row.id}
+                  href={`/leads/${row.id}`}
+                  className="glass-surface block rounded-lg p-2.5 text-xs hover:bg-accent/50"
+                >
+                  <div className="flex items-center gap-1.5 font-medium">
+                    <PriorityDot tier={row.tier} />
+                    <span className="truncate">{row.company || row.visitorName || 'Unknown'}</span>
+                    {row.overdue && (
+                      <span className="ml-auto rounded-full bg-destructive-soft px-1.5 text-[10px] font-semibold text-destructive">
+                        overdue
+                      </span>
+                    )}
+                  </div>
+                  <div className="mt-1 flex justify-between text-muted-foreground">
+                    <span>
+                      P{row.tier} · {row.score}
+                    </span>
+                    <span>{row.owner ? row.owner.split(/\s+/)[0] : 'unowned'}</span>
+                  </div>
+                </Link>
+              ))}
+              {stage.leads.length === 0 && (
+                <div className="px-1 py-3 text-center text-xs text-muted-foreground">—</div>
+              )}
             </div>
-          </Link>
+          </div>
         ))}
-        {cards.length === 0 && <div className="px-1 py-3 text-center text-xs text-muted-foreground">—</div>}
       </div>
     </div>
   );

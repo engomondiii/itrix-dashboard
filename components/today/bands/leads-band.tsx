@@ -24,7 +24,7 @@ function LeadCard({ row }: { row: LeadRow }) {
   return (
     <QueueCard
       tone={row.tier === 1 ? 'urgent' : 'neutral'}
-      href="/leads"
+      href={`/leads/${row.id}`}
       title={
         <>
           {row.company || row.visitorName}

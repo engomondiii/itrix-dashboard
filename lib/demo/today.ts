@@ -253,6 +253,74 @@ const ndas = makeStore('demo:today:ndas', seedNdas);
 const support = makeStore('demo:today:support', seedSupport);
 const attachments = makeStore('demo:today:attachments', seedAttachments);
 
+interface DemoNote {
+  id: string;
+  leadId: string;
+  body: string;
+  author: string;
+  createdAt: string;
+}
+
+interface DemoActivity {
+  id: string;
+  leadId: string;
+  type: string;
+  label: string;
+  at: string;
+  by: string | null;
+}
+
+const leadNotes = makeStore<DemoNote>('demo:today:lead-notes', () => []);
+const leadActivity = makeStore<DemoActivity>('demo:today:lead-activity', () => []);
+
+function logActivity(leadId: string, type: string, label: string): void {
+  const rows = leadActivity.load();
+  rows.unshift({
+    id: `act-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
+    leadId,
+    type,
+    label,
+    at: new Date().toISOString(),
+    by: 'Demo User',
+  });
+  leadActivity.save(rows);
+}
+
+/** Build the full LeadDetailSerializer shape from a list row + side stores. */
+function leadDetail(row: LeadRow) {
+  return {
+    ...row,
+    email: row.company ? `contact@${row.company.toLowerCase().replace(/[^a-z]+/g, '')}.example` : '',
+    commercialPath: 'Non-Exclusive',
+    specialRights: 'None',
+    timeline: 'This quarter',
+    computeBottleneck: '',
+    workloadType: 'survey-correction',
+    currentStack: ['QGIS', 'in-house scripts'],
+    commercialIntent: '',
+    scoreBreakdown: {},
+    recommendedNextStep: '',
+    humanHandoffTrigger: false,
+    ctaClicked: false,
+    documentsViewed: 2,
+    clientId: null,
+    valueDelivered: false,
+    qualification: {},
+    notes: leadNotes
+      .load()
+      .filter((n) => n.leadId === row.id)
+      .map((n) => ({ id: n.id, body: n.body, author: n.author, createdAt: n.createdAt })),
+    activity: [
+      ...leadActivity
+        .load()
+        .filter((a) => a.leadId === row.id)
+        .map((a) => ({ id: a.id, type: a.type, label: a.label, at: a.at, by: a.by })),
+      { id: `act-sub-${row.id}`, type: 'submission', label: 'Lead submitted', at: row.submittedAt, by: null },
+    ],
+    meetings: [],
+  };
+}
+
 function errorEnvelope(status: number, code: string, detail: string) {
   return HttpResponse.json({ error: { detail, code } }, { status });
 }
@@ -425,6 +493,17 @@ export const todayHandlers = [
     });
   }),
 
+  // Detail = list row + detail extras + embedded notes/activity/meetings.
+  // Every lead action returns this full shape, like the real backend.
+  http.get(`${V1}/leads/:id/`, async ({ request, params }) => {
+    await delay(LATENCY);
+    const denied = requireAuth(request);
+    if (denied) return denied;
+    const row = leads.load().find((l) => l.id === params.id);
+    if (!row) return errorEnvelope(404, 'not_found', 'Not found.');
+    return HttpResponse.json(leadDetail(row));
+  }),
+
   http.post(`${V1}/leads/:id/assign/`, async ({ request, params }) => {
     await delay(LATENCY);
     const denied = requireAuth(request);
@@ -435,7 +514,207 @@ export const todayHandlers = [
     const body = (await request.json().catch(() => ({}))) as { owner?: string | null };
     row.owner = body.owner ? 'Demo User' : null;
     leads.save(rows);
-    return HttpResponse.json(row);
+    logActivity(row.id, 'owner_change', body.owner ? 'Assigned to Demo User' : 'Unassigned');
+    return HttpResponse.json(leadDetail(row));
+  }),
+
+  http.post(`${V1}/leads/:id/note/`, async ({ request, params }) => {
+    await delay(LATENCY);
+    const denied = requireAuth(request);
+    if (denied) return denied;
+    const row = leads.load().find((l) => l.id === params.id);
+    if (!row) return errorEnvelope(404, 'not_found', 'Not found.');
+    const body = (await request.json().catch(() => ({}))) as { body?: string };
+    if (!body.body) return errorEnvelope(400, 'invalid', 'body is required.');
+    const notes = leadNotes.load();
+    notes.unshift({
+      id: `note-${Date.now()}`,
+      leadId: row.id,
+      body: body.body,
+      author: 'Demo User',
+      createdAt: new Date().toISOString(),
+    });
+    leadNotes.save(notes);
+    logActivity(row.id, 'note', 'Note added');
+    return HttpResponse.json(leadDetail(row));
+  }),
+
+  http.post(`${V1}/leads/:id/status/`, async ({ request, params }) => {
+    await delay(LATENCY);
+    const denied = requireAuth(request);
+    if (denied) return denied;
+    const rows = leads.load();
+    const row = rows.find((l) => l.id === params.id);
+    if (!row) return errorEnvelope(404, 'not_found', 'Not found.');
+    const body = (await request.json().catch(() => ({}))) as { status?: string };
+    const valid = [
+      'New', 'Contacted', 'Meeting Booked', 'NDA', 'Evaluation', 'PoC',
+      'Licensed', 'Closed', 'Qualifying', 'Nurture', 'Negotiation', 'Lost',
+    ];
+    if (!body.status || !valid.includes(body.status)) {
+      return errorEnvelope(400, 'itrix_error', `Unknown status: ${body.status}`);
+    }
+    row.status = body.status as LeadRow['status'];
+    leads.save(rows);
+    logActivity(row.id, 'status_change', `Status → ${body.status}`);
+    return HttpResponse.json(leadDetail(row));
+  }),
+
+  http.post(`${V1}/leads/:id/nda/`, async ({ request, params }) => {
+    await delay(LATENCY);
+    const denied = requireAuth(request);
+    if (denied) return denied;
+    const rows = leads.load();
+    const row = rows.find((l) => l.id === params.id);
+    if (!row) return errorEnvelope(404, 'not_found', 'Not found.');
+    row.status = 'NDA';
+    leads.save(rows);
+    const all = ndas.load();
+    if (!all.some((n) => n.leadId === row.id)) {
+      all.push({
+        id: `nd-${Date.now()}`,
+        leadId: row.id,
+        leadName: row.visitorName,
+        company: row.company,
+        status: 'required',
+        docType: 'mutual',
+        signerName: '',
+        signerEmail: '',
+        requestedAt: new Date().toISOString(),
+        sentAt: null,
+        signedAt: null,
+        declineReason: '',
+      });
+      ndas.save(all);
+    }
+    logActivity(row.id, 'nda', 'NDA requested');
+    return HttpResponse.json(leadDetail(row));
+  }),
+
+  // --- Pipeline board (all 8 visible stages, always, in order) --------------
+  http.get(`${V1}/pipeline/`, async ({ request }) => {
+    await delay(LATENCY);
+    const denied = requireAuth(request);
+    if (denied) return denied;
+    const BOARD = [
+      'New', 'Contacted', 'Meeting Booked', 'NDA', 'Evaluation', 'PoC', 'Licensed', 'Closed',
+    ];
+    const rows = leads.load();
+    return HttpResponse.json({
+      stages: BOARD.map((status) => {
+        const cards = rows
+          .filter((l) => l.status === status)
+          .map((l) => ({ ...l, overdue: l.tier <= 2 && status === 'New' }));
+        return { status, count: cards.length, leads: cards };
+      }),
+    });
+  }),
+
+  // --- NDA record per lead (404 = none yet, exactly like the backend) -------
+  http.get(`${V1}/nda/:leadId/`, async ({ request, params }) => {
+    await delay(LATENCY);
+    const denied = requireAuth(request);
+    if (denied) return denied;
+    const record = ndas.load().find((n) => n.leadId === params.leadId);
+    if (!record) return errorEnvelope(404, 'not_found', 'No NDARecord matches the given query.');
+    return HttpResponse.json({ ...record, body: '', checklist: [] });
+  }),
+
+  http.post(`${V1}/nda/:leadId/:action/`, async ({ request, params }) => {
+    await delay(LATENCY);
+    const denied = requireAuth(request);
+    if (denied) return denied;
+    const all = ndas.load();
+    const record = all.find((n) => n.leadId === params.leadId);
+    if (!record) return errorEnvelope(404, 'not_found', 'No NDARecord matches the given query.');
+    const body = (await request.json().catch(() => ({}))) as Record<string, string>;
+    const action = params.action as string;
+
+    if (action === 'prepare') {
+      if (body.docType === 'mutual' || body.docType === 'one-way') record.docType = body.docType;
+      if (body.signerName) record.signerName = body.signerName;
+      if (body.signerEmail) record.signerEmail = body.signerEmail;
+    } else if (action === 'send') {
+      if (!body.signerEmail) return errorEnvelope(400, 'invalid', 'signerEmail is required.');
+      record.signerEmail = body.signerEmail;
+      if (body.signerName) record.signerName = body.signerName;
+      record.status = 'sent';
+      record.sentAt = new Date().toISOString();
+    } else if (action === 'sign') {
+      record.status = 'signed';
+      record.signedAt = new Date().toISOString();
+    } else if (action === 'decline') {
+      if (!body.reason) return errorEnvelope(400, 'invalid', 'reason is required.');
+      record.status = 'declined';
+      record.declineReason = body.reason;
+    } else if (action === 'expire') {
+      record.status = 'expired';
+    } else {
+      return errorEnvelope(400, 'invalid', 'Unknown action.');
+    }
+    ndas.save(all);
+    return HttpResponse.json({ ...record, body: '', checklist: [] });
+  }),
+
+  // --- Deal signals (deterministic, mirrors cockpit formulas) ---------------
+  http.get(`${V1}/cockpit/leads/:leadId/`, async ({ request, params }) => {
+    await delay(LATENCY);
+    const denied = requireAuth(request);
+    if (denied) return denied;
+    const row = leads.load().find((l) => l.id === params.leadId);
+    if (!row) return errorEnvelope(404, 'not_found', 'Not found.');
+    const clamp = (n: number) => Math.min(100, Math.max(0, n));
+    return HttpResponse.json({
+      leadId: row.id,
+      company: row.company,
+      tier: row.tier,
+      score: row.score,
+      journeyState: row.journeyState,
+      productRoute: row.productRoute,
+      commercialPath: 'Non-Exclusive',
+      valueDelivered: false,
+      pitchEngagement: {
+        opened: true, slidesViewed: 6, totalDwellSeconds: 480,
+        ctaClicks: 1, questionsAsked: 3, reopens: 1, engagementScore: 62,
+      },
+      pain: row.primaryPain || null,
+      gain: 'Faster correction turnaround',
+      visitorType: 'Operator',
+      buyerPsychology: 'Proof-driven',
+      objectionSignals: row.score < 60 ? ['Wants proof before any commitment'] : [],
+      readiness: { nda: clamp(row.score - 8), assessment: clamp(row.score), poc: clamp(row.score - 18) },
+      licenseOutProbability: clamp(row.score - 5),
+      ladderStage: 'Review',
+    });
+  }),
+
+  http.get(`${V1}/cockpit/leads/:leadId/next-action/`, async ({ request, params }) => {
+    await delay(LATENCY);
+    const denied = requireAuth(request);
+    if (denied) return denied;
+    const row = leads.load().find((l) => l.id === params.leadId);
+    if (!row) return errorEnvelope(404, 'not_found', 'Not found.');
+    const isNew = row.status === 'New';
+    return HttpResponse.json({
+      leadId: row.id,
+      state: row.journeyState,
+      nextAction: isNew ? 'await_diagnosis' : 'propose_evaluation',
+      reason: isNew
+        ? 'The lead has not been worked yet — make first contact.'
+        : 'Engagement is strong enough to propose a scoped evaluation.',
+      primary: {
+        key: isNew ? 'contact' : 'propose_evaluation',
+        label: isNew ? 'Make first contact' : 'Propose an evaluation',
+        detail: '',
+        href: '',
+      },
+      primaryKind: null,
+      secondary: [],
+      suppressionReason: null,
+      suppressionCopy: null,
+      suppressedCount: 0,
+      signals: {},
+    });
   }),
 
   // --- NDA ------------------------------------------------------------------
