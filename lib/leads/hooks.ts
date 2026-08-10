@@ -107,6 +107,11 @@ function useLeadDetailMutation<TVars>(
     mutationFn,
     onSuccess: (detail) => {
       queryClient.setQueryData(LEAD_KEYS.detail(id), detail);
+      // Validated against the live backend: the action response's PREFETCHED
+      // relations (notes/activity/meetings) are one write stale — the
+      // viewset prefetches before the insert. The scalar fields are fresh,
+      // so keep the fast setQueryData above, but refetch for the relations.
+      queryClient.invalidateQueries({ queryKey: LEAD_KEYS.detail(id) });
       queryClient.invalidateQueries({ queryKey: ['leads', 'list'] });
       queryClient.invalidateQueries({ queryKey: LEAD_KEYS.pipeline });
       queryClient.invalidateQueries({ queryKey: ['today'] });
