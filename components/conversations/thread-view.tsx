@@ -14,6 +14,7 @@ import Link from 'next/link';
 import { ArrowLeft } from 'lucide-react';
 
 import { cn } from '@/lib/utils';
+import { journeyLabel } from '@/lib/leads/journey-labels';
 import { formatRelative } from '@/lib/entity/format';
 import { useConversations, useThreadDetail } from '@/lib/conversations/hooks';
 import type { GovernanceStatus, SenderKind, ThreadTurn } from '@/lib/conversations/types';
@@ -99,7 +100,7 @@ export function ThreadView({ threadId }: { threadId: string }) {
               {detail.title || 'Untitled conversation'}
             </h1>
             <p className="mt-0.5 text-xs text-muted-foreground">
-              {detail.company || (detail.anonymous ? 'Anonymous visitor' : '')} · {detail.journeyState} ·{' '}
+              {detail.company || (detail.anonymous ? 'Anonymous visitor' : '')} · {journeyLabel(detail.journeyState)} ·{' '}
               started {formatRelative(detail.createdAt)}
               {detail.leadId && (
                 <>

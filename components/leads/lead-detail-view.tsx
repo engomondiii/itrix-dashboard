@@ -38,6 +38,9 @@ import {
 } from '@/lib/leads/hooks';
 import type { LeadStatus } from '@/lib/today/types';
 import type { LeadDetail } from '@/lib/leads/types';
+import { journeyLabel } from '@/lib/leads/journey-labels';
+import { useConversations } from '@/lib/conversations/hooks';
+import { useThreadBoard } from '@/lib/today/hooks';
 import { ReasonAction } from '@/components/today/reason-action';
 
 const ALL_STAGES: LeadStatus[] = [
@@ -96,6 +99,7 @@ function Header({ lead }: { lead: LeadDetail }) {
           <p className="mt-0.5 text-xs text-muted-foreground">
             P{lead.tier} · score {lead.score} · submitted {formatRelative(lead.submittedAt)}
             {lead.productRoute ? ` · ${lead.productRoute}` : ''}
+            {lead.journeyState ? ` · ${journeyLabel(lead.journeyState)}` : ''}
           </p>
         </div>
 
@@ -308,6 +312,49 @@ function NdaPanel({ lead }: { lead: LeadDetail }) {
   );
 }
 
+function ConversationsPanel({ lead }: { lead: LeadDetail }) {
+  // The transcript already links thread → lead; this closes the loop the
+  // other way so working a lead never means hunting the Conversations board.
+  const board = useThreadBoard();
+  const conversations = useConversations();
+  const threads = (board.data?.results ?? []).filter((t) => t.leadId === lead.id);
+  const conversation = (conversations.data ?? []).find((c) => c.leadId === lead.id);
+
+  if (threads.length === 0 && !conversation) return null;
+
+  return (
+    <Panel title="Conversations">
+      <div className="space-y-2 text-sm">
+        {threads.map((thread) => (
+          <div key={thread.threadId} className="flex flex-wrap items-center gap-2">
+            <Link href={`/conversations/${thread.threadId}`} className="min-w-0 flex-1 truncate hover:underline">
+              {thread.title || 'Untitled conversation'}
+            </Link>
+            <span className="text-xs text-muted-foreground">
+              {thread.visitorTurns} visitor {thread.visitorTurns === 1 ? 'turn' : 'turns'} ·{' '}
+              {formatRelative(thread.lastActivityAt ?? thread.createdAt)}
+            </span>
+            <Link
+              href={`/conversations/${thread.threadId}`}
+              className="rounded-md border border-border px-2 py-0.5 text-xs hover:bg-accent"
+            >
+              Transcript
+            </Link>
+          </div>
+        ))}
+        {conversation && (
+          <Link
+            href={`/conversations/messages/${conversation.id}`}
+            className="inline-block rounded-md bg-primary px-3 py-1.5 text-xs font-medium text-primary-foreground hover:bg-primary/90"
+          >
+            Reply as a person
+          </Link>
+        )}
+      </div>
+    </Panel>
+  );
+}
+
 function NotesPanel({ lead }: { lead: LeadDetail }) {
   const { toast } = useToast();
   const addNote = useAddNote(lead.id);
@@ -417,6 +464,7 @@ export function LeadDetailView({ leadId }: { leadId: string }) {
       <Header lead={detail} />
       <div className="grid gap-4 lg:grid-cols-[1fr_320px]">
         <div className="min-w-0 space-y-4">
+          <ConversationsPanel lead={detail} />
           <NotesPanel lead={detail} />
           <TimelinePanel lead={detail} />
         </div>

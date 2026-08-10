@@ -19,6 +19,7 @@ import { formatRelative } from '@/lib/entity/format';
 import { useThreadBoard } from '@/lib/today/hooks';
 import type { ThreadRow } from '@/lib/today/types';
 import { cn } from '@/lib/utils';
+import { journeyLabel } from '@/lib/leads/journey-labels';
 
 const HOUR_MS = 60 * 60 * 1000;
 
@@ -84,7 +85,7 @@ export function ConversationsView() {
                         {row.anonymous && <span className="text-muted-foreground"> · anonymous</span>}
                       </span>
                       <span className="block text-xs text-muted-foreground">
-                        {row.turnCount} turns ({row.visitorTurns} from the visitor) · {row.journeyState}
+                        {row.turnCount} turns ({row.visitorTurns} from the visitor) · {journeyLabel(row.journeyState)}
                       </span>
                     </span>
                     <span className="shrink-0 text-xs text-muted-foreground">
