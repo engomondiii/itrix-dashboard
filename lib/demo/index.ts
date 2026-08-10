@@ -19,8 +19,9 @@ export async function enableDemoMode(): Promise<void> {
   const { setupWorker } = await import('msw/browser');
   const { handlers } = await import('./handlers');
   const { notificationHandlers } = await import('./notifications');
+  const { todayHandlers } = await import('./today');
 
-  await setupWorker(...handlers, ...notificationHandlers).start({
+  await setupWorker(...handlers, ...notificationHandlers, ...todayHandlers).start({
     // Anything the handlers don't model (static assets, HMR, source maps)
     // must pass through untouched — and without console noise.
     onUnhandledRequest: 'bypass',

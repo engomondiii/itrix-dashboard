@@ -1,0 +1,493 @@
+/**
+ * Demo-mode handlers for every Today-queue endpoint — same contract-fidelity
+ * rules as `handlers.ts`, mirroring itrix-backend exactly:
+ *
+ *   approval queue    → BARE ARRAY; actions POST /agents/approval/{id}/{action}/
+ *   follow-up         → {results, count}; scopes are PATH segments; actions POST sub-paths
+ *   threads           → {results, count}; only ?limit honoured
+ *   leads             → standard pagination; assign takes {owner}
+ *   nda               → standard pagination; ?status= exact
+ *   support queue     → {results, count, summary}; READ-ONLY (no action routes AT ALL)
+ *   attachments       → {results, count, summary}; release/quarantine need reason ≥12 chars
+ */
+
+import { delay, http, HttpResponse } from 'msw';
+
+import type {
+  ApprovalRow,
+  AttachmentRow,
+  FollowUpRow,
+  LeadRow,
+  NdaRow,
+  SupportRow,
+  ThreadRow,
+} from '@/lib/today/types';
+
+const LATENCY = 200;
+
+function hoursAgo(h: number): string {
+  return new Date(Date.now() - h * 3_600_000).toISOString();
+}
+function hoursAhead(h: number): string {
+  return new Date(Date.now() + h * 3_600_000).toISOString();
+}
+
+// ---------------------------------------------------------------------------
+// Seeds (per-tab persistence, one store per domain)
+// ---------------------------------------------------------------------------
+
+function seedApprovals(): ApprovalRow[] {
+  return [
+    {
+      id: 'ap-01', leadId: 'ld-02', conversationId: 'cv-11', agentKey: 'pitch',
+      claimLevel: 3,
+      draftBody:
+        'In our internal benchmark the current pipeline processed a full survey batch in under 40 minutes — I can share the methodology note if useful.',
+      finalBody: '', status: 'pending', reason: '', requiresSecondApprover: false,
+      firstApprover: null, at: hoursAgo(1),
+    },
+    {
+      id: 'ap-02', leadId: 'ld-01', conversationId: 'cv-07', agentKey: 'pitch',
+      claimLevel: 5,
+      draftBody:
+        'Our patent coverage extends to the correction workflow itself, so a license would include exclusivity for your market segment.',
+      finalBody: '', status: 'awaiting_second', reason: '', requiresSecondApprover: true,
+      firstApprover: 'Demo User', at: hoursAgo(3),
+    },
+  ];
+}
+
+function seedFollowUps(): FollowUpRow[] {
+  return [
+    {
+      id: 'fu-01', leadId: 'ld-03', leadName: 'H. Cho', company: 'Daehan Survey Co.',
+      tier: 1, owner: 'Demo User', createdAt: hoursAgo(50), dueAt: hoursAgo(26),
+      status: 'pending', snoozedUntil: null, note: 'Send the evaluation scope doc',
+    },
+    {
+      id: 'fu-02', leadId: 'ld-04', leadName: 'M. Ortiz', company: 'GeoField Ltda.',
+      tier: 3, owner: null, createdAt: hoursAgo(30), dueAt: hoursAgo(4),
+      status: 'pending', snoozedUntil: null, note: 'Reply to pricing question',
+    },
+    {
+      id: 'fu-03', leadId: 'ld-02', leadName: 'K. Tanaka', company: 'Shinkai Instruments',
+      tier: 2, owner: 'Demo User', createdAt: hoursAgo(20), dueAt: hoursAhead(5),
+      status: 'pending', snoozedUntil: null, note: 'Confirm meeting agenda',
+    },
+  ];
+}
+
+function seedThreads(): ThreadRow[] {
+  return [
+    {
+      threadId: 'th-01', title: 'Survey correction throughput', anonymous: false,
+      leadId: 'ld-02', company: 'Shinkai Instruments', journeyState: 'ENGAGED',
+      turnCount: 14, visitorTurns: 6, working: true,
+      lastActivityAt: hoursAgo(0.5), createdAt: hoursAgo(6), ownerKind: 'lead',
+    },
+    {
+      threadId: 'th-02', title: 'Pricing for a 3-team rollout', anonymous: true,
+      leadId: null, company: '', journeyState: 'ARRIVED',
+      turnCount: 5, visitorTurns: 3, working: true,
+      lastActivityAt: hoursAgo(2), createdAt: hoursAgo(3), ownerKind: 'session',
+    },
+    {
+      threadId: 'th-03', title: 'Old exploratory chat', anonymous: true,
+      leadId: null, company: '', journeyState: 'ARRIVED',
+      turnCount: 4, visitorTurns: 2, working: true,
+      lastActivityAt: hoursAgo(70), createdAt: hoursAgo(72), ownerKind: 'session',
+    },
+  ];
+}
+
+function seedLeads(): LeadRow[] {
+  return [
+    {
+      id: 'ld-05', visitorName: 'S. Park', company: 'Hanul Engineering', role: 'CTO',
+      productRoute: 'survey-automation', primaryPain: 'Manual correction backlog',
+      score: 86, tier: 1, status: 'New', owner: null,
+      submittedAt: hoursAgo(2), journeyState: 'ARRIVED',
+    },
+    {
+      id: 'ld-06', visitorName: 'A. Weber', company: 'FeldMesser GmbH', role: 'Ops lead',
+      productRoute: 'survey-automation', primaryPain: 'Field-to-office turnaround',
+      score: 61, tier: 2, status: 'New', owner: null,
+      submittedAt: hoursAgo(8), journeyState: 'ARRIVED',
+    },
+    {
+      id: 'ld-07', visitorName: 'J. Doe', company: '', role: '',
+      productRoute: '', primaryPain: '', score: 22, tier: 4, status: 'New',
+      owner: 'Demo User', submittedAt: hoursAgo(12), journeyState: 'ARRIVED',
+    },
+  ];
+}
+
+function seedNdas(): NdaRow[] {
+  return [
+    {
+      id: 'nd-01', leadId: 'ld-02', leadName: 'K. Tanaka', company: 'Shinkai Instruments',
+      status: 'required', docType: 'mutual', signerName: '', signerEmail: '',
+      requestedAt: hoursAgo(28), sentAt: null, signedAt: null, declineReason: '',
+    },
+    {
+      id: 'nd-02', leadId: 'ld-03', leadName: 'H. Cho', company: 'Daehan Survey Co.',
+      status: 'sent', docType: 'one-way', signerName: 'H. Cho',
+      signerEmail: 'h.cho@daehan.example', requestedAt: hoursAgo(80),
+      sentAt: hoursAgo(52), signedAt: null, declineReason: '',
+    },
+  ];
+}
+
+function seedSupport(): SupportRow[] {
+  return [
+    {
+      requestId: 'sp-01', clientId: 'cl-01', company: 'Daehan Survey Co.',
+      subject: 'Export job stuck at 90%', status: 'open', urgency: 'critical',
+      blocking: true, owner: '', slaDueAt: hoursAgo(1), overdueSeconds: 3600,
+      slaBreaching: true, threadId: null, createdAt: hoursAgo(7),
+    },
+    {
+      requestId: 'sp-02', clientId: 'cl-02', company: 'GeoField Ltda.',
+      subject: 'How to add a second reviewer?', status: 'in_progress', urgency: 'normal',
+      blocking: false, owner: 'Demo User', slaDueAt: hoursAhead(20),
+      overdueSeconds: -72_000, slaBreaching: false, threadId: null, createdAt: hoursAgo(2),
+    },
+  ];
+}
+
+function seedAttachments(): AttachmentRow[] {
+  return [
+    {
+      attachmentId: 'at-01', threadId: 'th-01', filename: 'site-survey-raw.zip',
+      declaredMime: 'application/zip', detectedMime: 'application/zip',
+      bytes: 48_211_004, status: 'quarantined', riskFlags: ['macro-container'],
+      preNda: true, scanVerdict: 'suspicious', scanDetail: 'Archive contains executable content',
+      visitorNote: 'Raw data sample as discussed', createdAt: hoursAgo(26), needsReview: true,
+    },
+    {
+      attachmentId: 'at-02', threadId: 'th-02', filename: 'requirements.docx',
+      declaredMime: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+      detectedMime: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+      bytes: 402_113, status: 'failed', riskFlags: [], preNda: false,
+      scanVerdict: '', scanDetail: 'Scanner timeout', visitorNote: '',
+      createdAt: hoursAgo(5), needsReview: true,
+    },
+  ];
+}
+
+// ---------------------------------------------------------------------------
+// Store plumbing
+// ---------------------------------------------------------------------------
+
+function makeStore<T>(key: string, seed: () => T[]) {
+  return {
+    load(): T[] {
+      try {
+        const raw = sessionStorage.getItem(key);
+        if (raw) return JSON.parse(raw) as T[];
+      } catch {
+        // fall through to a fresh seed
+      }
+      const seeded = seed();
+      this.save(seeded);
+      return seeded;
+    },
+    save(rows: T[]): void {
+      try {
+        sessionStorage.setItem(key, JSON.stringify(rows));
+      } catch {
+        // storage blocked; continue in memory
+      }
+    },
+  };
+}
+
+const approvals = makeStore('demo:today:approvals', seedApprovals);
+const followUps = makeStore('demo:today:follow-ups', seedFollowUps);
+const threads = makeStore('demo:today:threads', seedThreads);
+const leads = makeStore('demo:today:leads', seedLeads);
+const ndas = makeStore('demo:today:ndas', seedNdas);
+const support = makeStore('demo:today:support', seedSupport);
+const attachments = makeStore('demo:today:attachments', seedAttachments);
+
+function errorEnvelope(status: number, code: string, detail: string) {
+  return HttpResponse.json({ error: { detail, code } }, { status });
+}
+
+function requireAuth(request: Request): Response | null {
+  const header = request.headers.get('authorization') ?? '';
+  if (!header.startsWith('Bearer demo-access-')) {
+    return errorEnvelope(401, 'not_authenticated', 'Authentication credentials were not provided.');
+  }
+  return null;
+}
+
+function effectiveDue(task: FollowUpRow): string {
+  return task.snoozedUntil ?? task.dueAt;
+}
+
+// ---------------------------------------------------------------------------
+// Handlers
+// ---------------------------------------------------------------------------
+
+const V1 = '*/api/v1';
+
+export const todayHandlers = [
+  // --- Approvals (bare array; governance-admin actions) ---------------------
+  http.get(`${V1}/agents/approval-queue/`, async ({ request }) => {
+    await delay(LATENCY);
+    const denied = requireAuth(request);
+    if (denied) return denied;
+    const rows = approvals
+      .load()
+      .filter((r) => r.status === 'pending' || r.status === 'awaiting_second')
+      .sort((a, b) => b.at.localeCompare(a.at));
+    return HttpResponse.json(rows);
+  }),
+
+  http.post(`${V1}/agents/approval/:id/:action/`, async ({ request, params }) => {
+    await delay(LATENCY);
+    const denied = requireAuth(request);
+    if (denied) return denied;
+    const { id, action } = params as { id: string; action: string };
+    const rows = approvals.load();
+    const row = rows.find((r) => r.id === id);
+    if (!row) return errorEnvelope(404, 'not_found', 'Not found.');
+    const body = (await request.json().catch(() => ({}))) as { body?: string; reason?: string };
+
+    if (action === 'approve') {
+      if (row.requiresSecondApprover && row.status === 'pending') {
+        row.status = 'awaiting_second';
+        row.firstApprover = 'Demo User';
+      } else if (row.status === 'awaiting_second' && row.firstApprover === 'Demo User') {
+        // Same-approver guard, mirrored from the backend's 409.
+        return errorEnvelope(409, 'conflict', 'A second, distinct approver is required for L4/L5.');
+      } else {
+        row.status = 'approved';
+      }
+    } else if (action === 'edit') {
+      if (!body.body) return errorEnvelope(400, 'invalid', 'body is required to edit.');
+      row.finalBody = body.body;
+      row.status = 'edited';
+    } else if (action === 'reject') {
+      row.status = 'rejected';
+      row.reason = body.reason ?? '';
+    } else {
+      return errorEnvelope(400, 'invalid', 'Unknown action.');
+    }
+    approvals.save(rows);
+    return HttpResponse.json(row);
+  }),
+
+  // --- Follow-up (path-segment scopes; POST action sub-paths) ---------------
+  http.get(`${V1}/follow-up/`, async ({ request }) => {
+    await delay(LATENCY);
+    const denied = requireAuth(request);
+    if (denied) return denied;
+    const results = followUps
+      .load()
+      .filter((t) => t.status === 'pending' || t.status === 'snoozed')
+      .sort((a, b) => a.dueAt.localeCompare(b.dueAt));
+    return HttpResponse.json({ results, count: results.length });
+  }),
+
+  http.get(`${V1}/follow-up/overdue/`, async ({ request }) => {
+    await delay(LATENCY);
+    const denied = requireAuth(request);
+    if (denied) return denied;
+    const now = new Date().toISOString();
+    const results = followUps
+      .load()
+      .filter((t) => t.status === 'pending' && effectiveDue(t) < now)
+      .sort((a, b) => a.dueAt.localeCompare(b.dueAt));
+    return HttpResponse.json({ results, count: results.length });
+  }),
+
+  http.get(`${V1}/follow-up/today/`, async ({ request }) => {
+    await delay(LATENCY);
+    const denied = requireAuth(request);
+    if (denied) return denied;
+    const now = new Date();
+    const endOfDay = new Date(now);
+    endOfDay.setHours(23, 59, 59, 999);
+    const results = followUps
+      .load()
+      .filter(
+        (t) =>
+          (t.status === 'pending' || t.status === 'snoozed') &&
+          t.dueAt >= now.toISOString() &&
+          t.dueAt <= endOfDay.toISOString(),
+      )
+      .sort((a, b) => a.dueAt.localeCompare(b.dueAt));
+    return HttpResponse.json({ results, count: results.length });
+  }),
+
+  http.post(`${V1}/follow-up/:id/:action/`, async ({ request, params }) => {
+    await delay(LATENCY);
+    const denied = requireAuth(request);
+    if (denied) return denied;
+    const { id, action } = params as { id: string; action: string };
+    const rows = followUps.load();
+    const row = rows.find((t) => t.id === id);
+    if (!row) return errorEnvelope(404, 'not_found', 'Not found.');
+    const body = (await request.json().catch(() => ({}))) as { hours?: number; dueAt?: string };
+
+    if (action === 'complete') row.status = 'completed';
+    else if (action === 'dismiss') row.status = 'dismissed';
+    else if (action === 'snooze') {
+      const hours = Math.min(720, Math.max(1, body.hours ?? 24));
+      row.status = 'snoozed';
+      row.snoozedUntil = new Date(Date.now() + hours * 3_600_000).toISOString();
+    } else if (action === 'reschedule') {
+      if (!body.dueAt) return errorEnvelope(400, 'invalid', 'dueAt is required.');
+      row.dueAt = body.dueAt;
+      row.snoozedUntil = null;
+      row.status = 'pending';
+    } else {
+      return errorEnvelope(400, 'invalid', 'Unknown action.');
+    }
+    followUps.save(rows);
+    return HttpResponse.json(row);
+  }),
+
+  // --- Threads --------------------------------------------------------------
+  http.get(`${V1}/cockpit/threads/`, async ({ request }) => {
+    await delay(LATENCY);
+    const denied = requireAuth(request);
+    if (denied) return denied;
+    const limit = Math.min(500, Number(new URL(request.url).searchParams.get('limit')) || 200);
+    const results = threads
+      .load()
+      .sort((a, b) => (b.lastActivityAt ?? '').localeCompare(a.lastActivityAt ?? ''))
+      .slice(0, limit);
+    return HttpResponse.json({ results, count: results.length });
+  }),
+
+  // --- Leads ----------------------------------------------------------------
+  http.get(`${V1}/leads/`, async ({ request }) => {
+    await delay(LATENCY);
+    const denied = requireAuth(request);
+    if (denied) return denied;
+    const params = new URL(request.url).searchParams;
+    let rows = leads.load();
+    const status = params.get('status');
+    if (status) rows = rows.filter((l) => l.status.toLowerCase() === status.toLowerCase());
+    rows = [...rows].sort((a, b) => b.submittedAt.localeCompare(a.submittedAt));
+    return HttpResponse.json({
+      results: rows,
+      count: rows.length,
+      page: 1,
+      pageSize: Math.max(rows.length, 25),
+      totalPages: 1,
+    });
+  }),
+
+  http.post(`${V1}/leads/:id/assign/`, async ({ request, params }) => {
+    await delay(LATENCY);
+    const denied = requireAuth(request);
+    if (denied) return denied;
+    const rows = leads.load();
+    const row = rows.find((l) => l.id === params.id);
+    if (!row) return errorEnvelope(404, 'not_found', 'Not found.');
+    const body = (await request.json().catch(() => ({}))) as { owner?: string | null };
+    row.owner = body.owner ? 'Demo User' : null;
+    leads.save(rows);
+    return HttpResponse.json(row);
+  }),
+
+  // --- NDA ------------------------------------------------------------------
+  http.get(`${V1}/nda/`, async ({ request }) => {
+    await delay(LATENCY);
+    const denied = requireAuth(request);
+    if (denied) return denied;
+    const status = new URL(request.url).searchParams.get('status');
+    let rows = ndas.load();
+    if (status) rows = rows.filter((n) => n.status === status);
+    return HttpResponse.json({
+      results: rows,
+      count: rows.length,
+      page: 1,
+      pageSize: 25,
+      totalPages: 1,
+    });
+  }),
+
+  // --- Support (read-only; there are deliberately NO action handlers) -------
+  http.get(`${V1}/cockpit/support/queue/`, async ({ request }) => {
+    await delay(LATENCY);
+    const denied = requireAuth(request);
+    if (denied) return denied;
+    const rows = support.load().filter((r) => r.status !== 'resolved');
+    // Blocking first → urgency → most overdue, like the server.
+    const urgencyRank = { critical: 0, high: 1, normal: 2, low: 3 } as const;
+    const results = [...rows].sort(
+      (a, b) =>
+        Number(b.blocking) - Number(a.blocking) ||
+        urgencyRank[a.urgency] - urgencyRank[b.urgency] ||
+        (b.overdueSeconds ?? -1) - (a.overdueSeconds ?? -1),
+    );
+    return HttpResponse.json({
+      results,
+      count: results.length,
+      summary: {
+        open: results.length,
+        blockingOpen: results.filter((r) => r.blocking).length,
+        breaching: results.filter((r) => r.slaBreaching).length,
+        unowned: results.filter((r) => !r.owner).length,
+        resolvedButNotConfirmed: 0,
+      },
+    });
+  }),
+
+  // --- Attachments ----------------------------------------------------------
+  http.get(`${V1}/cockpit/attachments/`, async ({ request }) => {
+    await delay(LATENCY);
+    const denied = requireAuth(request);
+    if (denied) return denied;
+    const results = attachments
+      .load()
+      .filter((a) => a.status === 'quarantined' || a.status === 'failed')
+      .sort((a, b) => a.createdAt.localeCompare(b.createdAt)); // oldest first
+    return HttpResponse.json({
+      results,
+      count: results.length,
+      summary: {
+        quarantined: results.filter((a) => a.status === 'quarantined').length,
+        failed: results.filter((a) => a.status === 'failed').length,
+        preNdaAwaitingReview: results.filter((a) => a.preNda).length,
+      },
+    });
+  }),
+
+  http.post(`${V1}/cockpit/attachments/:id/:action/`, async ({ request, params }) => {
+    await delay(LATENCY);
+    const denied = requireAuth(request);
+    if (denied) return denied;
+    const { id, action } = params as { id: string; action: string };
+    const rows = attachments.load();
+    const row = rows.find((a) => a.attachmentId === id);
+    if (!row) return errorEnvelope(404, 'not_found', 'Not found.');
+    const body = (await request.json().catch(() => ({}))) as { reason?: string };
+
+    // MIN_REASON_CHARS = 12, enforced server-side.
+    if (!body.reason || body.reason.trim().length < 12) {
+      return errorEnvelope(400, 'invalid', 'A reason of at least 12 characters is required.');
+    }
+    if (action === 'release') {
+      if (row.status !== 'quarantined') {
+        return errorEnvelope(400, 'invalid', 'Only quarantined files can be released.');
+      }
+      row.status = 'scanned';
+      row.needsReview = false;
+      attachments.save(rows);
+      return HttpResponse.json({ attachmentId: id, status: 'scanned', released: true });
+    }
+    if (action === 'quarantine') {
+      row.status = 'quarantined';
+      row.needsReview = true;
+      attachments.save(rows);
+      return HttpResponse.json({ attachmentId: id, status: 'quarantined', quarantined: true });
+    }
+    return errorEnvelope(400, 'invalid', 'Unknown action.');
+  }),
+];
