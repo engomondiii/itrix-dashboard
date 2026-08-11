@@ -24,13 +24,14 @@ function probablyWaiting(row: ThreadRow): boolean {
   return Date.now() - new Date(last).getTime() < ACTIVE_WINDOW_MS;
 }
 
-export function ThreadsBand() {
+export function ThreadsBand({ forceOpen = false }: { forceOpen?: boolean }) {
   const board = useThreadBoard();
   const rows = (board.data?.results ?? []).filter(probablyWaiting);
   const { visible, remaining, showMore } = useCapped(rows);
 
   return (
     <TodayBand
+      forceOpen={forceOpen}
       title="Conversations probably waiting"
       hint="visitor engaged in the last 24h — worth a look"
       count={rows.length}

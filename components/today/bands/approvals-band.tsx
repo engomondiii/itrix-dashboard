@@ -99,13 +99,14 @@ function ApprovalCard({ row }: { row: ApprovalRow }) {
   );
 }
 
-export function ApprovalsBand() {
+export function ApprovalsBand({ forceOpen = false }: { forceOpen?: boolean }) {
   const queue = useApprovalQueue();
   const rows = queue.data ?? [];
   const { visible, remaining, showMore } = useCapped(rows);
 
   return (
     <TodayBand
+      forceOpen={forceOpen}
       title="Waiting for your OK"
       hint="messages the AI won't send without a human"
       count={rows.length}

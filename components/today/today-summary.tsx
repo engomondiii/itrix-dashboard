@@ -1,10 +1,10 @@
 'use client';
 
 /**
- * The queue at a glance: one chip per band with its live count; clicking
- * scrolls to the band. Deliberately NOT tabs — the banded page order is the
- * priority story ("Waiting for your OK" must never hide behind a click);
- * the strip only gives instant orientation and travel.
+ * The queue at a glance AND its filter: one chip per band with a live,
+ * scope-aware count. Clicking focuses the queue on that band alone (forced
+ * open); clicking again returns to the full banded view. With nothing
+ * focused, the priority order still tells the whole story.
  *
  * Zero-cost data-wise: it consumes the same react-query caches the bands
  * poll — no extra requests.
@@ -23,7 +23,15 @@ import {
 } from '@/lib/today/hooks';
 import { inScope, isProbablyWaiting, type TodayScope } from './scope';
 
-export function TodaySummary({ scope }: { scope: TodayScope }) {
+export function TodaySummary({
+  scope,
+  focus,
+  onFocus,
+}: {
+  scope: TodayScope;
+  focus: string | null;
+  onFocus: (id: string | null) => void;
+}) {
   const { user } = useAuth();
   const approvals = useApprovalQueue();
   const overdue = useFollowUp('overdue');
@@ -79,10 +87,15 @@ export function TodaySummary({ scope }: { scope: TodayScope }) {
         <button
           key={chip.id}
           type="button"
-          onClick={() => document.getElementById(chip.id)?.scrollIntoView({ behavior: 'smooth', block: 'start' })}
-          disabled={chip.count === 0}
+          role="tab"
+          aria-selected={focus === chip.id}
+          onClick={() => onFocus(focus === chip.id ? null : chip.id)}
+          disabled={chip.count === 0 && focus !== chip.id}
           className={cn(
-            'flex items-center gap-1.5 rounded-full border border-border bg-card px-3 py-1 text-xs font-medium hover:bg-accent disabled:opacity-45 disabled:hover:bg-card',
+            'flex items-center gap-1.5 rounded-full border px-3 py-1 text-xs font-medium disabled:opacity-45',
+            focus === chip.id
+              ? 'border-primary bg-primary text-primary-foreground'
+              : 'border-border bg-card hover:bg-accent disabled:hover:bg-card',
           )}
         >
           {chip.label}

@@ -26,6 +26,8 @@ interface TodayBandProps {
   alwaysShow?: boolean;
   /** Accent for the count pill; defaults to neutral. */
   tone?: 'urgent' | 'warn' | 'neutral';
+  /** When the queue is focused on this band, it must be open and visible. */
+  forceOpen?: boolean;
   children: ReactNode;
 }
 
@@ -42,15 +44,16 @@ export function TodayBand({
   isLoading = false,
   alwaysShow = false,
   tone = 'neutral',
+  forceOpen = false,
   children,
 }: TodayBandProps) {
   // Collapse choice persists per band — someone who folds "Due today" away
   // shouldn't have to re-fold it on every visit.
   const [stored, setStored] = useStoredState(`today.band.${title}`, 'open');
-  const open = stored !== 'closed';
+  const open = forceOpen || stored !== 'closed';
   const toggle = () => setStored(open ? 'closed' : 'open');
 
-  if (!alwaysShow && !isLoading && count === 0) return null;
+  if (!forceOpen && !alwaysShow && !isLoading && count === 0) return null;
 
   return (
     <section className="mb-6">

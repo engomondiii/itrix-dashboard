@@ -84,9 +84,11 @@ function FollowUpCard({ row, urgent }: { row: FollowUpRow; urgent: boolean }) {
 export function FollowUpBand({
   scope,
   ownerScope,
+  forceOpen = false,
 }: {
   scope: 'overdue' | 'today';
   ownerScope: TodayScope;
+  forceOpen?: boolean;
 }) {
   const { user } = useAuth();
   const list = useFollowUp(scope);
@@ -98,6 +100,7 @@ export function FollowUpBand({
 
   return (
     <TodayBand
+      forceOpen={forceOpen}
       title={urgent ? 'Overdue follow-ups' : 'Due today'}
       hint={urgent ? 'oldest first — these slipped' : 'still ahead of you today'}
       count={rows.length}

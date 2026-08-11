@@ -66,7 +66,7 @@ function LeadCard({ row }: { row: LeadRow }) {
   );
 }
 
-export function NewLeadsBand({ ownerScope }: { ownerScope: TodayScope }) {
+export function NewLeadsBand({ ownerScope, forceOpen = false }: { ownerScope: TodayScope; forceOpen?: boolean }) {
   const { user } = useAuth();
   const leads = useNewLeads();
   // Priority 1 first, then newest within a priority.
@@ -77,6 +77,7 @@ export function NewLeadsBand({ ownerScope }: { ownerScope: TodayScope }) {
 
   return (
     <TodayBand
+      forceOpen={forceOpen}
       title="New leads"
       hint="unworked — highest priority first"
       count={rows.length}

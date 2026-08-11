@@ -87,13 +87,14 @@ function AttachmentCard({ row }: { row: AttachmentRow }) {
   );
 }
 
-export function AttachmentsBand() {
+export function AttachmentsBand({ forceOpen = false }: { forceOpen?: boolean }) {
   const queue = useAttachmentQueue();
   const rows = queue.data?.results ?? [];
   const { visible, remaining, showMore } = useCapped(rows);
 
   return (
     <TodayBand
+      forceOpen={forceOpen}
       title="Files awaiting review"
       hint="quarantined or failed scans — oldest first"
       count={rows.length}

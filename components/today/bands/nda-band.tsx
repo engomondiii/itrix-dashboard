@@ -12,13 +12,14 @@ import { QueueCard } from '../queue-card';
 import { TodayBand } from '../today-band';
 import { ShowMore, useCapped } from '../use-capped';
 
-export function NdaBand() {
+export function NdaBand({ forceOpen = false }: { forceOpen?: boolean }) {
   const nda = useNdaInFlight();
   const rows = nda.data?.results ?? [];
   const { visible, remaining, showMore } = useCapped(rows);
 
   return (
     <TodayBand
+      forceOpen={forceOpen}
       title="NDAs in flight"
       hint="to send, or waiting on a signature"
       count={rows.length}

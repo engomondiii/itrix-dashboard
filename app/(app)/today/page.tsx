@@ -15,6 +15,8 @@
  * toasts from the backend (e.g. the L4/L5 duplicate-approver 409).
  */
 
+import { useState } from 'react';
+
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/lib/auth/auth-context';
 import { ApprovalsBand } from '@/components/today/bands/approvals-band';
@@ -34,6 +36,9 @@ export default function TodayPage() {
 
   const [storedScope, changeScope] = useStoredState('today.scope', 'mine');
   const scope: TodayScope = storedScope === 'all' ? 'all' : 'mine';
+  // Chip focus: show one band alone (forced open), or the whole queue.
+  const [focus, setFocus] = useState<string | null>(null);
+  const showing = (id: string) => focus === null || focus === id;
 
   return (
     <section>
@@ -68,16 +73,20 @@ export default function TodayPage() {
         </div>
       </header>
 
-      <TodaySummary scope={scope} />
+      <TodaySummary scope={scope} focus={focus} onFocus={setFocus} />
 
-      <div id="band-approvals"><ApprovalsBand /></div>
-      <div id="band-overdue"><FollowUpBand scope="overdue" ownerScope={scope} /></div>
-      <div id="band-waiting"><ThreadsBand /></div>
-      <div id="band-leads"><NewLeadsBand ownerScope={scope} /></div>
-      <div id="band-nda"><NdaBand /></div>
-      <div id="band-due-today"><FollowUpBand scope="today" ownerScope={scope} /></div>
-      <div id="band-support"><SupportBand ownerScope={scope} /></div>
-      <div id="band-files"><AttachmentsBand /></div>
+      {showing('band-approvals') && <ApprovalsBand forceOpen={focus === 'band-approvals'} />}
+      {showing('band-overdue') && (
+        <FollowUpBand scope="overdue" ownerScope={scope} forceOpen={focus === 'band-overdue'} />
+      )}
+      {showing('band-waiting') && <ThreadsBand forceOpen={focus === 'band-waiting'} />}
+      {showing('band-leads') && <NewLeadsBand ownerScope={scope} forceOpen={focus === 'band-leads'} />}
+      {showing('band-nda') && <NdaBand forceOpen={focus === 'band-nda'} />}
+      {showing('band-due-today') && (
+        <FollowUpBand scope="today" ownerScope={scope} forceOpen={focus === 'band-due-today'} />
+      )}
+      {showing('band-support') && <SupportBand ownerScope={scope} forceOpen={focus === 'band-support'} />}
+      {showing('band-files') && <AttachmentsBand forceOpen={focus === 'band-files'} />}
     </section>
   );
 }

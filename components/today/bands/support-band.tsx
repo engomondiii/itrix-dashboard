@@ -21,7 +21,7 @@ function tone(row: SupportRow): 'urgent' | 'warn' | 'neutral' {
   return 'neutral';
 }
 
-export function SupportBand({ ownerScope }: { ownerScope: TodayScope }) {
+export function SupportBand({ ownerScope, forceOpen = false }: { ownerScope: TodayScope; forceOpen?: boolean }) {
   const { user } = useAuth();
   const queue = useSupportQueue();
   const rows = (queue.data?.results ?? []).filter((row) =>
@@ -31,6 +31,7 @@ export function SupportBand({ ownerScope }: { ownerScope: TodayScope }) {
 
   return (
     <TodayBand
+      forceOpen={forceOpen}
       title="Open support requests"
       hint="handled outside this screen for now — read-only heads-up"
       count={rows.length}
