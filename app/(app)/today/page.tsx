@@ -25,6 +25,7 @@ import { NdaBand } from '@/components/today/bands/nda-band';
 import { SupportBand } from '@/components/today/bands/support-band';
 import { ThreadsBand } from '@/components/today/bands/threads-band';
 import type { TodayScope } from '@/components/today/scope';
+import { TodaySummary } from '@/components/today/today-summary';
 import { useStoredState } from '@/components/today/use-stored';
 
 export default function TodayPage() {
@@ -67,14 +68,16 @@ export default function TodayPage() {
         </div>
       </header>
 
-      <ApprovalsBand />
-      <FollowUpBand scope="overdue" ownerScope={scope} />
-      <ThreadsBand />
-      <NewLeadsBand ownerScope={scope} />
-      <NdaBand />
-      <FollowUpBand scope="today" ownerScope={scope} />
-      <SupportBand ownerScope={scope} />
-      <AttachmentsBand />
+      <TodaySummary scope={scope} />
+
+      <div id="band-approvals"><ApprovalsBand /></div>
+      <div id="band-overdue"><FollowUpBand scope="overdue" ownerScope={scope} /></div>
+      <div id="band-waiting"><ThreadsBand /></div>
+      <div id="band-leads"><NewLeadsBand ownerScope={scope} /></div>
+      <div id="band-nda"><NdaBand /></div>
+      <div id="band-due-today"><FollowUpBand scope="today" ownerScope={scope} /></div>
+      <div id="band-support"><SupportBand ownerScope={scope} /></div>
+      <div id="band-files"><AttachmentsBand /></div>
     </section>
   );
 }

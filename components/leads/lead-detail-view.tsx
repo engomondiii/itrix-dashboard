@@ -318,12 +318,16 @@ function ConversationsPanel({ lead }: { lead: LeadDetail }) {
   // other way so working a lead never means hunting the Conversations board.
   const board = useThreadBoard();
   const conversations = useConversations();
-  const threads = (board.data?.results ?? []).filter((t) => t.leadId === lead.id);
-  const conversation = (conversations.data ?? []).find((c) => c.leadId === lead.id);
+  // One person can have MANY chats (each client-page visit can open one) —
+  // list them all, newest activity first.
+  const threads = (board.data?.results ?? [])
+    .filter((t) => t.leadId === lead.id)
+    .sort((a, b) => (b.lastActivityAt ?? b.createdAt).localeCompare(a.lastActivityAt ?? a.createdAt));
+  const leadConversations = (conversations.data ?? []).filter((c) => c.leadId === lead.id);
 
   return (
-    <Panel title="Conversations">
-      {threads.length === 0 && !conversation && (
+    <Panel title={`Conversations${threads.length > 1 ? ` (${threads.length})` : ''}`}>
+      {threads.length === 0 && leadConversations.length === 0 && (
         <p className="text-sm text-muted-foreground">
           Nothing linked to this lead yet — a conversation attaches once the visitor&apos;s
           thread is qualified.{' '}
@@ -347,18 +351,32 @@ function ConversationsPanel({ lead }: { lead: LeadDetail }) {
               href={`/conversations/${thread.threadId}`}
               className="rounded-md border border-border px-2 py-0.5 text-xs hover:bg-accent"
             >
-              Transcript
+              Open &amp; reply
             </Link>
           </div>
         ))}
-        {conversation && (
-          <Link
-            href={`/conversations/messages/${conversation.id}`}
-            className="inline-block rounded-md bg-primary px-3 py-1.5 text-xs font-medium text-primary-foreground hover:bg-primary/90"
-          >
-            Reply as a person
-          </Link>
-        )}
+        {/* Message channels with no visible thread (portal/console contexts). */}
+        {leadConversations
+          .filter((c) => !threads.some((t) => t.title.trim() === c.title.trim()))
+          .map((c) => (
+            <div key={c.id} className="flex flex-wrap items-center gap-2">
+              <Link
+                href={`/conversations/messages/${c.id}`}
+                className="min-w-0 flex-1 truncate hover:underline"
+              >
+                {c.title || 'Messages'}
+              </Link>
+              {c.lastMessageAt && (
+                <span className="text-xs text-muted-foreground">{formatRelative(c.lastMessageAt)}</span>
+              )}
+              <Link
+                href={`/conversations/messages/${c.id}`}
+                className="rounded-md border border-border px-2 py-0.5 text-xs hover:bg-accent"
+              >
+                Reply
+              </Link>
+            </div>
+          ))}
       </div>
     </Panel>
   );

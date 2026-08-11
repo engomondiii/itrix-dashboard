@@ -1,16 +1,18 @@
 'use client';
 
 /**
- * Conversations — the live board. One list of AI conversations grouped by
- * urgency (client-side; the server only honours `limit`):
+ * Conversations — tabbed and grouped by WHO, because one visitor produces
+ * many threads (every client-page visit can open one) and a flat list turns
+ * into 70 look-alike rows.
  *
- *   Active now      activity in the last hour
- *   Waiting on us   visitor engaged, activity in the last 24h
- *   Quiet           everything else
+ *   Tabs      Needs attention (live or visitor-engaged) · Quiet · All
+ *   Grouping  by company (lead/client identity); anonymous visitors last.
+ *             A company header collapses a person's many sessions into one
+ *             readable block. Not every thread has a lead — anonymous and
+ *             portal sessions link up only at qualification.
  *
- * A row opens its transcript. The board is cockpit THREADS; the message
- * plane (console conversations) is a different model — the transcript view
- * offers "reply as a person" where a leadId links the two.
+ * The server honours no filters (only limit) — tabs, search and grouping
+ * are all client-side over the newest 500.
  */
 
 import Link from 'next/link';
@@ -25,7 +27,9 @@ import { ShowMore, useCapped } from '@/components/today/use-capped';
 
 const HOUR_MS = 60 * 60 * 1000;
 
-function groupOf(row: ThreadRow): 'active' | 'waiting' | 'quiet' {
+type Activity = 'active' | 'waiting' | 'quiet';
+
+function activityOf(row: ThreadRow): Activity {
   const last = new Date(row.lastActivityAt ?? row.createdAt).getTime();
   const age = Date.now() - last;
   if (age < HOUR_MS) return 'active';
@@ -33,20 +37,103 @@ function groupOf(row: ThreadRow): 'active' | 'waiting' | 'quiet' {
   return 'quiet';
 }
 
-const GROUPS: Array<{ key: 'active' | 'waiting' | 'quiet'; title: string; hint: string }> = [
-  { key: 'active', title: 'Active now', hint: 'activity in the last hour' },
-  { key: 'waiting', title: 'Waiting on us', hint: 'visitor engaged in the last 24h' },
-  { key: 'quiet', title: 'Quiet', hint: 'no recent activity' },
+type TabKey = 'attention' | 'quiet' | 'all';
+
+const TABS: Array<{ key: TabKey; label: string }> = [
+  { key: 'attention', label: 'Needs attention' },
+  { key: 'quiet', label: 'Quiet' },
+  { key: 'all', label: 'All' },
 ];
+
+function inTab(tab: TabKey, activity: Activity): boolean {
+  if (tab === 'all') return true;
+  if (tab === 'attention') return activity !== 'quiet';
+  return activity === 'quiet';
+}
+
+function lastTouch(row: ThreadRow): string {
+  return row.lastActivityAt ?? row.createdAt;
+}
+
+function Row({ row }: { row: ThreadRow }) {
+  const activity = activityOf(row);
+  return (
+    <Link
+      href={`/conversations/${row.threadId}`}
+      className={cn(
+        'glass-surface flex flex-wrap items-center gap-x-4 gap-y-1 rounded-xl border-l-2 px-4 py-3 text-sm hover:bg-accent/40',
+        activity === 'active'
+          ? 'border-l-brand-accent'
+          : activity === 'waiting'
+            ? 'border-l-warning'
+            : 'border-l-transparent',
+      )}
+    >
+      <span className="min-w-0 flex-1">
+        <span className="block truncate font-medium">{row.title || 'Untitled conversation'}</span>
+        <span className="block text-xs text-muted-foreground">
+          {row.turnCount} turns ({row.visitorTurns} from the visitor) · {journeyLabel(row.journeyState)}
+        </span>
+      </span>
+      <span className="shrink-0 text-xs text-muted-foreground">{formatRelative(lastTouch(row))}</span>
+    </Link>
+  );
+}
+
+function IdentityGroup({ title, meta, rows }: { title: string; meta?: string; rows: ThreadRow[] }) {
+  const sorted = [...rows].sort((a, b) => lastTouch(b).localeCompare(lastTouch(a)));
+  const { visible, remaining, showMore } = useCapped(sorted);
+  return (
+    <div className="mb-5">
+      <h2 className="font-display tracking-display mb-2 text-sm font-semibold">
+        {title}{' '}
+        <span className="font-sans text-xs font-normal text-muted-foreground">
+          — {rows.length} conversation{rows.length === 1 ? '' : 's'}
+          {meta ? ` · ${meta}` : ''}
+        </span>
+      </h2>
+      <div className="space-y-2">
+        {visible.map((row) => (
+          <Row key={row.threadId} row={row} />
+        ))}
+        <ShowMore remaining={remaining} onClick={showMore} />
+      </div>
+    </div>
+  );
+}
 
 export function ConversationsView() {
   const board = useThreadBoard();
-  // The server honours no board filters — search is ours, over the full 200.
+  const [tab, setTab] = useState<TabKey>('attention');
   const [search, setSearch] = useState('');
   const needle = search.trim().toLowerCase();
-  const rows = (board.data?.results ?? []).filter(
+
+  const all = board.data?.results ?? [];
+  const searched = all.filter(
     (r) => !needle || r.title.toLowerCase().includes(needle) || r.company.toLowerCase().includes(needle),
   );
+  const counts: Record<TabKey, number> = {
+    attention: searched.filter((r) => inTab('attention', activityOf(r))).length,
+    quiet: searched.filter((r) => inTab('quiet', activityOf(r))).length,
+    all: searched.length,
+  };
+  const rows = searched.filter((r) => inTab(tab, activityOf(r)));
+
+  // Group by identity: named companies first (most recent first), then the
+  // anonymous pool. One person's many sessions collapse into one block.
+  const byCompany = new Map<string, ThreadRow[]>();
+  for (const row of rows) {
+    const key = row.company || '';
+    byCompany.set(key, [...(byCompany.get(key) ?? []), row]);
+  }
+  const named = [...byCompany.entries()]
+    .filter(([company]) => company !== '')
+    .sort((a, b) => {
+      const lastA = a[1].map(lastTouch).sort().at(-1) ?? '';
+      const lastB = b[1].map(lastTouch).sort().at(-1) ?? '';
+      return lastB.localeCompare(lastA);
+    });
+  const anonymous = byCompany.get('') ?? [];
 
   return (
     <section>
@@ -65,80 +152,58 @@ export function ConversationsView() {
         />
       </header>
 
-      {board.isLoading && rows.length === 0 ? (
+      <div className="mb-5 flex rounded-lg border border-border p-0.5" role="tablist">
+        {TABS.map(({ key, label }) => (
+          <button
+            key={key}
+            type="button"
+            role="tab"
+            aria-selected={tab === key}
+            onClick={() => setTab(key)}
+            className={cn(
+              'rounded-md px-3 py-1.5 text-xs font-medium',
+              tab === key ? 'bg-primary text-primary-foreground' : 'text-muted-foreground hover:bg-muted',
+            )}
+          >
+            {label}{' '}
+            <span className={cn('tabular-nums', tab === key ? 'opacity-80' : 'text-muted-foreground')} data-numeric>
+              {counts[key]}
+            </span>
+          </button>
+        ))}
+      </div>
+
+      {board.isLoading && all.length === 0 ? (
         <div className="glass-surface animate-pulse rounded-xl p-10 text-sm text-muted-foreground">Loading…</div>
       ) : rows.length === 0 ? (
         <div className="glass-surface rounded-xl p-10 text-center text-sm text-muted-foreground">
-          No conversations yet.
+          {needle ? 'Nothing matches the search here.' : 'Nothing in this tab right now.'}
         </div>
       ) : (
-        GROUPS.map(({ key, title, hint }) => (
-          <Group
-            key={key}
-            groupKey={key}
-            title={title}
-            hint={hint}
-            rows={rows.filter((r) => groupOf(r) === key)}
-          />
-        ))
+        <>
+          {named.map(([company, companyRows]) => (
+            <IdentityGroup
+              key={company}
+              title={company}
+              meta={companyRows[0].leadId ? undefined : 'no lead linked yet'}
+              rows={companyRows}
+            />
+          ))}
+          {anonymous.length > 0 && (
+            <IdentityGroup
+              title="Anonymous visitors"
+              meta="identity unknown until they qualify"
+              rows={anonymous}
+            />
+          )}
+        </>
       )}
-      {(board.data?.results.length ?? 0) >= 500 && (
+
+      {all.length >= 500 && (
         <p className="text-xs text-muted-foreground">
           Showing the newest 500 conversations — the backend has no paging beyond that yet.
         </p>
       )}
     </section>
-  );
-}
-
-function Group({
-  groupKey,
-  title,
-  hint,
-  rows,
-}: {
-  groupKey: 'active' | 'waiting' | 'quiet';
-  title: string;
-  hint: string;
-  rows: ThreadRow[];
-}) {
-  const { visible, remaining, showMore } = useCapped(rows);
-  if (rows.length === 0) return null;
-  return (
-    <div className="mb-6">
-      <h2 className="font-display tracking-display mb-2 text-sm font-semibold">
-        {title}{' '}
-        <span className="font-sans text-xs font-normal text-muted-foreground">
-          — {hint} · {rows.length}
-        </span>
-      </h2>
-      <div className="space-y-2">
-        {visible.map((row) => (
-          <Link
-            key={row.threadId}
-            href={`/conversations/${row.threadId}`}
-            className={cn(
-              'glass-surface flex flex-wrap items-center gap-x-4 gap-y-1 rounded-xl border-l-2 px-4 py-3 text-sm hover:bg-accent/40',
-              groupKey === 'active' ? 'border-l-brand-accent' : groupKey === 'waiting' ? 'border-l-warning' : 'border-l-transparent',
-            )}
-          >
-            <span className="min-w-0 flex-1">
-              <span className="block truncate font-medium">
-                {row.title || 'Untitled conversation'}
-                {row.company && <span className="text-muted-foreground"> · {row.company}</span>}
-                {row.anonymous && <span className="text-muted-foreground"> · anonymous</span>}
-              </span>
-              <span className="block text-xs text-muted-foreground">
-                {row.turnCount} turns ({row.visitorTurns} from the visitor) · {journeyLabel(row.journeyState)}
-              </span>
-            </span>
-            <span className="shrink-0 text-xs text-muted-foreground">
-              {formatRelative(row.lastActivityAt ?? row.createdAt)}
-            </span>
-          </Link>
-        ))}
-        <ShowMore remaining={remaining} onClick={showMore} />
-      </div>
-    </div>
   );
 }

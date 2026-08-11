@@ -280,7 +280,9 @@ export function CustomersView() {
   const evaluations = useEvaluations();
   const pocs = usePocs();
 
-  // Server-side the board is unfiltered — search and the health chips are ours.
+  // Server-side the board is unfiltered — tabs, search and the health chips
+  // are ours. Tabs, not stacked sections: each side can be hundreds of rows.
+  const [tab, setTab] = useState<'accounts' | 'deals'>('accounts');
   const [search, setSearch] = useState('');
   const [health, setHealth] = useState<HealthClass | ''>('');
   const needle = search.trim().toLowerCase();
@@ -304,14 +306,39 @@ export function CustomersView() {
             Licensed accounts by health, and every deal still in flight.
           </p>
         </div>
-        <div className="flex flex-wrap items-center gap-2">
-          <input
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            placeholder="Search company…"
-            className="h-8 w-48 rounded-md border border-input bg-card px-2.5 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-          />
-          {(['critical', 'at_risk', 'stable'] as const).map((h) => (
+        <input
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          placeholder="Search company…"
+          className="h-8 w-48 rounded-md border border-input bg-card px-2.5 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+        />
+      </header>
+
+      <div className="mb-4 flex flex-wrap items-center gap-3">
+        <div className="flex rounded-lg border border-border p-0.5" role="tablist">
+          {(
+            [
+              ['accounts', `Accounts ${customerRows.length}`],
+              ['deals', `Deals in flight ${deals.length}`],
+            ] as const
+          ).map(([key, label]) => (
+            <button
+              key={key}
+              type="button"
+              role="tab"
+              aria-selected={tab === key}
+              onClick={() => setTab(key)}
+              className={cn(
+                'rounded-md px-3 py-1.5 text-xs font-medium',
+                tab === key ? 'bg-primary text-primary-foreground' : 'text-muted-foreground hover:bg-muted',
+              )}
+            >
+              {label}
+            </button>
+          ))}
+        </div>
+        {tab === 'accounts' &&
+          (['critical', 'at_risk', 'stable'] as const).map((h) => (
             <button
               key={h}
               type="button"
@@ -327,35 +354,27 @@ export function CustomersView() {
               {HEALTH_LABEL[h]}
             </button>
           ))}
-        </div>
-      </header>
+      </div>
 
-      <h2 className="font-display tracking-display mb-2 text-sm font-semibold">
-        Accounts <span className="font-sans text-xs font-normal text-muted-foreground">— worst health first</span>
-      </h2>
-      {customers.isLoading && customerRows.length === 0 ? (
-        <div className="glass-surface animate-pulse rounded-xl p-8 text-sm text-muted-foreground">Loading…</div>
-      ) : customerRows.length === 0 ? (
-        <div className="glass-surface rounded-xl p-8 text-center text-sm text-muted-foreground">
-          No licensed accounts yet.
-        </div>
-      ) : (
-        <AccountsGrid rows={customerRows} />
-      )}
+      {tab === 'accounts' &&
+        (customers.isLoading && customerRows.length === 0 ? (
+          <div className="glass-surface animate-pulse rounded-xl p-8 text-sm text-muted-foreground">Loading…</div>
+        ) : customerRows.length === 0 ? (
+          <div className="glass-surface rounded-xl p-8 text-center text-sm text-muted-foreground">
+            No licensed accounts{needle ? ' match the search' : ' yet'}.
+          </div>
+        ) : (
+          <AccountsGrid rows={customerRows} />
+        ))}
 
-      <h2 className="font-display tracking-display mb-2 mt-8 text-sm font-semibold">
-        Deals in flight{' '}
-        <span className="font-sans text-xs font-normal text-muted-foreground">
-          — evaluations and PoCs, editable in place
-        </span>
-      </h2>
-      {deals.length === 0 ? (
-        <div className="glass-surface rounded-xl p-8 text-center text-sm text-muted-foreground">
-          Nothing in flight.
-        </div>
-      ) : (
-        <DealsList deals={deals} />
-      )}
+      {tab === 'deals' &&
+        (deals.length === 0 ? (
+          <div className="glass-surface rounded-xl p-8 text-center text-sm text-muted-foreground">
+            Nothing in flight{needle ? ' matches the search' : ''}.
+          </div>
+        ) : (
+          <DealsList deals={deals} />
+        ))}
     </section>
   );
 }

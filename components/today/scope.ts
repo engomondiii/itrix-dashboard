@@ -11,6 +11,17 @@
 
 export type TodayScope = 'mine' | 'all';
 
+/** The "probably waiting" heuristic shared by the band and the summary strip. */
+export function isProbablyWaiting(row: {
+  visitorTurns: number;
+  lastActivityAt: string | null;
+  createdAt: string;
+}): boolean {
+  if (row.visitorTurns === 0) return false;
+  const last = row.lastActivityAt ?? row.createdAt;
+  return Date.now() - new Date(last).getTime() < 24 * 60 * 60 * 1000;
+}
+
 export function inScope(scope: TodayScope, owner: string | null | undefined, userName?: string): boolean {
   if (scope === 'all') return true;
   return !owner || (!!userName && owner === userName);
