@@ -7,9 +7,11 @@
  */
 
 import { useQuery } from '@tanstack/react-query';
+import { useState } from 'react';
 
 import { http } from '@/lib/api/client';
 import { cn } from '@/lib/utils';
+import { useDebouncedValue } from '@/lib/use-debounced-value';
 import { SettingsSection } from '@/components/ui/settings-section';
 import type { PaginatedEnvelope } from '@/lib/today/types';
 
@@ -24,9 +26,15 @@ interface TeamMember {
 }
 
 export default function TeamSettingsPage() {
+  // Server-side search (?search= over name and email).
+  const [search, setSearch] = useState('');
+  const debounced = useDebouncedValue(search);
   const team = useQuery({
-    queryKey: ['settings', 'team'],
-    queryFn: () => http.get<PaginatedEnvelope<TeamMember>>('/api/v1/team/?pageSize=100'),
+    queryKey: ['settings', 'team', debounced],
+    queryFn: () =>
+      http.get<PaginatedEnvelope<TeamMember>>(
+        `/api/v1/team/?pageSize=100${debounced ? `&search=${encodeURIComponent(debounced)}` : ''}`,
+      ),
   });
 
   return (
@@ -34,6 +42,12 @@ export default function TeamSettingsPage() {
       title="Team"
       description="Everyone with staff access. Accounts are provisioned by an admin — there's no self-serve invite."
     >
+      <input
+        value={search}
+        onChange={(e) => setSearch(e.target.value)}
+        placeholder="Search name or email…"
+        className="mb-3 h-8 w-56 rounded-md border border-input bg-card px-2.5 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+      />
       {team.isLoading ? (
         <p className="text-sm text-muted-foreground">Loading…</p>
       ) : (

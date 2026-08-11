@@ -15,15 +15,21 @@
 
 import Link from 'next/link';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
-import { Suspense, useCallback } from 'react';
+import { Suspense, useCallback, useEffect, useState } from 'react';
+import { ChevronDown, ChevronUp } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { formatRelative } from '@/lib/entity/format';
+import { useDebouncedValue } from '@/lib/use-debounced-value';
 import { useLeads, usePipeline } from '@/lib/leads/hooks';
 import { PARKED_STAGES } from '@/lib/leads/api';
 import type { LeadRow, LeadStatus } from '@/lib/today/types';
 import type { PipelineStage } from '@/lib/leads/types';
+
+/** Server-side sortable fields (LeadFilter's sort= vocabulary). */
+type SortField = 'submittedAt' | 'score' | 'tier' | 'status';
+type SortDir = 'asc' | 'desc';
 
 /** Stage chips shown on the list view (board columns come from the server). */
 const LIST_STAGES: LeadStatus[] = [
@@ -91,8 +97,15 @@ function LeadsInner() {
   const view = searchParams.get('view') === 'board' ? 'board' : 'list';
   const stage = (searchParams.get('stage') ?? '') as LeadStatus | '';
   const tier = Number(searchParams.get('p')) || null;
-  const search = searchParams.get('q') ?? '';
+  const urlSearch = searchParams.get('q') ?? '';
   const page = Number(searchParams.get('page')) || 1;
+  const sort = (searchParams.get('sort') as SortField) || 'submittedAt';
+  const dir: SortDir = searchParams.get('dir') === 'asc' ? 'asc' : 'desc';
+
+  // The input is instant; the URL (and therefore the server query) follows
+  // the debounced value — one request per pause, not per keystroke.
+  const [searchInput, setSearchInput] = useState(urlSearch);
+  const debouncedSearch = useDebouncedValue(searchInput);
 
   const setParams = useCallback(
     (patch: Record<string, string | null>) => {
@@ -108,8 +121,21 @@ function LeadsInner() {
     [router, pathname, searchParams],
   );
 
+  useEffect(() => {
+    if (debouncedSearch !== urlSearch) setParams({ q: debouncedSearch || null });
+  }, [debouncedSearch, urlSearch, setParams]);
+
+  const setSort = useCallback(
+    (field: SortField) => {
+      // Same column toggles direction; a new column starts at its natural end.
+      if (sort === field) setParams({ dir: dir === 'desc' ? 'asc' : 'desc' });
+      else setParams({ sort: field, dir: field === 'tier' ? 'asc' : 'desc' });
+    },
+    [sort, dir, setParams],
+  );
+
   // List = filtered query; board = the real pipeline endpoint.
-  const leads = useLeads({ status: stage, tier, search, page, sort: 'submittedAt', dir: 'desc' });
+  const leads = useLeads({ status: stage, tier, search: urlSearch, page, sort, dir });
   const pipeline = usePipeline(view === 'board');
   const rows = leads.data?.results ?? [];
 
@@ -144,8 +170,8 @@ function LeadsInner() {
         <>
           <div className="mb-4 flex flex-wrap items-center gap-2">
             <input
-              value={search}
-              onChange={(e) => setParams({ q: e.target.value || null })}
+              value={searchInput}
+              onChange={(e) => setSearchInput(e.target.value)}
               placeholder="Search company, name, pain…"
               className="h-8 w-56 rounded-md border border-input bg-card px-2.5 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
             />
@@ -163,7 +189,7 @@ function LeadsInner() {
             ))}
           </div>
 
-          <LeadTable rows={rows} isLoading={leads.isLoading} />
+          <LeadTable rows={rows} isLoading={leads.isLoading} sort={sort} dir={dir} onSort={setSort} />
 
           {(leads.data?.totalPages ?? 1) > 1 && (
             <div className="mt-4 flex items-center justify-between text-sm text-muted-foreground">
@@ -195,7 +221,54 @@ function LeadsInner() {
   );
 }
 
-function LeadTable({ rows, isLoading }: { rows: LeadRow[]; isLoading: boolean }) {
+function SortableTh({
+  label,
+  field,
+  sort,
+  dir,
+  onSort,
+}: {
+  label: string;
+  field: SortField;
+  sort: SortField;
+  dir: SortDir;
+  onSort: (field: SortField) => void;
+}) {
+  const active = sort === field;
+  const Arrow = dir === 'asc' ? ChevronUp : ChevronDown;
+  return (
+    <th
+      className="px-4 py-2.5 font-medium"
+      aria-sort={active ? (dir === 'asc' ? 'ascending' : 'descending') : undefined}
+    >
+      <button
+        type="button"
+        onClick={() => onSort(field)}
+        className={cn(
+          'inline-flex items-center gap-0.5 hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',
+          active && 'text-foreground',
+        )}
+      >
+        {label}
+        {active && <Arrow className="h-3 w-3" />}
+      </button>
+    </th>
+  );
+}
+
+function LeadTable({
+  rows,
+  isLoading,
+  sort,
+  dir,
+  onSort,
+}: {
+  rows: LeadRow[];
+  isLoading: boolean;
+  sort: SortField;
+  dir: SortDir;
+  onSort: (field: SortField) => void;
+}) {
   if (isLoading && rows.length === 0) {
     return <div className="glass-surface animate-pulse rounded-xl p-10 text-sm text-muted-foreground">Loading…</div>;
   }
@@ -212,11 +285,11 @@ function LeadTable({ rows, isLoading }: { rows: LeadRow[]; isLoading: boolean })
         <thead>
           <tr className="border-b border-border text-left text-xs text-muted-foreground">
             <th className="px-4 py-2.5 font-medium">Company / contact</th>
-            <th className="px-4 py-2.5 font-medium">Priority</th>
-            <th className="px-4 py-2.5 font-medium">Stage</th>
-            <th className="px-4 py-2.5 font-medium">Score</th>
+            <SortableTh label="Priority" field="tier" sort={sort} dir={dir} onSort={onSort} />
+            <SortableTh label="Stage" field="status" sort={sort} dir={dir} onSort={onSort} />
+            <SortableTh label="Score" field="score" sort={sort} dir={dir} onSort={onSort} />
             <th className="px-4 py-2.5 font-medium">Owner</th>
-            <th className="px-4 py-2.5 font-medium">Submitted</th>
+            <SortableTh label="Submitted" field="submittedAt" sort={sort} dir={dir} onSort={onSort} />
           </tr>
         </thead>
         <tbody>

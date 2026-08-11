@@ -279,19 +279,54 @@ export function CustomersView() {
   const evaluations = useEvaluations();
   const pocs = usePocs();
 
-  const customerRows = customers.data?.results ?? [];
+  // Server-side the board is unfiltered — search and the health chips are ours.
+  const [search, setSearch] = useState('');
+  const [health, setHealth] = useState<HealthClass | ''>('');
+  const needle = search.trim().toLowerCase();
+
+  const customerRows = (customers.data?.results ?? []).filter(
+    (row) =>
+      (!needle || row.company.toLowerCase().includes(needle)) &&
+      (!health || row.healthClass === health),
+  );
   const deals = [
     ...(evaluations.data?.results ?? []).filter((e) => e.status !== 'won' && e.status !== 'lost'),
     ...(pocs.data?.results ?? []).filter((p) => p.status !== 'completed' && p.status !== 'cancelled'),
-  ];
+  ].filter((d) => !needle || (d.company || d.leadName).toLowerCase().includes(needle));
 
   return (
     <section>
-      <header className="mb-5">
-        <h1 className="font-display tracking-display text-2xl font-semibold">Customers</h1>
-        <p className="mt-1 text-sm text-muted-foreground">
-          Licensed accounts by health, and every deal still in flight.
-        </p>
+      <header className="mb-5 flex flex-wrap items-end justify-between gap-3">
+        <div>
+          <h1 className="font-display tracking-display text-2xl font-semibold">Customers</h1>
+          <p className="mt-1 text-sm text-muted-foreground">
+            Licensed accounts by health, and every deal still in flight.
+          </p>
+        </div>
+        <div className="flex flex-wrap items-center gap-2">
+          <input
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            placeholder="Search company…"
+            className="h-8 w-48 rounded-md border border-input bg-card px-2.5 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+          />
+          {(['critical', 'at_risk', 'stable'] as const).map((h) => (
+            <button
+              key={h}
+              type="button"
+              onClick={() => setHealth(health === h ? '' : h)}
+              aria-pressed={health === h}
+              className={cn(
+                'rounded-full border px-3 py-1 text-xs font-medium',
+                health === h
+                  ? 'border-primary bg-primary text-primary-foreground'
+                  : 'border-border bg-card text-muted-foreground hover:bg-accent',
+              )}
+            >
+              {HEALTH_LABEL[h]}
+            </button>
+          ))}
+        </div>
       </header>
 
       <h2 className="font-display tracking-display mb-2 text-sm font-semibold">

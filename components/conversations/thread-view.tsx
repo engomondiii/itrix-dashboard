@@ -1,13 +1,19 @@
 'use client';
 
 /**
- * Transcript of one cockpit thread. This is the ONE place (besides the
- * approval queue) where held/blocked bodies are visible — the console
- * message plane blanks them.
+ * Transcript of one cockpit thread — the ONE conversation surface: reading
+ * AND replying happen here.
  *
- * "Reply as a person" appears when a console conversation shares this
- * thread's leadId (the only join the backend exposes); otherwise the note
- * explains why stepping in isn't available.
+ * Two backend planes feed it. Thread turns carry the real bodies (including
+ * held/blocked drafts) but — a known backend gap — never the team's own
+ * console replies; console messages carry the team replies but blank held
+ * bodies. Both are rows of the same Message table with the same ids, so the
+ * view merges them: thread version wins per id, console-only rows fill the
+ * gaps, ordered by time.
+ *
+ * The thread → conversation join is leadId when the backend provides one;
+ * for anonymous visitors there is no join field at all, so we fall back to
+ * an exact title match (both titles derive from the same first message).
  */
 
 import Link from 'next/link';
@@ -16,8 +22,15 @@ import { ArrowLeft } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { journeyLabel } from '@/lib/leads/journey-labels';
 import { formatRelative } from '@/lib/entity/format';
-import { useConversations, useThreadDetail } from '@/lib/conversations/hooks';
-import type { GovernanceStatus, SenderKind, ThreadTurn } from '@/lib/conversations/types';
+import { useConversation, useConversations, useThreadDetail } from '@/lib/conversations/hooks';
+import type {
+  ConversationSummary,
+  GovernanceStatus,
+  SenderKind,
+  ThreadDetail,
+  ThreadTurn,
+} from '@/lib/conversations/types';
+import { MessageComposer } from './message-composer';
 
 const SENDER_LABEL: Record<SenderKind, string> = {
   visitor: 'Visitor',
@@ -57,10 +70,60 @@ function Turn({ turn }: { turn: ThreadTurn }) {
           )}
           <span>{formatRelative(turn.at)}</span>
         </p>
-        <p className="whitespace-pre-wrap">{turn.body}</p>
+        {turn.governanceStatus === 'pending' && !turn.body ? (
+          <p className="italic text-muted-foreground">Held for a human OK — the draft is in Approvals.</p>
+        ) : (
+          <p className="whitespace-pre-wrap">{turn.body}</p>
+        )}
       </div>
     </li>
   );
+}
+
+/** leadId join first; exact-title fallback for anonymous conversations. */
+function findLinked(
+  detail: ThreadDetail | undefined,
+  conversations: ConversationSummary[],
+): ConversationSummary | undefined {
+  if (!detail) return undefined;
+  if (detail.leadId != null) {
+    const byLead = conversations.find((c) => c.leadId === detail.leadId);
+    if (byLead) return byLead;
+  }
+  const title = detail.title.trim().toLowerCase();
+  if (!title) return undefined;
+  return conversations.find((c) => c.title.trim().toLowerCase() === title);
+}
+
+/** Merge planes by message id: thread turn wins; console-only rows fill in. */
+function mergedTurns(
+  detail: ThreadDetail,
+  consoleMessages: Array<{
+    id: string;
+    senderKind: SenderKind;
+    agentKey: string | null;
+    body: string;
+    governanceStatus: GovernanceStatus;
+    underReview: boolean;
+    at: string;
+  }>,
+): ThreadTurn[] {
+  const seen = new Set(detail.turns.map((t) => t.id));
+  const extras: ThreadTurn[] = consoleMessages
+    .filter((m) => !seen.has(m.id))
+    .map((m) => ({
+      id: m.id,
+      seq: Number.MAX_SAFE_INTEGER,
+      senderKind: m.senderKind,
+      agentKey: m.agentKey,
+      body: m.underReview && !m.body ? '' : m.body,
+      governanceStatus: m.underReview ? 'pending' : m.governanceStatus,
+      claimLevel: 0,
+      streamingStatus: 'settled',
+      citedChunkIds: [],
+      at: m.at,
+    }));
+  return [...detail.turns, ...extras].sort((a, b) => a.at.localeCompare(b.at));
 }
 
 export function ThreadView({ threadId }: { threadId: string }) {
@@ -68,11 +131,12 @@ export function ThreadView({ threadId }: { threadId: string }) {
   const conversations = useConversations();
 
   const detail = thread.data;
-  // The only thread ⇄ conversation join the backend exposes is a shared leadId.
-  const linkedConversation =
-    detail?.leadId != null
-      ? (conversations.data ?? []).find((c) => c.leadId === detail.leadId)
-      : undefined;
+  const linkedConversation = findLinked(detail, conversations.data ?? []);
+  const conversation = useConversation(linkedConversation?.id ?? '');
+  const turns =
+    detail && linkedConversation && conversation.data
+      ? mergedTurns(detail, conversation.data.messages)
+      : (detail?.turns ?? []);
 
   if (thread.isLoading) {
     return <div className="glass-surface animate-pulse rounded-xl p-10 text-sm text-muted-foreground">Loading…</div>;
@@ -86,7 +150,7 @@ export function ThreadView({ threadId }: { threadId: string }) {
   }
 
   return (
-    <section className="mx-auto max-w-4xl">
+    <section>
       <header className="mb-5">
         <Link
           href="/conversations"
@@ -112,26 +176,23 @@ export function ThreadView({ threadId }: { threadId: string }) {
               )}
             </p>
           </div>
-          {linkedConversation ? (
-            <Link
-              href={`/conversations/messages/${linkedConversation.id}`}
-              className="rounded-md bg-primary px-3 py-1.5 text-xs font-medium text-primary-foreground hover:bg-primary/90"
-            >
-              Reply as a person
-            </Link>
-          ) : (
-            <span className="text-xs text-muted-foreground">
-              No message channel linked{detail.anonymous ? ' (anonymous visitor)' : ''}.
-            </span>
-          )}
         </div>
       </header>
 
       <ol className="space-y-3">
-        {detail.turns.map((turn) => (
+        {turns.map((turn) => (
           <Turn key={turn.id} turn={turn} />
         ))}
       </ol>
+
+      {linkedConversation ? (
+        <MessageComposer conversationId={linkedConversation.id} />
+      ) : (
+        <p className="mt-6 text-xs text-muted-foreground">
+          Replying isn&apos;t possible here yet — the backend exposes no message channel for this
+          conversation{detail.anonymous ? ' (anonymous visitor, no matching title found)' : ''}.
+        </p>
+      )}
 
       {detail.guardHits.length > 0 && (
         <aside className="glass-surface mt-6 rounded-xl border-l-2 border-l-warning p-4">

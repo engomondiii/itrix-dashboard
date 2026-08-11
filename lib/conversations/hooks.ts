@@ -26,6 +26,8 @@ export function useConversation(conversationId: string) {
   return useQuery({
     queryKey: ['conversations', 'console', conversationId],
     queryFn: () => getConversation(conversationId),
+    // Callers may pass '' while the thread → conversation join resolves.
+    enabled: conversationId !== '',
     refetchInterval: POLL_MS,
   });
 }

@@ -704,7 +704,16 @@ export const todayHandlers = [
         [l.company, l.visitorName, l.primaryPain].some((v) => v.toLowerCase().includes(search)),
       );
     }
-    rows = [...rows].sort((a, b) => b.submittedAt.localeCompare(a.submittedAt));
+    // sort=submittedAt|score|tier|status & dir=asc|desc, like LeadFilter.
+    const sort = params.get('sort') ?? 'submittedAt';
+    const dirMul = params.get('dir') === 'asc' ? 1 : -1;
+    rows = [...rows].sort((a, b) => {
+      const pick = (l: LeadRow) =>
+        sort === 'score' ? l.score : sort === 'tier' ? l.tier : sort === 'status' ? l.status : l.submittedAt;
+      const av = pick(a);
+      const bv = pick(b);
+      return (typeof av === 'number' ? av - (bv as number) : String(av).localeCompare(String(bv))) * dirMul;
+    });
     return HttpResponse.json({
       results: rows,
       count: rows.length,
@@ -1119,12 +1128,18 @@ export const todayHandlers = [
     await delay(LATENCY);
     const denied = requireAuth(request);
     if (denied) return denied;
+    const teamSearch = (new URL(request.url).searchParams.get('search') ?? '').toLowerCase();
     const results = [
       { id: 'tm-01', name: 'Demo User', email: 'demo@example.com', role: 'Operations', avatarUrl: null, active: true, openLeads: 4 },
       { id: 'tm-02', name: 'Naomi Kim', email: 'naomi@example.com', role: 'Design', avatarUrl: null, active: true, openLeads: 0 },
       { id: 'tm-03', name: 'Daehyuk Park', email: 'park@example.com', role: 'Strategy', avatarUrl: null, active: true, openLeads: 2 },
       { id: 'tm-04', name: 'Former Staffer', email: 'gone@example.com', role: 'Ops', avatarUrl: null, active: false, openLeads: 0 },
-    ];
+    ].filter(
+      (m) =>
+        !teamSearch ||
+        m.name.toLowerCase().includes(teamSearch) ||
+        m.email.toLowerCase().includes(teamSearch),
+    );
     return HttpResponse.json({ results, count: results.length, page: 1, pageSize: 100, totalPages: 1 });
   }),
 

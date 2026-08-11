@@ -147,16 +147,50 @@ export function ApprovalsView() {
   const queue = useApprovalQueue();
   const { hasPermission } = useAuth();
   const canAct = hasPermission(['ADMIN', 'ASSESSMENT']);
-  const rows = queue.data ?? [];
+
+  // The endpoint is a bare newest-first array with no params — risk filter
+  // and ordering are ours. Oldest-first is the default: it's a queue.
+  const [minRisk, setMinRisk] = useState<number | null>(null);
+  const [order, setOrder] = useState<'oldest' | 'newest'>('oldest');
+  const rows = (queue.data ?? [])
+    .filter((row) => minRisk === null || row.claimLevel >= minRisk)
+    .sort((a, b) => (order === 'oldest' ? a.at.localeCompare(b.at) : b.at.localeCompare(a.at)));
 
   return (
     <section>
-      <header className="mb-5">
-        <h1 className="font-display tracking-display text-2xl font-semibold">Approvals</h1>
-        <p className="mt-1 text-sm text-muted-foreground">
-          Messages the AI wants to send that need a human OK before they go out.
-          {!canAct && ' Your role can watch this queue but not act on it.'}
-        </p>
+      <header className="mb-5 flex flex-wrap items-end justify-between gap-3">
+        <div>
+          <h1 className="font-display tracking-display text-2xl font-semibold">Approvals</h1>
+          <p className="mt-1 text-sm text-muted-foreground">
+            Messages the AI wants to send that need a human OK before they go out.
+            {!canAct && ' Your role can watch this queue but not act on it.'}
+          </p>
+        </div>
+        <div className="flex flex-wrap items-center gap-2">
+          {[3, 4, 5].map((level) => (
+            <button
+              key={level}
+              type="button"
+              onClick={() => setMinRisk(minRisk === level ? null : level)}
+              aria-pressed={minRisk === level}
+              className={cn(
+                'rounded-full border px-3 py-1 text-xs font-medium',
+                minRisk === level
+                  ? 'border-primary bg-primary text-primary-foreground'
+                  : 'border-border bg-card text-muted-foreground hover:bg-accent',
+              )}
+            >
+              Risk {level}+
+            </button>
+          ))}
+          <button
+            type="button"
+            onClick={() => setOrder(order === 'oldest' ? 'newest' : 'oldest')}
+            className="rounded-md border border-border px-3 py-1 text-xs font-medium text-muted-foreground hover:bg-accent"
+          >
+            {order === 'oldest' ? 'Oldest first' : 'Newest first'}
+          </button>
+        </div>
       </header>
 
       {queue.isLoading && rows.length === 0 ? (

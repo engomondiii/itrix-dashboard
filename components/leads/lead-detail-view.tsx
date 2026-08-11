@@ -320,10 +320,18 @@ function ConversationsPanel({ lead }: { lead: LeadDetail }) {
   const threads = (board.data?.results ?? []).filter((t) => t.leadId === lead.id);
   const conversation = (conversations.data ?? []).find((c) => c.leadId === lead.id);
 
-  if (threads.length === 0 && !conversation) return null;
-
   return (
     <Panel title="Conversations">
+      {threads.length === 0 && !conversation && (
+        <p className="text-sm text-muted-foreground">
+          Nothing linked to this lead yet — a conversation attaches once the visitor&apos;s
+          thread is qualified.{' '}
+          <Link href="/conversations" className="underline">
+            Browse all conversations
+          </Link>
+          .
+        </p>
+      )}
       <div className="space-y-2 text-sm">
         {threads.map((thread) => (
           <div key={thread.threadId} className="flex flex-wrap items-center gap-2">

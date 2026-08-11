@@ -75,7 +75,7 @@ export function MessagesView({ conversationId }: { conversationId: string }) {
   }
 
   return (
-    <section className="mx-auto max-w-4xl">
+    <section>
       <header className="mb-5">
         <Link
           href="/conversations"

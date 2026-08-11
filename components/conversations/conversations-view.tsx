@@ -14,6 +14,7 @@
  */
 
 import Link from 'next/link';
+import { useState } from 'react';
 
 import { formatRelative } from '@/lib/entity/format';
 import { useThreadBoard } from '@/lib/today/hooks';
@@ -39,15 +40,28 @@ const GROUPS: Array<{ key: 'active' | 'waiting' | 'quiet'; title: string; hint: 
 
 export function ConversationsView() {
   const board = useThreadBoard();
-  const rows = board.data?.results ?? [];
+  // The server honours no board filters — search is ours, over the full 200.
+  const [search, setSearch] = useState('');
+  const needle = search.trim().toLowerCase();
+  const rows = (board.data?.results ?? []).filter(
+    (r) => !needle || r.title.toLowerCase().includes(needle) || r.company.toLowerCase().includes(needle),
+  );
 
   return (
     <section>
-      <header className="mb-5">
-        <h1 className="font-display tracking-display text-2xl font-semibold">Conversations</h1>
-        <p className="mt-1 text-sm text-muted-foreground">
-          Watch the AI talk to visitors, live — open a transcript to see every turn.
-        </p>
+      <header className="mb-5 flex flex-wrap items-end justify-between gap-3">
+        <div>
+          <h1 className="font-display tracking-display text-2xl font-semibold">Conversations</h1>
+          <p className="mt-1 text-sm text-muted-foreground">
+            Watch the AI talk to visitors, live — open a transcript to read and reply.
+          </p>
+        </div>
+        <input
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          placeholder="Search title or company…"
+          className="h-8 w-56 rounded-md border border-input bg-card px-2.5 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+        />
       </header>
 
       {board.isLoading && rows.length === 0 ? (

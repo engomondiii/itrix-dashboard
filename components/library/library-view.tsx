@@ -106,6 +106,11 @@ function TemplatesTab() {
   const [creating, setCreating] = useState(false);
   const [newName, setNewName] = useState('');
   const [newBody, setNewBody] = useState('');
+  const [search, setSearch] = useState('');
+  const needle = search.trim().toLowerCase();
+  const visible = (templates.data?.results ?? []).filter(
+    (t) => !needle || t.name.toLowerCase().includes(needle) || t.body.toLowerCase().includes(needle),
+  );
 
   return (
     <div>
@@ -126,7 +131,13 @@ function TemplatesTab() {
             {label}
           </button>
         ))}
-        <Button size="sm" variant="outline" className="ml-auto" onClick={() => setCreating((v) => !v)}>
+        <input
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          placeholder="Search templates…"
+          className="ml-auto h-8 w-44 rounded-md border border-input bg-card px-2.5 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+        />
+        <Button size="sm" variant="outline" onClick={() => setCreating((v) => !v)}>
           {creating ? 'Cancel' : 'New template'}
         </Button>
       </div>
@@ -171,13 +182,13 @@ function TemplatesTab() {
 
       {templates.isLoading ? (
         <div className="glass-surface animate-pulse rounded-xl p-8 text-sm text-muted-foreground">Loading…</div>
-      ) : (templates.data?.results.length ?? 0) === 0 ? (
+      ) : visible.length === 0 ? (
         <div className="glass-surface rounded-xl p-8 text-center text-sm text-muted-foreground">
-          No {kind} templates yet.
+          {needle ? 'No templates match the search.' : `No ${kind} templates yet.`}
         </div>
       ) : (
         <div className="space-y-3">
-          {templates.data!.results.map((template) => (
+          {visible.map((template) => (
             <TemplateCard key={template.id} template={template} kind={kind} />
           ))}
         </div>

@@ -40,7 +40,7 @@ export function CustomerDetailView({ clientId }: { clientId: string }) {
   }
 
   return (
-    <section className="mx-auto max-w-4xl">
+    <section>
       <header className="mb-5">
         <Link
           href="/customers"
