@@ -26,6 +26,7 @@ import {
   usePocs,
   usePocMutation,
 } from '@/lib/customers/hooks';
+import { ShowMore, useCapped } from '@/components/today/use-capped';
 import type {
   CustomerRow,
   Evaluation,
@@ -339,11 +340,7 @@ export function CustomersView() {
           No licensed accounts yet.
         </div>
       ) : (
-        <div className="grid gap-2 md:grid-cols-2 xl:grid-cols-3">
-          {customerRows.map((row) => (
-            <CustomerCard key={row.clientId} row={row} />
-          ))}
-        </div>
+        <AccountsGrid rows={customerRows} />
       )}
 
       <h2 className="font-display tracking-display mb-2 mt-8 text-sm font-semibold">
@@ -357,16 +354,45 @@ export function CustomersView() {
           Nothing in flight.
         </div>
       ) : (
-        <div className="space-y-2">
-          {deals.map((deal) =>
-            'pkg' in deal ? (
-              <EvaluationCard key={`ev-${deal.id}`} row={deal} />
-            ) : (
-              <PocCard key={`poc-${deal.id}`} row={deal} />
-            ),
-          )}
-        </div>
+        <DealsList deals={deals} />
       )}
     </section>
+  );
+}
+
+function AccountsGrid({ rows }: { rows: CustomerRow[] }) {
+  const { visible, remaining, showMore } = useCapped(rows);
+  return (
+    <div>
+      <div className="grid gap-2 md:grid-cols-2 xl:grid-cols-3">
+        {visible.map((row) => (
+          <CustomerCard key={row.clientId} row={row} />
+        ))}
+      </div>
+      <div className="mt-2">
+        <ShowMore remaining={remaining} onClick={showMore} />
+      </div>
+      {rows.length >= 500 && (
+        <p className="mt-2 text-xs text-muted-foreground">
+          Showing the worst 500 accounts — the backend has no paging beyond that yet.
+        </p>
+      )}
+    </div>
+  );
+}
+
+function DealsList({ deals }: { deals: Array<Evaluation | Poc> }) {
+  const { visible, remaining, showMore } = useCapped(deals);
+  return (
+    <div className="space-y-2">
+      {visible.map((deal) =>
+        'pkg' in deal ? (
+          <EvaluationCard key={`ev-${deal.id}`} row={deal} />
+        ) : (
+          <PocCard key={`poc-${deal.id}`} row={deal} />
+        ),
+      )}
+      <ShowMore remaining={remaining} onClick={showMore} />
+    </div>
   );
 }

@@ -15,6 +15,7 @@ import { Button } from '@/components/ui/button';
 import { useToast } from '@/components/ui/toast';
 import { cn } from '@/lib/utils';
 import { normalizeError } from '@/lib/api/errors';
+import { ShowMore, useCapped } from '@/components/today/use-capped';
 import {
   usePersona,
   usePersonas,
@@ -108,9 +109,10 @@ function TemplatesTab() {
   const [newBody, setNewBody] = useState('');
   const [search, setSearch] = useState('');
   const needle = search.trim().toLowerCase();
-  const visible = (templates.data?.results ?? []).filter(
+  const matching = (templates.data?.results ?? []).filter(
     (t) => !needle || t.name.toLowerCase().includes(needle) || t.body.toLowerCase().includes(needle),
   );
+  const { visible, remaining, showMore } = useCapped(matching);
 
   return (
     <div>
@@ -182,7 +184,7 @@ function TemplatesTab() {
 
       {templates.isLoading ? (
         <div className="glass-surface animate-pulse rounded-xl p-8 text-sm text-muted-foreground">Loading…</div>
-      ) : visible.length === 0 ? (
+      ) : matching.length === 0 ? (
         <div className="glass-surface rounded-xl p-8 text-center text-sm text-muted-foreground">
           {needle ? 'No templates match the search.' : `No ${kind} templates yet.`}
         </div>
@@ -191,6 +193,7 @@ function TemplatesTab() {
           {visible.map((template) => (
             <TemplateCard key={template.id} template={template} kind={kind} />
           ))}
+          <ShowMore remaining={remaining} onClick={showMore} />
         </div>
       )}
     </div>
@@ -201,22 +204,40 @@ function ProfilesTab() {
   const personas = usePersonas();
   const [openId, setOpenId] = useState<string | null>(null);
   const detail = usePersona(openId);
+  const [search, setSearch] = useState('');
+  const needle = search.trim().toLowerCase();
+  const rows = (personas.data?.personas ?? []).filter(
+    (p) =>
+      !needle ||
+      [p.company, p.department, p.primary_persona, p.functionalFamily, p.pitchArchetype].some(
+        (v) => v.toLowerCase().includes(needle),
+      ),
+  );
+  const { visible, remaining, showMore } = useCapped(rows);
 
   return (
     <div>
-      <p className="mb-4 rounded-lg bg-warning-soft px-3 py-2 text-xs font-medium text-warning">
-        Internal only — buyer profiles must never be shared with or shown to customers.
-      </p>
+      <div className="mb-4 flex flex-wrap items-center gap-3">
+        <p className="rounded-lg bg-warning-soft px-3 py-2 text-xs font-medium text-warning">
+          Internal only — buyer profiles must never be shared with or shown to customers.
+        </p>
+        <input
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          placeholder="Search company, role, family…"
+          className="ml-auto h-8 w-56 rounded-md border border-input bg-card px-2.5 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+        />
+      </div>
 
       {personas.isLoading ? (
         <div className="glass-surface animate-pulse rounded-xl p-8 text-sm text-muted-foreground">Loading…</div>
-      ) : (personas.data?.personas.length ?? 0) === 0 ? (
+      ) : rows.length === 0 ? (
         <div className="glass-surface rounded-xl p-8 text-center text-sm text-muted-foreground">
-          No profiles seeded yet.
+          {needle ? 'No profiles match the search.' : 'No profiles seeded yet.'}
         </div>
       ) : (
         <div className="space-y-2">
-          {personas.data!.personas.map((persona) => (
+          {visible.map((persona) => (
             <article key={persona.personaId} className="glass-surface rounded-xl px-4 py-3">
               <button
                 type="button"
@@ -256,6 +277,7 @@ function ProfilesTab() {
               )}
             </article>
           ))}
+          <ShowMore remaining={remaining} onClick={showMore} />
         </div>
       )}
     </div>

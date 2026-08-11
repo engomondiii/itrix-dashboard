@@ -17,6 +17,7 @@
  */
 
 import Link from 'next/link';
+import { useState } from 'react';
 import { ArrowLeft } from 'lucide-react';
 
 import { cn } from '@/lib/utils';
@@ -30,6 +31,7 @@ import type {
   ThreadDetail,
   ThreadTurn,
 } from '@/lib/conversations/types';
+import { MessageBody } from './message-body';
 import { MessageComposer } from './message-composer';
 
 const SENDER_LABEL: Record<SenderKind, string> = {
@@ -73,7 +75,7 @@ function Turn({ turn }: { turn: ThreadTurn }) {
         {turn.governanceStatus === 'pending' && !turn.body ? (
           <p className="italic text-muted-foreground">Held for a human OK — the draft is in Approvals.</p>
         ) : (
-          <p className="whitespace-pre-wrap">{turn.body}</p>
+          <MessageBody text={turn.body} />
         )}
       </div>
     </li>
@@ -95,7 +97,12 @@ function findLinked(
   return conversations.find((c) => c.title.trim().toLowerCase() === title);
 }
 
-/** Merge planes by message id: thread turn wins; console-only rows fill in. */
+/**
+ * Merge planes: thread turns are the source of truth; from the console side
+ * we take ONLY team messages — the one kind threads are missing (backend
+ * gap). Visitor/agent rows on the console plane are review-plane COPIES with
+ * different ids; merging them wholesale duplicated every turn (seen live).
+ */
 function mergedTurns(
   detail: ThreadDetail,
   consoleMessages: Array<{
@@ -110,7 +117,7 @@ function mergedTurns(
 ): ThreadTurn[] {
   const seen = new Set(detail.turns.map((t) => t.id));
   const extras: ThreadTurn[] = consoleMessages
-    .filter((m) => !seen.has(m.id))
+    .filter((m) => !seen.has(m.id) && m.senderKind === 'team')
     .map((m) => ({
       id: m.id,
       seq: Number.MAX_SAFE_INTEGER,
@@ -129,6 +136,8 @@ function mergedTurns(
 export function ThreadView({ threadId }: { threadId: string }) {
   const thread = useThreadDetail(threadId);
   const conversations = useConversations();
+  // A long-running conversation can be hundreds of turns - render the tail.
+  const [shown, setShown] = useState(50);
 
   const detail = thread.data;
   const linkedConversation = findLinked(detail, conversations.data ?? []);
@@ -179,8 +188,17 @@ export function ThreadView({ threadId }: { threadId: string }) {
         </div>
       </header>
 
+      {turns.length > shown && (
+        <button
+          type="button"
+          onClick={() => setShown((n) => n + 100)}
+          className="mb-3 w-full rounded-md border border-border px-3 py-1.5 text-xs text-muted-foreground hover:bg-accent"
+        >
+          Show {Math.min(turns.length - shown, 100)} earlier messages ({turns.length - shown} hidden)
+        </button>
+      )}
       <ol className="space-y-3">
-        {turns.map((turn) => (
+        {turns.slice(-shown).map((turn) => (
           <Turn key={turn.id} turn={turn} />
         ))}
       </ol>

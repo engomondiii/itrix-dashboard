@@ -22,7 +22,11 @@ import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { formatRelative } from '@/lib/entity/format';
 import { useDebouncedValue } from '@/lib/use-debounced-value';
-import { useLeads, usePipeline } from '@/lib/leads/hooks';
+import { useBulkLeadAction, useLeads, usePipeline } from '@/lib/leads/hooks';
+import { useToast } from '@/components/ui/toast';
+import { normalizeError } from '@/lib/api/errors';
+import { useAuth } from '@/lib/auth/auth-context';
+import { ShowMore, useCapped } from '@/components/today/use-capped';
 import { PARKED_STAGES } from '@/lib/leads/api';
 import type { LeadRow, LeadStatus } from '@/lib/today/types';
 import type { PipelineStage } from '@/lib/leads/types';
@@ -99,6 +103,9 @@ function LeadsInner() {
   const tier = Number(searchParams.get('p')) || null;
   const urlSearch = searchParams.get('q') ?? '';
   const page = Number(searchParams.get('page')) || 1;
+  const pageSize = [20, 50, 100].includes(Number(searchParams.get('n')))
+    ? Number(searchParams.get('n'))
+    : 20;
   const sort = (searchParams.get('sort') as SortField) || 'submittedAt';
   const dir: SortDir = searchParams.get('dir') === 'asc' ? 'asc' : 'desc';
 
@@ -107,6 +114,9 @@ function LeadsInner() {
   const [searchInput, setSearchInput] = useState(urlSearch);
   const debouncedSearch = useDebouncedValue(searchInput);
 
+  // Bulk selection: page-scoped; cleared by setParams on any filter change.
+  const [selected, setSelected] = useState<Set<string>>(new Set());
+
   const setParams = useCallback(
     (patch: Record<string, string | null>) => {
       const next = new URLSearchParams(searchParams.toString());
@@ -114,16 +124,25 @@ function LeadsInner() {
         if (value === null || value === '') next.delete(key);
         else next.set(key, value);
       }
-      // Any filter change resets pagination.
+      // Any filter change resets pagination — and the bulk selection, which
+      // is page-scoped by definition.
       if (!('page' in patch)) next.delete('page');
+      setSelected(new Set());
       router.replace(`${pathname}?${next.toString()}`, { scroll: false });
     },
     [router, pathname, searchParams],
   );
 
+  // Writes the URL directly (no setState) — the effect-safe subset of
+  // setParams. Selection survives a search refinement; the ids stay valid.
   useEffect(() => {
-    if (debouncedSearch !== urlSearch) setParams({ q: debouncedSearch || null });
-  }, [debouncedSearch, urlSearch, setParams]);
+    if (debouncedSearch === urlSearch) return;
+    const next = new URLSearchParams(searchParams.toString());
+    if (debouncedSearch) next.set('q', debouncedSearch);
+    else next.delete('q');
+    next.delete('page');
+    router.replace(`${pathname}?${next.toString()}`, { scroll: false });
+  }, [debouncedSearch, urlSearch, searchParams, router, pathname]);
 
   const setSort = useCallback(
     (field: SortField) => {
@@ -135,9 +154,19 @@ function LeadsInner() {
   );
 
   // List = filtered query; board = the real pipeline endpoint.
-  const leads = useLeads({ status: stage, tier, search: urlSearch, page, sort, dir });
+  const leads = useLeads({ status: stage, tier, search: urlSearch, page, pageSize, sort, dir });
   const pipeline = usePipeline(view === 'board');
   const rows = leads.data?.results ?? [];
+
+  const toggleRow = (id: string) =>
+    setSelected((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  const toggleAll = () =>
+    setSelected((prev) => (prev.size === rows.length ? new Set() : new Set(rows.map((r) => r.id))));
 
   return (
     <section>
@@ -189,14 +218,40 @@ function LeadsInner() {
             ))}
           </div>
 
-          <LeadTable rows={rows} isLoading={leads.isLoading} sort={sort} dir={dir} onSort={setSort} />
+          {selected.size > 0 && <BulkBar selected={selected} onClear={() => setSelected(new Set())} />}
 
-          {(leads.data?.totalPages ?? 1) > 1 && (
-            <div className="mt-4 flex items-center justify-between text-sm text-muted-foreground">
+          <LeadTable
+            rows={rows}
+            isLoading={leads.isLoading}
+            sort={sort}
+            dir={dir}
+            onSort={setSort}
+            selected={selected}
+            onToggleRow={toggleRow}
+            onToggleAll={toggleAll}
+          />
+
+          {(leads.data?.count ?? 0) > 0 && (
+            <div className="mt-4 flex flex-wrap items-center justify-between gap-3 text-sm text-muted-foreground">
               <span data-numeric>
-                Page {leads.data?.page} of {leads.data?.totalPages} · {leads.data?.count} leads
+                Showing {(page - 1) * pageSize + 1}–{Math.min(page * pageSize, leads.data!.count)} of{' '}
+                {leads.data!.count} leads
               </span>
-              <div className="flex gap-2">
+              <div className="flex items-center gap-2">
+                <label className="flex items-center gap-1.5 text-xs">
+                  Per page
+                  <select
+                    value={pageSize}
+                    onChange={(e) => setParams({ n: e.target.value === '20' ? null : e.target.value })}
+                    className="h-7 rounded-md border border-input bg-card px-1.5 text-xs focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                  >
+                    {[20, 50, 100].map((n) => (
+                      <option key={n} value={n}>
+                        {n}
+                      </option>
+                    ))}
+                  </select>
+                </label>
                 <Button size="sm" variant="outline" disabled={page <= 1} onClick={() => setParams({ page: String(page - 1) })}>
                   Previous
                 </Button>
@@ -256,18 +311,102 @@ function SortableTh({
   );
 }
 
+function BulkBar({ selected, onClear }: { selected: Set<string>; onClear: () => void }) {
+  const { toast } = useToast();
+  const { user } = useAuth();
+  const bulk = useBulkLeadAction();
+  const [stageTo, setStageTo] = useState<LeadStatus | ''>('');
+  const ids = [...selected];
+
+  function report(result: { done: number; failed: number }, verb: string) {
+    toast({
+      title: result.failed
+        ? `${verb} ${result.done}, ${result.failed} failed`
+        : `${verb} ${result.done} lead${result.done === 1 ? '' : 's'}`,
+      tone: result.failed ? 'destructive' : 'success',
+    });
+    onClear();
+  }
+
+  return (
+    <div className="mb-3 flex flex-wrap items-center gap-2 rounded-xl bg-secondary px-3 py-2 text-sm">
+      <span className="font-medium" data-numeric>
+        {selected.size} selected
+      </span>
+      {user?.email && (
+        <Button
+          size="sm"
+          variant="outline"
+          disabled={bulk.isPending}
+          onClick={() =>
+            bulk.mutate(
+              { kind: 'assign', ids, owner: user.email },
+              {
+                onSuccess: (r) => report(r, 'Assigned'),
+                onError: (e) => toast({ title: normalizeError(e).message, tone: 'destructive' }),
+              },
+            )
+          }
+        >
+          Assign to me
+        </Button>
+      )}
+      <label className="flex items-center gap-1.5 text-xs text-muted-foreground">
+        Move to
+        <select
+          value={stageTo}
+          onChange={(e) => setStageTo(e.target.value as LeadStatus)}
+          className="h-7 rounded-md border border-input bg-card px-1.5 text-xs focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+        >
+          <option value="">stage…</option>
+          {[...LIST_STAGES, ...PARKED_STAGES].map((stageOption) => (
+            <option key={stageOption} value={stageOption}>
+              {stageOption}
+            </option>
+          ))}
+        </select>
+      </label>
+      <Button
+        size="sm"
+        disabled={bulk.isPending || !stageTo}
+        onClick={() =>
+          stageTo &&
+          bulk.mutate(
+            { kind: 'status', ids, status: stageTo },
+            {
+              onSuccess: (r) => report(r, 'Moved'),
+              onError: (e) => toast({ title: normalizeError(e).message, tone: 'destructive' }),
+            },
+          )
+        }
+      >
+        {bulk.isPending ? 'Working…' : 'Apply'}
+      </Button>
+      <Button size="sm" variant="ghost" className="ml-auto" onClick={onClear}>
+        Clear
+      </Button>
+    </div>
+  );
+}
+
 function LeadTable({
   rows,
   isLoading,
   sort,
   dir,
   onSort,
+  selected,
+  onToggleRow,
+  onToggleAll,
 }: {
   rows: LeadRow[];
   isLoading: boolean;
   sort: SortField;
   dir: SortDir;
   onSort: (field: SortField) => void;
+  selected: Set<string>;
+  onToggleRow: (id: string) => void;
+  onToggleAll: () => void;
 }) {
   if (isLoading && rows.length === 0) {
     return <div className="glass-surface animate-pulse rounded-xl p-10 text-sm text-muted-foreground">Loading…</div>;
@@ -284,6 +423,15 @@ function LeadTable({
       <table className="w-full min-w-[640px] text-sm">
         <thead>
           <tr className="border-b border-border text-left text-xs text-muted-foreground">
+            <th className="w-10 px-4 py-2.5">
+              <input
+                type="checkbox"
+                aria-label="Select all on this page"
+                checked={rows.length > 0 && selected.size === rows.length}
+                onChange={onToggleAll}
+                className="h-3.5 w-3.5 accent-[hsl(var(--primary))]"
+              />
+            </th>
             <th className="px-4 py-2.5 font-medium">Company / contact</th>
             <SortableTh label="Priority" field="tier" sort={sort} dir={dir} onSort={onSort} />
             <SortableTh label="Stage" field="status" sort={sort} dir={dir} onSort={onSort} />
@@ -295,6 +443,15 @@ function LeadTable({
         <tbody>
           {rows.map((row) => (
             <tr key={row.id} className="border-b border-border/60 last:border-0 hover:bg-accent/40">
+              <td className="px-4 py-2.5">
+                <input
+                  type="checkbox"
+                  aria-label={`Select ${row.company || row.visitorName || 'lead'}`}
+                  checked={selected.has(row.id)}
+                  onChange={() => onToggleRow(row.id)}
+                  className="h-3.5 w-3.5 accent-[hsl(var(--primary))]"
+                />
+              </td>
               <td className="px-4 py-2.5">
                 <Link href={`/leads/${row.id}`} className="font-medium hover:underline">
                   {row.company || row.visitorName || 'Unknown'}
@@ -331,15 +488,25 @@ function LeadBoard({ stages, isLoading }: { stages: PipelineStage[]; isLoading: 
     <div className="overflow-x-auto pb-2">
       <div className="flex min-w-max gap-3">
         {stages.map((stage) => (
-          <div key={stage.status} className="w-56 shrink-0 rounded-xl bg-muted/50 p-2">
-            <div className="mb-2 flex items-center justify-between px-1">
-              <span className="text-xs font-semibold">{stageLabel(stage.status)}</span>
-              <span className="text-xs text-muted-foreground" data-numeric>
-                {stage.count}
-              </span>
-            </div>
-            <div className="space-y-2">
-              {stage.leads.map((row) => (
+          <BoardColumn key={stage.status} stage={stage} />
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function BoardColumn({ stage }: { stage: PipelineStage }) {
+  const { visible, remaining, showMore } = useCapped(stage.leads);
+  return (
+    <div className="w-56 shrink-0 rounded-xl bg-muted/50 p-2">
+      <div className="mb-2 flex items-center justify-between px-1">
+        <span className="text-xs font-semibold">{stageLabel(stage.status)}</span>
+        <span className="text-xs text-muted-foreground" data-numeric>
+          {stage.count}
+        </span>
+      </div>
+      <div className="space-y-2">
+        {visible.map((row) => (
                 <Link
                   key={row.id}
                   href={`/leads/${row.id}`}
@@ -362,12 +529,10 @@ function LeadBoard({ stages, isLoading }: { stages: PipelineStage[]; isLoading: 
                   </div>
                 </Link>
               ))}
-              {stage.leads.length === 0 && (
-                <div className="px-1 py-3 text-center text-xs text-muted-foreground">—</div>
-              )}
-            </div>
-          </div>
-        ))}
+        {stage.leads.length === 0 && (
+          <div className="px-1 py-3 text-center text-xs text-muted-foreground">—</div>
+        )}
+        <ShowMore remaining={remaining} onClick={showMore} />
       </div>
     </div>
   );

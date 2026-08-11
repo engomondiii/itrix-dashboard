@@ -42,6 +42,7 @@ import { journeyLabel } from '@/lib/leads/journey-labels';
 import { useConversations } from '@/lib/conversations/hooks';
 import { useThreadBoard } from '@/lib/today/hooks';
 import { ReasonAction } from '@/components/today/reason-action';
+import { ShowMore, useCapped } from '@/components/today/use-capped';
 
 const ALL_STAGES: LeadStatus[] = [
   'New', 'Qualifying', 'Contacted', 'Meeting Booked', 'NDA', 'Evaluation',
@@ -367,6 +368,7 @@ function NotesPanel({ lead }: { lead: LeadDetail }) {
   const { toast } = useToast();
   const addNote = useAddNote(lead.id);
   const [draft, setDraft] = useState('');
+  const notesCap = useCapped(lead.notes);
 
   return (
     <Panel title="Notes">
@@ -396,7 +398,7 @@ function NotesPanel({ lead }: { lead: LeadDetail }) {
         <p className="text-xs text-muted-foreground">No notes yet.</p>
       ) : (
         <ul className="space-y-2">
-          {lead.notes.map((note) => (
+          {notesCap.visible.map((note) => (
             <li key={note.id} className="rounded-lg bg-muted/60 px-3 py-2 text-sm">
               <p>{note.body}</p>
               <p className="mt-0.5 text-xs text-muted-foreground">
@@ -404,6 +406,7 @@ function NotesPanel({ lead }: { lead: LeadDetail }) {
               </p>
             </li>
           ))}
+          <ShowMore remaining={notesCap.remaining} onClick={notesCap.showMore} />
         </ul>
       )}
     </Panel>
@@ -425,6 +428,7 @@ function TimelinePanel({ lead }: { lead: LeadDetail }) {
       by: m.bookedBy || null,
     })),
   ].sort((a, b) => b.at.localeCompare(a.at));
+  const cap = useCapped(entries);
 
   return (
     <Panel title="History">
@@ -432,7 +436,7 @@ function TimelinePanel({ lead }: { lead: LeadDetail }) {
         <p className="text-xs text-muted-foreground">Nothing yet.</p>
       ) : (
         <ul className="space-y-1.5">
-          {entries.map((entry) => (
+          {cap.visible.map((entry) => (
             <li key={entry.id} className="flex items-baseline gap-2 text-sm">
               <span className="w-20 shrink-0 text-xs text-muted-foreground" title={entry.at}>
                 {formatRelative(entry.at)}
@@ -443,6 +447,7 @@ function TimelinePanel({ lead }: { lead: LeadDetail }) {
               </span>
             </li>
           ))}
+          <ShowMore remaining={cap.remaining} onClick={cap.showMore} />
         </ul>
       )}
     </Panel>

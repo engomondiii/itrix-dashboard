@@ -149,6 +149,36 @@ export function useAssignLead(id: string) {
   });
 }
 
+/**
+ * Bulk actions fan out as parallel per-lead requests — the itriX backend has
+ * no bulk endpoints (unlike the starter's Django twin). allSettled so one
+ * failure doesn't abort the rest; the caller reports done/failed counts.
+ */
+export function useBulkLeadAction() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (
+      vars:
+        | { kind: 'assign'; ids: string[]; owner: string }
+        | { kind: 'status'; ids: string[]; status: LeadStatus },
+    ) => {
+      const results = await Promise.allSettled(
+        vars.ids.map((id) =>
+          vars.kind === 'assign' ? assignLead(id, vars.owner) : setLeadStatus(id, vars.status),
+        ),
+      );
+      return {
+        done: results.filter((r) => r.status === 'fulfilled').length,
+        failed: results.filter((r) => r.status === 'rejected').length,
+      };
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['leads'] });
+      queryClient.invalidateQueries({ queryKey: ['today'] });
+    },
+  });
+}
+
 export function useRequestNda(id: string) {
   const queryClient = useQueryClient();
   return useMutation({

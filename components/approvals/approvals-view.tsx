@@ -22,6 +22,7 @@ import { formatRelative } from '@/lib/entity/format';
 import { useApprovalAction, useApprovalQueue } from '@/lib/today/hooks';
 import type { ApprovalRow } from '@/lib/today/types';
 import { ReasonAction } from '@/components/today/reason-action';
+import { ShowMore, useCapped } from '@/components/today/use-capped';
 
 const RISK_LABEL: Record<number, string> = {
   1: 'Risk 1 · conversational',
@@ -155,6 +156,7 @@ export function ApprovalsView() {
   const rows = (queue.data ?? [])
     .filter((row) => minRisk === null || row.claimLevel >= minRisk)
     .sort((a, b) => (order === 'oldest' ? a.at.localeCompare(b.at) : b.at.localeCompare(a.at)));
+  const { visible, remaining, showMore } = useCapped(rows);
 
   return (
     <section>
@@ -201,9 +203,10 @@ export function ApprovalsView() {
         </div>
       ) : (
         <div className="space-y-3">
-          {rows.map((row) => (
+          {visible.map((row) => (
             <ApprovalCard key={row.id} row={row} canAct={canAct} />
           ))}
+          <ShowMore remaining={remaining} onClick={showMore} />
         </div>
       )}
     </section>

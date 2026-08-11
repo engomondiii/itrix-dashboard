@@ -13,6 +13,7 @@ import { ArrowLeft } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { formatRelative } from '@/lib/entity/format';
 import { useCustomer, useCustomerSupport } from '@/lib/customers/hooks';
+import { ShowMore, useCapped } from '@/components/today/use-capped';
 import type { HealthClass } from '@/lib/customers/types';
 
 const HEALTH_STYLE: Record<HealthClass, string> = {
@@ -25,6 +26,7 @@ const HEALTH_STYLE: Record<HealthClass, string> = {
 export function CustomerDetailView({ clientId }: { clientId: string }) {
   const customer = useCustomer(clientId);
   const support = useCustomerSupport(clientId);
+  const supportCap = useCapped(support.data?.results ?? []);
 
   const detail = customer.data;
 
@@ -91,7 +93,7 @@ export function CustomerDetailView({ clientId }: { clientId: string }) {
           <p className="text-sm text-muted-foreground">No support requests.</p>
         ) : (
           <ul className="space-y-2">
-            {support.data!.results.map((row) => (
+            {supportCap.visible.map((row) => (
               <li key={row.requestId} className="rounded-lg bg-muted/60 px-3 py-2 text-sm">
                 <p className="font-medium">
                   {row.subject}
@@ -108,6 +110,7 @@ export function CustomerDetailView({ clientId }: { clientId: string }) {
                 </p>
               </li>
             ))}
+            <ShowMore remaining={supportCap.remaining} onClick={supportCap.showMore} />
           </ul>
         )}
       </div>

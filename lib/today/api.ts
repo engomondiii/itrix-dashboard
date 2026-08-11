@@ -77,8 +77,12 @@ export function rescheduleFollowUp(id: string, dueAt: string): Promise<FollowUpR
 
 // -- Threads -----------------------------------------------------------------
 
-/** Only `limit` is honoured server-side; all other filtering is client-side. */
-export function listThreads(limit = 200): Promise<ResultsEnvelope<ThreadRow>> {
+/**
+ * Only `limit` is honoured server-side (max 500, NO offset pagination — the
+ * board simply cannot reach older threads than the newest 500; flagged for
+ * the backend lane). Ask for the max; render incrementally.
+ */
+export function listThreads(limit = 500): Promise<ResultsEnvelope<ThreadRow>> {
   return http.get<ResultsEnvelope<ThreadRow>>(`${V1}/cockpit/threads/?limit=${limit}`);
 }
 
@@ -102,14 +106,15 @@ export function assignLead(id: string, owner: string | null): Promise<unknown> {
 // -- NDA ---------------------------------------------------------------------
 
 export function listNda(status: NdaStatus): Promise<PaginatedEnvelope<NdaRow>> {
-  return http.get<PaginatedEnvelope<NdaRow>>(`${V1}/nda/?status=${status}`);
+  // pageSize max is 200 — enough that the Today band's count is honest.
+  return http.get<PaginatedEnvelope<NdaRow>>(`${V1}/nda/?status=${status}&pageSize=200`);
 }
 
 // -- Support (read-only) -----------------------------------------------------
 
 export function getSupportQueue(): Promise<SummaryEnvelope<SupportRow, SupportSummary>> {
   return http.get<SummaryEnvelope<SupportRow, SupportSummary>>(
-    `${V1}/cockpit/support/queue/`,
+    `${V1}/cockpit/support/queue/?limit=500`,
   );
 }
 
@@ -119,7 +124,7 @@ export function listAttachmentQueue(): Promise<
   SummaryEnvelope<AttachmentRow, AttachmentSummary>
 > {
   return http.get<SummaryEnvelope<AttachmentRow, AttachmentSummary>>(
-    `${V1}/cockpit/attachments/`,
+    `${V1}/cockpit/attachments/?limit=500`,
   );
 }
 

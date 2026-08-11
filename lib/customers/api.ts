@@ -19,9 +19,13 @@ interface CustomerBoard extends ResultsEnvelope<CustomerRow> {
   healthClasses: HealthClass[];
 }
 
-/** Sorted worst-first server-side: critical, at_risk, unknown, stable. */
+/**
+ * Sorted worst-first server-side. limit max 500, no offset pagination —
+ * accounts beyond the worst 500 are unreachable until the backend grows
+ * paging (flagged for the backend lane).
+ */
 export function listCustomers(): Promise<CustomerBoard> {
-  return http.get<CustomerBoard>(`${V1}/cockpit/customers/`);
+  return http.get<CustomerBoard>(`${V1}/cockpit/customers/?limit=500`);
 }
 
 export function getCustomer(clientId: string): Promise<CustomerDetail> {

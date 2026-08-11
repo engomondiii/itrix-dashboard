@@ -21,6 +21,7 @@ import { useThreadBoard } from '@/lib/today/hooks';
 import type { ThreadRow } from '@/lib/today/types';
 import { cn } from '@/lib/utils';
 import { journeyLabel } from '@/lib/leads/journey-labels';
+import { ShowMore, useCapped } from '@/components/today/use-capped';
 
 const HOUR_MS = 60 * 60 * 1000;
 
@@ -71,47 +72,73 @@ export function ConversationsView() {
           No conversations yet.
         </div>
       ) : (
-        GROUPS.map(({ key, title, hint }) => {
-          const group = rows.filter((r) => groupOf(r) === key);
-          if (group.length === 0) return null;
-          return (
-            <div key={key} className="mb-6">
-              <h2 className="font-display tracking-display mb-2 text-sm font-semibold">
-                {title}{' '}
-                <span className="font-sans text-xs font-normal text-muted-foreground">
-                  — {hint} · {group.length}
-                </span>
-              </h2>
-              <div className="space-y-2">
-                {group.map((row) => (
-                  <Link
-                    key={row.threadId}
-                    href={`/conversations/${row.threadId}`}
-                    className={cn(
-                      'glass-surface flex flex-wrap items-center gap-x-4 gap-y-1 rounded-xl border-l-2 px-4 py-3 text-sm hover:bg-accent/40',
-                      key === 'active' ? 'border-l-brand-accent' : key === 'waiting' ? 'border-l-warning' : 'border-l-transparent',
-                    )}
-                  >
-                    <span className="min-w-0 flex-1">
-                      <span className="block truncate font-medium">
-                        {row.title || 'Untitled conversation'}
-                        {row.company && <span className="text-muted-foreground"> · {row.company}</span>}
-                        {row.anonymous && <span className="text-muted-foreground"> · anonymous</span>}
-                      </span>
-                      <span className="block text-xs text-muted-foreground">
-                        {row.turnCount} turns ({row.visitorTurns} from the visitor) · {journeyLabel(row.journeyState)}
-                      </span>
-                    </span>
-                    <span className="shrink-0 text-xs text-muted-foreground">
-                      {formatRelative(row.lastActivityAt ?? row.createdAt)}
-                    </span>
-                  </Link>
-                ))}
-              </div>
-            </div>
-          );
-        })
+        GROUPS.map(({ key, title, hint }) => (
+          <Group
+            key={key}
+            groupKey={key}
+            title={title}
+            hint={hint}
+            rows={rows.filter((r) => groupOf(r) === key)}
+          />
+        ))
+      )}
+      {(board.data?.results.length ?? 0) >= 500 && (
+        <p className="text-xs text-muted-foreground">
+          Showing the newest 500 conversations — the backend has no paging beyond that yet.
+        </p>
       )}
     </section>
+  );
+}
+
+function Group({
+  groupKey,
+  title,
+  hint,
+  rows,
+}: {
+  groupKey: 'active' | 'waiting' | 'quiet';
+  title: string;
+  hint: string;
+  rows: ThreadRow[];
+}) {
+  const { visible, remaining, showMore } = useCapped(rows);
+  if (rows.length === 0) return null;
+  return (
+    <div className="mb-6">
+      <h2 className="font-display tracking-display mb-2 text-sm font-semibold">
+        {title}{' '}
+        <span className="font-sans text-xs font-normal text-muted-foreground">
+          — {hint} · {rows.length}
+        </span>
+      </h2>
+      <div className="space-y-2">
+        {visible.map((row) => (
+          <Link
+            key={row.threadId}
+            href={`/conversations/${row.threadId}`}
+            className={cn(
+              'glass-surface flex flex-wrap items-center gap-x-4 gap-y-1 rounded-xl border-l-2 px-4 py-3 text-sm hover:bg-accent/40',
+              groupKey === 'active' ? 'border-l-brand-accent' : groupKey === 'waiting' ? 'border-l-warning' : 'border-l-transparent',
+            )}
+          >
+            <span className="min-w-0 flex-1">
+              <span className="block truncate font-medium">
+                {row.title || 'Untitled conversation'}
+                {row.company && <span className="text-muted-foreground"> · {row.company}</span>}
+                {row.anonymous && <span className="text-muted-foreground"> · anonymous</span>}
+              </span>
+              <span className="block text-xs text-muted-foreground">
+                {row.turnCount} turns ({row.visitorTurns} from the visitor) · {journeyLabel(row.journeyState)}
+              </span>
+            </span>
+            <span className="shrink-0 text-xs text-muted-foreground">
+              {formatRelative(row.lastActivityAt ?? row.createdAt)}
+            </span>
+          </Link>
+        ))}
+        <ShowMore remaining={remaining} onClick={showMore} />
+      </div>
+    </div>
   );
 }

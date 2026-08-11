@@ -22,6 +22,7 @@ import { normalizeError } from '@/lib/api/errors';
 import { formatRelative } from '@/lib/entity/format';
 import { useConversation, useSendMessage } from '@/lib/conversations/hooks';
 import type { ConsoleMessage } from '@/lib/conversations/types';
+import { MessageBody } from './message-body';
 
 const RISK_OPTIONS = [
   { level: 1, label: 'Risk 1 · conversational' },
@@ -47,7 +48,7 @@ function Message({ message }: { message: ConsoleMessage }) {
             Held for a human OK — see Approvals for the draft.
           </p>
         ) : (
-          <p className="whitespace-pre-wrap">{message.body}</p>
+          <MessageBody text={message.body} />
         )}
       </div>
     </li>
@@ -60,6 +61,7 @@ export function MessagesView({ conversationId }: { conversationId: string }) {
   const send = useSendMessage(conversationId);
   const [draft, setDraft] = useState('');
   const [claimLevel, setClaimLevel] = useState(1);
+  const [shown, setShown] = useState(50);
 
   const detail = conversation.data;
 
@@ -95,8 +97,17 @@ export function MessagesView({ conversationId }: { conversationId: string }) {
         )}
       </header>
 
+      {detail.messages.length > shown && (
+        <button
+          type="button"
+          onClick={() => setShown((n) => n + 100)}
+          className="mb-3 w-full rounded-md border border-border px-3 py-1.5 text-xs text-muted-foreground hover:bg-accent"
+        >
+          Show {Math.min(detail.messages.length - shown, 100)} earlier messages
+        </button>
+      )}
       <ol className="space-y-3">
-        {detail.messages.map((message) => (
+        {detail.messages.slice(-shown).map((message) => (
           <Message key={message.id} message={message} />
         ))}
       </ol>
