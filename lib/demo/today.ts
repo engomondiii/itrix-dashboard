@@ -103,61 +103,61 @@ function seedThreads(): ThreadRow[] {
 function seedLeads(): LeadRow[] {
   return [
     {
-      id: 'ld-05', visitorName: 'S. Park', company: 'Hanul Engineering', role: 'CTO',
+      id: 'ld-05', visitorName: 'S. Park', company: 'Hanul Engineering', industry: 'Civil engineering', role: 'CTO',
       productRoute: 'survey-automation', primaryPain: 'Manual correction backlog',
       score: 86, tier: 1, status: 'New', owner: null,
       submittedAt: hoursAgo(2), journeyState: 'ARRIVED',
     },
     {
-      id: 'ld-06', visitorName: 'A. Weber', company: 'FeldMesser GmbH', role: 'Ops lead',
+      id: 'ld-06', visitorName: 'A. Weber', company: 'FeldMesser GmbH', industry: 'Geodetic surveying', role: 'Ops lead',
       productRoute: 'survey-automation', primaryPain: 'Field-to-office turnaround',
       score: 61, tier: 2, status: 'New', owner: null,
       submittedAt: hoursAgo(8), journeyState: 'ARRIVED',
     },
     {
-      id: 'ld-07', visitorName: 'J. Doe', company: '', role: '',
+      id: 'ld-07', visitorName: 'J. Doe', company: '', industry: '', role: '',
       productRoute: '', primaryPain: '', score: 22, tier: 4, status: 'New',
       owner: 'Demo User', submittedAt: hoursAgo(12), journeyState: 'ARRIVED',
     },
     // The rest of the funnel, so the board view has columns to show.
     {
-      id: 'ld-01', visitorName: 'B. Novak', company: 'Adria Geodesy', role: 'Managing partner',
+      id: 'ld-01', visitorName: 'B. Novak', company: 'Adria Geodesy', industry: 'Geodetic surveying', role: 'Managing partner',
       productRoute: 'survey-automation', primaryPain: 'Season peak overload',
       score: 74, tier: 2, status: 'Contacted', owner: 'Demo User',
       submittedAt: hoursAgo(96), journeyState: 'ENGAGED',
     },
     {
-      id: 'ld-02', visitorName: 'K. Tanaka', company: 'Shinkai Instruments', role: 'BD director',
+      id: 'ld-02', visitorName: 'K. Tanaka', company: 'Shinkai Instruments', industry: 'Survey instruments', role: 'BD director',
       productRoute: 'survey-automation', primaryPain: 'Manual QA cost',
       score: 81, tier: 1, status: 'NDA', owner: 'Demo User',
       submittedAt: hoursAgo(120), journeyState: 'QUALIFIED',
     },
     {
-      id: 'ld-03', visitorName: 'H. Cho', company: 'Daehan Survey Co.', role: 'COO',
+      id: 'ld-03', visitorName: 'H. Cho', company: 'Daehan Survey Co.', industry: 'Geodetic surveying', role: 'COO',
       productRoute: 'survey-automation', primaryPain: 'Correction turnaround SLA',
       score: 90, tier: 1, status: 'Evaluation', owner: 'Demo User',
       submittedAt: hoursAgo(200), journeyState: 'EVALUATING',
     },
     {
-      id: 'ld-04', visitorName: 'M. Ortiz', company: 'GeoField Ltda.', role: 'Head of ops',
+      id: 'ld-04', visitorName: 'M. Ortiz', company: 'GeoField Ltda.', industry: 'Mapping / GIS', role: 'Head of ops',
       productRoute: 'survey-automation', primaryPain: 'Pricing clarity',
       score: 55, tier: 3, status: 'Meeting Booked', owner: null,
       submittedAt: hoursAgo(60), journeyState: 'ENGAGED',
     },
     {
-      id: 'ld-08', visitorName: 'R. Silva', company: 'TopoBras', role: 'CEO',
+      id: 'ld-08', visitorName: 'R. Silva', company: 'TopoBras', industry: 'Construction', role: 'CEO',
       productRoute: 'survey-automation', primaryPain: 'Rework rate',
       score: 78, tier: 2, status: 'PoC', owner: 'Demo User',
       submittedAt: hoursAgo(400), journeyState: 'POC',
     },
     {
-      id: 'ld-09', visitorName: 'E. Laine', company: 'Pohjola Kartta', role: 'CTO',
+      id: 'ld-09', visitorName: 'E. Laine', company: 'Pohjola Kartta', industry: 'Mapping / GIS', role: 'CTO',
       productRoute: 'survey-automation', primaryPain: '',
       score: 88, tier: 1, status: 'Licensed', owner: 'Demo User',
       submittedAt: hoursAgo(900), journeyState: 'LICENSED',
     },
     {
-      id: 'ld-10', visitorName: 'T. Okafor', company: 'Delta Mapping', role: 'Surveyor',
+      id: 'ld-10', visitorName: 'T. Okafor', company: 'Delta Mapping', industry: 'Mapping / GIS', role: 'Surveyor',
       productRoute: '', primaryPain: 'Budget next quarter',
       score: 40, tier: 3, status: 'Nurture', owner: null,
       submittedAt: hoursAgo(500), journeyState: 'ENGAGED',
@@ -698,6 +698,8 @@ export const todayHandlers = [
     if (status) rows = rows.filter((l) => l.status.toLowerCase() === status.toLowerCase());
     const tier = Number(params.get('tier'));
     if (tier) rows = rows.filter((l) => l.tier === tier);
+    const owner = params.get('owner');
+    if (owner) rows = rows.filter((l) => l.owner !== null); // demo user owns all owned rows
     const search = (params.get('search') ?? '').toLowerCase();
     if (search) {
       rows = rows.filter((l) =>

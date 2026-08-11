@@ -60,7 +60,9 @@ export function MessageComposer({ conversationId }: { conversationId: string }) 
         className="w-full rounded-md border border-input bg-card p-2.5 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
       />
       <div className="flex flex-wrap items-center justify-between gap-2">
-        <select
+        <label className="flex items-center gap-1.5 text-xs text-muted-foreground">
+          Risk
+          <select
           value={claimLevel}
           onChange={(e) => setClaimLevel(Number(e.target.value))}
           className="h-8 rounded-md border border-input bg-card px-2 text-xs focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
@@ -71,7 +73,11 @@ export function MessageComposer({ conversationId }: { conversationId: string }) 
               {option.label}
             </option>
           ))}
-        </select>
+          </select>
+        </label>
+        <span className="hidden text-[11px] text-muted-foreground sm:inline">
+          Risk 1–2 send now · Risk 3+ go through Approvals first
+        </span>
         <Button type="submit" size="sm" disabled={send.isPending || !draft.trim()}>
           {send.isPending ? 'Sending…' : claimLevel >= 3 ? 'Send for OK' : 'Send'}
         </Button>

@@ -108,6 +108,8 @@ function LeadsInner() {
     : 20;
   const sort = (searchParams.get('sort') as SortField) || 'submittedAt';
   const dir: SortDir = searchParams.get('dir') === 'asc' ? 'asc' : 'desc';
+  const mine = searchParams.get('mine') === '1';
+  const who = searchParams.get('who'); // null | 'named' | 'unnamed'
 
   // The input is instant; the URL (and therefore the server query) follows
   // the debounced value — one request per pause, not per keystroke.
@@ -153,10 +155,28 @@ function LeadsInner() {
     [sort, dir, setParams],
   );
 
-  // List = filtered query; board = the real pipeline endpoint.
-  const leads = useLeads({ status: stage, tier, search: urlSearch, page, pageSize, sort, dir });
+  const { user } = useAuth();
+
+  // List = filtered query; board = the real pipeline endpoint. "Mine" is a
+  // real server-side owner filter; named/unnamed is client-side per page
+  // (identity isn't a queryable field on the backend).
+  const leads = useLeads({
+    status: stage,
+    tier,
+    owner: mine && user?.email ? user.email : undefined,
+    search: urlSearch,
+    page,
+    pageSize,
+    sort,
+    dir,
+  });
   const pipeline = usePipeline(view === 'board');
-  const rows = leads.data?.results ?? [];
+  const rows = (leads.data?.results ?? []).filter((row) => {
+    const named = Boolean(row.company || row.visitorName);
+    if (who === 'named') return named;
+    if (who === 'unnamed') return !named;
+    return true;
+  });
 
   const toggleRow = (id: string) =>
     setSelected((prev) => {
@@ -204,6 +224,19 @@ function LeadsInner() {
               placeholder="Search company, name, pain…"
               className="h-8 w-56 rounded-md border border-input bg-card px-2.5 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
             />
+            <span className="mx-1 hidden h-5 w-px bg-border sm:block" />
+            <Chip active={mine} onClick={() => setParams({ mine: mine ? null : '1' })}>
+              Mine
+            </Chip>
+            <Chip active={who === 'named'} onClick={() => setParams({ who: who === 'named' ? null : 'named' })}>
+              Known
+            </Chip>
+            <Chip
+              active={who === 'unnamed'}
+              onClick={() => setParams({ who: who === 'unnamed' ? null : 'unnamed' })}
+            >
+              Unknown
+            </Chip>
             <span className="mx-1 hidden h-5 w-px bg-border sm:block" />
             {PRIORITIES.map((p) => (
               <Chip key={p} active={tier === p} onClick={() => setParams({ p: tier === p ? null : String(p) })}>

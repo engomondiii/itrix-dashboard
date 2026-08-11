@@ -94,6 +94,7 @@ export interface LeadRow {
   id: string;
   visitorName: string;
   company: string;
+  industry: string;
   role: string;
   productRoute: string;
   primaryPain: string;

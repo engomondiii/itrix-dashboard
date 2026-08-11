@@ -313,6 +313,101 @@ function NdaPanel({ lead }: { lead: LeadDetail }) {
   );
 }
 
+/** Prettify a qualification key: "q1" → "Q1", "decision_process" → "Decision process". */
+function qualLabel(key: string): string {
+  if (/^q\d+$/i.test(key)) return key.toUpperCase();
+  const spaced = key.replace(/_/g, ' ');
+  return spaced.charAt(0).toUpperCase() + spaced.slice(1);
+}
+
+/**
+ * Everything the lead told us and everything the system derived — the full
+ * briefing, so staff never have to wonder what's known about this person.
+ * Empty fields are simply omitted; no dash-filled skeletons.
+ */
+function AboutPanel({ lead }: { lead: LeadDetail }) {
+  const facts: Array<[string, React.ReactNode]> = [];
+  const add = (label: string, value: React.ReactNode) => {
+    if (value !== null && value !== undefined && value !== '') facts.push([label, value]);
+  };
+
+  add('Industry', lead.industry);
+  add('Their problem', lead.primaryPain);
+  add('Compute bottleneck', lead.computeBottleneck);
+  add('Workload', lead.workloadType);
+  add(
+    'Current stack',
+    lead.currentStack.length > 0 ? (
+      <span className="flex flex-wrap gap-1">
+        {lead.currentStack.map((tool) => (
+          <span key={tool} className="rounded-full bg-secondary px-2 py-0.5 text-[11px]">
+            {tool}
+          </span>
+        ))}
+      </span>
+    ) : (
+      ''
+    ),
+  );
+  add('Commercial intent', lead.commercialIntent);
+  add('Timeline', lead.timeline);
+  add('Product route', lead.productRoute);
+  add('Commercial path', lead.commercialPath);
+  if (lead.specialRights && lead.specialRights !== 'None') add('Special rights', lead.specialRights);
+
+  const breakdown = Object.entries(lead.scoreBreakdown).filter(
+    ([, v]) => typeof v === 'number' || typeof v === 'string',
+  );
+  if (breakdown.length > 0) {
+    add(
+      'Score breakdown',
+      breakdown.map(([k, v]) => `${qualLabel(k)} ${String(v)}`).join(' · '),
+    );
+  }
+
+  const engagement = [
+    lead.documentsViewed > 0 ? `${lead.documentsViewed} document${lead.documentsViewed === 1 ? '' : 's'} viewed` : null,
+    lead.ctaClicked ? 'clicked the call-to-action' : null,
+    lead.humanHandoffTrigger ? 'asked for a human' : null,
+    lead.valueDelivered ? 'value delivered' : null,
+  ].filter(Boolean);
+  if (engagement.length > 0) add('Engagement', engagement.join(' · '));
+
+  if (lead.recommendedNextStep) add('System suggestion', lead.recommendedNextStep);
+
+  const answers = Object.entries(lead.qualification).filter(([, v]) => typeof v === 'string' && v !== '');
+
+  if (facts.length === 0 && answers.length === 0) return null;
+
+  return (
+    <Panel title="About this lead">
+      <dl className="grid gap-x-6 gap-y-2 text-sm sm:grid-cols-2">
+        {facts.map(([label, value]) => (
+          <div key={label}>
+            <dt className="text-xs font-medium text-muted-foreground">{label}</dt>
+            <dd className="mt-0.5">{value}</dd>
+          </div>
+        ))}
+      </dl>
+      {answers.length > 0 && (
+        <div className="mt-4 border-t border-border/60 pt-3">
+          <p className="mb-2 text-xs font-medium text-muted-foreground">
+            What they told the AI during qualification
+          </p>
+          <dl className="space-y-1.5 text-sm">
+            {answers.map(([key, value]) => (
+              <div key={key} className="flex gap-2">
+                <dt className="w-10 shrink-0 text-xs font-semibold text-muted-foreground">{qualLabel(key)}</dt>
+                <dd className="min-w-0">{String(value)}</dd>
+              </div>
+            ))}
+          </dl>
+        </div>
+      )}
+    </Panel>
+  );
+}
+
 function ConversationsPanel({ lead }: { lead: LeadDetail }) {
   // The transcript already links thread → lead; this closes the loop the
   // other way so working a lead never means hunting the Conversations board.
@@ -495,6 +590,7 @@ export function LeadDetailView({ leadId }: { leadId: string }) {
       <Header lead={detail} />
       <div className="grid gap-4 lg:grid-cols-[1fr_320px]">
         <div className="min-w-0 space-y-4">
+          <AboutPanel lead={detail} />
           <ConversationsPanel lead={detail} />
           <NotesPanel lead={detail} />
           <TimelinePanel lead={detail} />

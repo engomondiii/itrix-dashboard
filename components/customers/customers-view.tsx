@@ -18,6 +18,7 @@ import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/components/ui/toast';
 import { cn } from '@/lib/utils';
+import { formatRelative } from '@/lib/entity/format';
 import { normalizeError } from '@/lib/api/errors';
 import {
   useCustomers,
@@ -26,7 +27,7 @@ import {
   usePocs,
   usePocMutation,
 } from '@/lib/customers/hooks';
-import { ShowMore, useCapped } from '@/components/today/use-capped';
+import { PaginationFooter, useClientPage } from '@/components/shared/client-pagination';
 import type {
   CustomerRow,
   Evaluation,
@@ -59,30 +60,6 @@ const MILESTONE_NEXT: Record<MilestoneStatus, MilestoneStatus> = {
   done: 'pending',
   missed: 'in_progress',
 };
-
-function CustomerCard({ row }: { row: CustomerRow }) {
-  return (
-    <Link
-      href={`/customers/${row.clientId}`}
-      className="glass-surface block rounded-xl px-4 py-3 hover:bg-accent/40"
-    >
-      <div className="flex flex-wrap items-center gap-2">
-        <span className="text-sm font-medium">{row.company}</span>
-        <span className={cn('rounded-full px-2 py-0.5 text-[11px] font-semibold', HEALTH_STYLE[row.healthClass])}>
-          {HEALTH_LABEL[row.healthClass]}
-        </span>
-        {row.blockingSupport && (
-          <span className="rounded-full bg-destructive-soft px-2 py-0.5 text-[11px] font-semibold text-destructive">
-            blocking support
-          </span>
-        )}
-      </div>
-      {row.reasons.length > 0 && (
-        <p className="mt-1 truncate text-xs text-muted-foreground">{row.reasons.join(' · ')}</p>
-      )}
-    </Link>
-  );
-}
 
 function KpiEditor({
   evaluationId,
@@ -127,151 +104,297 @@ function KpiEditor({
   );
 }
 
-function EvaluationCard({ row }: { row: Evaluation }) {
-  const { toast } = useToast();
-  const mutate = useEvaluationMutation();
-  const [open, setOpen] = useState(false);
+const HEALTH_RANK: Record<HealthClass, number> = { critical: 0, at_risk: 1, unknown: 2, stable: 3 };
+
+function AccountsTable({ rows }: { rows: CustomerRow[] }) {
+  const [sort, setSort] = useState<'health' | 'company'>('health');
+  const sorted = [...rows].sort((a, b) =>
+    sort === 'company'
+      ? a.company.localeCompare(b.company)
+      : HEALTH_RANK[a.healthClass] - HEALTH_RANK[b.healthClass] || a.company.localeCompare(b.company),
+  );
+  const pager = useClientPage(sorted);
+
+  const header = (label: string, key: 'health' | 'company') => (
+    <th className="px-4 py-2.5 font-medium">
+      <button
+        type="button"
+        onClick={() => setSort(key)}
+        className={cn('hover:text-foreground', sort === key && 'text-foreground')}
+      >
+        {label}
+      </button>
+    </th>
+  );
 
   return (
-    <article className="glass-surface rounded-xl px-4 py-3">
-      <div className="flex flex-wrap items-center gap-2 text-sm">
-        <Link href={`/leads/${row.leadId}`} className="font-medium hover:underline">
-          {row.company || row.leadName}
-        </Link>
-        <span className="text-xs text-muted-foreground">Evaluation · {row.pkg}</span>
-        <select
-          value={row.status}
-          disabled={mutate.isPending}
-          onChange={(e) =>
-            mutate.mutate(
-              { kind: 'status', id: row.id, status: e.target.value as EvaluationStatus },
-              {
-                onSuccess: () => toast({ title: `Evaluation ${e.target.value}`, tone: 'success' }),
-                onError: (err) => toast({ title: normalizeError(err).message, tone: 'destructive' }),
-              },
-            )
-          }
-          className="ml-auto h-7 rounded-md border border-input bg-card px-1.5 text-xs focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-        >
-          {EVAL_STATUSES.map((s) => (
-            <option key={s} value={s}>
-              {s.replace('_', ' ')}
-            </option>
-          ))}
-        </select>
-        {row.kpis.length > 0 && (
-          <button
-            type="button"
-            onClick={() => setOpen((v) => !v)}
-            className="text-xs text-muted-foreground underline"
-          >
-            {open ? 'hide' : `${row.kpis.length} KPIs`}
-          </button>
-        )}
+    <div>
+      <div className="glass-surface overflow-x-auto rounded-xl">
+        <table className="w-full min-w-[640px] text-sm">
+          <thead>
+            <tr className="border-b border-border text-left text-xs text-muted-foreground">
+              {header('Company', 'company')}
+              {header('Health', 'health')}
+              <th className="px-4 py-2.5 font-medium">Why</th>
+              <th className="px-4 py-2.5 font-medium">Flags</th>
+              <th className="px-4 py-2.5 font-medium">Expansion</th>
+            </tr>
+          </thead>
+          <tbody>
+            {pager.pageRows.map((row) => (
+              <tr key={row.clientId} className="border-b border-border/60 last:border-0 hover:bg-accent/40">
+                <td className="px-4 py-2.5">
+                  <Link href={`/customers/${row.clientId}`} className="font-medium hover:underline">
+                    {row.company}
+                  </Link>
+                </td>
+                <td className="px-4 py-2.5">
+                  <span className={cn('rounded-full px-2 py-0.5 text-[11px] font-semibold', HEALTH_STYLE[row.healthClass])}>
+                    {HEALTH_LABEL[row.healthClass]}
+                  </span>
+                </td>
+                <td className="max-w-[28ch] truncate px-4 py-2.5 text-xs text-muted-foreground">
+                  {row.reasons.join(' - ') || '—'}
+                </td>
+                <td className="px-4 py-2.5 text-xs text-muted-foreground">
+                  {[
+                    row.blockingSupport ? 'blocking support' : null,
+                    row.outcomesOffPlan > 0 ? `${row.outcomesOffPlan} off-plan` : null,
+                    row.negativePulse ? 'negative pulse' : null,
+                    row.degradedDeployments > 0 ? `${row.degradedDeployments} degraded` : null,
+                  ]
+                    .filter(Boolean)
+                    .join(' - ') || '—'}
+                </td>
+                <td className="px-4 py-2.5 text-xs text-muted-foreground">
+                  {row.expansionAllowed ? 'allowed' : 'on hold'}
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
       </div>
-      {open && (
-        <div className="mt-2 space-y-1.5 border-t border-border/60 pt-2">
-          {row.kpis.map((kpi) => (
-            <KpiEditor key={kpi.id} evaluationId={row.id} kpi={kpi} />
-          ))}
-        </div>
+      <PaginationFooter
+        page={pager.page}
+        pageSize={pager.pageSize}
+        total={pager.total}
+        totalPages={pager.totalPages}
+        noun="accounts"
+        onPage={pager.setPage}
+        onPageSize={pager.setPageSize}
+      />
+      {rows.length >= 500 && (
+        <p className="mt-2 text-xs text-muted-foreground">
+          Showing the worst 500 accounts — the backend has no paging beyond that yet.
+        </p>
       )}
-    </article>
+    </div>
   );
 }
 
-function PocCard({ row }: { row: Poc }) {
-  const { toast } = useToast();
-  const mutate = usePocMutation();
-  const [open, setOpen] = useState(false);
-  const done = row.milestones.filter((m) => m.status === 'done').length;
+function DealsTable({ deals }: { deals: Array<Evaluation | Poc> }) {
+  const [sort, setSort] = useState<'company' | 'status' | 'updated'>('updated');
+  const [openId, setOpenId] = useState<string | null>(null);
+  const sorted = [...deals].sort((a, b) => {
+    if (sort === 'company') return (a.company || a.leadName).localeCompare(b.company || b.leadName);
+    if (sort === 'status') return a.status.localeCompare(b.status);
+    return b.updatedAt.localeCompare(a.updatedAt);
+  });
+  const pager = useClientPage(sorted);
+
+  const header = (label: string, key: 'company' | 'status' | 'updated') => (
+    <th className="px-4 py-2.5 font-medium">
+      <button
+        type="button"
+        onClick={() => setSort(key)}
+        className={cn('hover:text-foreground', sort === key && 'text-foreground')}
+      >
+        {label}
+      </button>
+    </th>
+  );
 
   return (
-    <article className="glass-surface rounded-xl px-4 py-3">
-      <div className="flex flex-wrap items-center gap-2 text-sm">
-        <Link href={`/leads/${row.leadId}`} className="font-medium hover:underline">
-          {row.company || row.leadName}
-        </Link>
-        <span className="text-xs text-muted-foreground">
-          PoC · {done}/{row.milestones.length} milestones
-        </span>
-        <select
-          value={row.status}
-          disabled={mutate.isPending}
-          onChange={(e) =>
-            mutate.mutate(
-              { kind: 'status', id: row.id, status: e.target.value as PocStatus },
-              {
-                onSuccess: () => toast({ title: `PoC ${e.target.value}`, tone: 'success' }),
-                onError: (err) => toast({ title: normalizeError(err).message, tone: 'destructive' }),
-              },
-            )
-          }
-          className="ml-auto h-7 rounded-md border border-input bg-card px-1.5 text-xs focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-        >
-          {POC_STATUSES.map((s) => (
-            <option key={s} value={s}>
-              {s}
-            </option>
-          ))}
-        </select>
-        {(row.milestones.length > 0 || row.risks.length > 0) && (
-          <button
-            type="button"
-            onClick={() => setOpen((v) => !v)}
-            className="text-xs text-muted-foreground underline"
-          >
-            {open ? 'hide' : 'details'}
-          </button>
-        )}
+    <div>
+      <div className="glass-surface overflow-x-auto rounded-xl">
+        <table className="w-full min-w-[720px] text-sm">
+          <thead>
+            <tr className="border-b border-border text-left text-xs text-muted-foreground">
+              {header('Company', 'company')}
+              <th className="px-4 py-2.5 font-medium">Type</th>
+              <th className="px-4 py-2.5 font-medium">Scope</th>
+              {header('Status', 'status')}
+              {header('Updated', 'updated')}
+              <th className="px-4 py-2.5 font-medium">Details</th>
+            </tr>
+          </thead>
+          <tbody>
+            {pager.pageRows.map((deal) => {
+              const rowId = `${'pkg' in deal ? 'ev' : 'poc'}-${deal.id}`;
+              return (
+                <DealRow
+                  key={rowId}
+                  deal={deal}
+                  open={openId === rowId}
+                  onToggle={() => setOpenId(openId === rowId ? null : rowId)}
+                />
+              );
+            })}
+          </tbody>
+        </table>
       </div>
-      {open && (
-        <div className="mt-2 space-y-2 border-t border-border/60 pt-2">
-          {row.milestones.map((m) => (
-            <div key={m.id} className="flex items-center gap-2 text-xs">
-              <button
-                type="button"
-                disabled={mutate.isPending}
-                onClick={() =>
-                  mutate.mutate(
-                    { kind: 'milestone', id: row.id, milestoneId: m.id, status: MILESTONE_NEXT[m.status] },
-                    { onError: (e) => toast({ title: normalizeError(e).message, tone: 'destructive' }) },
-                  )
-                }
-                className={cn(
-                  'rounded-full px-2 py-0.5 text-[11px] font-semibold',
-                  m.status === 'done' && 'bg-positive-soft text-positive',
-                  m.status === 'in_progress' && 'bg-secondary',
-                  m.status === 'pending' && 'bg-muted text-muted-foreground',
-                  m.status === 'missed' && 'bg-destructive-soft text-destructive',
-                )}
-                title="Click to advance: pending → in progress → done"
-              >
-                {m.status.replace('_', ' ')}
-              </button>
-              <span>{m.label}</span>
-            </div>
-          ))}
-          {row.risks.length > 0 && (
-            <ul className="space-y-1 text-xs text-muted-foreground">
-              {row.risks.map((r) => (
-                <li key={r.id}>
-                  <span
-                    className={cn(
-                      'mr-1.5 font-semibold',
-                      r.severity === 'high' ? 'text-destructive' : r.severity === 'medium' ? 'text-warning' : '',
-                    )}
-                  >
-                    {r.severity}
-                  </span>
-                  {r.description}
-                </li>
+      <PaginationFooter
+        page={pager.page}
+        pageSize={pager.pageSize}
+        total={pager.total}
+        totalPages={pager.totalPages}
+        noun="deals"
+        onPage={pager.setPage}
+        onPageSize={pager.setPageSize}
+      />
+    </div>
+  );
+}
+
+function DealRow({
+  deal,
+  open,
+  onToggle,
+}: {
+  deal: Evaluation | Poc;
+  open: boolean;
+  onToggle: () => void;
+}) {
+  const { toast } = useToast();
+  const evalMutate = useEvaluationMutation();
+  const pocMutate = usePocMutation();
+  const isEval = 'pkg' in deal;
+  const done = !isEval ? deal.milestones.filter((m) => m.status === 'done').length : 0;
+
+  return (
+    <>
+      <tr className="border-b border-border/60 hover:bg-accent/40">
+        <td className="px-4 py-2.5">
+          <Link href={`/leads/${deal.leadId}`} className="font-medium hover:underline">
+            {deal.company || deal.leadName}
+          </Link>
+        </td>
+        <td className="px-4 py-2.5 text-xs">{isEval ? 'Evaluation' : 'PoC'}</td>
+        <td className="max-w-[26ch] truncate px-4 py-2.5 text-xs text-muted-foreground">
+          {isEval ? deal.pkg : deal.scope || `${done}/${deal.milestones.length} milestones`}
+        </td>
+        <td className="px-4 py-2.5">
+          {isEval ? (
+            <select
+              value={deal.status}
+              disabled={evalMutate.isPending}
+              onChange={(e) =>
+                evalMutate.mutate(
+                  { kind: 'status', id: deal.id, status: e.target.value as EvaluationStatus },
+                  {
+                    onSuccess: () => toast({ title: `Evaluation ${e.target.value}`, tone: 'success' }),
+                    onError: (err) => toast({ title: normalizeError(err).message, tone: 'destructive' }),
+                  },
+                )
+              }
+              className="h-7 rounded-md border border-input bg-card px-1.5 text-xs focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+            >
+              {EVAL_STATUSES.map((status) => (
+                <option key={status} value={status}>
+                  {status.replace('_', ' ')}
+                </option>
               ))}
-            </ul>
+            </select>
+          ) : (
+            <select
+              value={deal.status}
+              disabled={pocMutate.isPending}
+              onChange={(e) =>
+                pocMutate.mutate(
+                  { kind: 'status', id: deal.id, status: e.target.value as PocStatus },
+                  {
+                    onSuccess: () => toast({ title: `PoC ${e.target.value}`, tone: 'success' }),
+                    onError: (err) => toast({ title: normalizeError(err).message, tone: 'destructive' }),
+                  },
+                )
+              }
+              className="h-7 rounded-md border border-input bg-card px-1.5 text-xs focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+            >
+              {POC_STATUSES.map((status) => (
+                <option key={status} value={status}>
+                  {status}
+                </option>
+              ))}
+            </select>
           )}
-        </div>
+        </td>
+        <td className="px-4 py-2.5 text-xs text-muted-foreground">{formatRelative(deal.updatedAt)}</td>
+        <td className="px-4 py-2.5">
+          <button type="button" onClick={onToggle} className="text-xs text-muted-foreground underline">
+            {open ? 'hide' : isEval ? `${deal.kpis.length} KPIs` : 'milestones'}
+          </button>
+        </td>
+      </tr>
+      {open && (
+        <tr className="border-b border-border/60 bg-muted/30">
+          <td colSpan={6} className="px-4 py-3">
+            {isEval ? (
+              <div className="space-y-1.5">
+                {deal.kpis.map((kpi) => (
+                  <KpiEditor key={kpi.id} evaluationId={deal.id} kpi={kpi} />
+                ))}
+                {deal.kpis.length === 0 && <p className="text-xs text-muted-foreground">No KPIs defined.</p>}
+              </div>
+            ) : (
+              <div className="space-y-2">
+                {deal.milestones.map((m) => (
+                  <div key={m.id} className="flex items-center gap-2 text-xs">
+                    <button
+                      type="button"
+                      disabled={pocMutate.isPending}
+                      onClick={() =>
+                        pocMutate.mutate(
+                          { kind: 'milestone', id: deal.id, milestoneId: m.id, status: MILESTONE_NEXT[m.status] },
+                          { onError: (e) => toast({ title: normalizeError(e).message, tone: 'destructive' }) },
+                        )
+                      }
+                      className={cn(
+                        'rounded-full px-2 py-0.5 text-[11px] font-semibold',
+                        m.status === 'done' && 'bg-positive-soft text-positive',
+                        m.status === 'in_progress' && 'bg-secondary',
+                        m.status === 'pending' && 'bg-muted text-muted-foreground',
+                        m.status === 'missed' && 'bg-destructive-soft text-destructive',
+                      )}
+                      title="Click to advance: pending, in progress, done"
+                    >
+                      {m.status.replace('_', ' ')}
+                    </button>
+                    <span>{m.label}</span>
+                  </div>
+                ))}
+                {deal.risks.length > 0 && (
+                  <ul className="space-y-1 text-xs text-muted-foreground">
+                    {deal.risks.map((r) => (
+                      <li key={r.id}>
+                        <span
+                          className={cn(
+                            'mr-1.5 font-semibold',
+                            r.severity === 'high' ? 'text-destructive' : r.severity === 'medium' ? 'text-warning' : '',
+                          )}
+                        >
+                          {r.severity}
+                        </span>
+                        {r.description}
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </div>
+            )}
+          </td>
+        </tr>
       )}
-    </article>
+    </>
   );
 }
 
@@ -364,7 +487,7 @@ export function CustomersView() {
             No licensed accounts{needle ? ' match the search' : ' yet'}.
           </div>
         ) : (
-          <AccountsGrid rows={customerRows} />
+          <AccountsTable rows={customerRows} />
         ))}
 
       {tab === 'deals' &&
@@ -373,45 +496,8 @@ export function CustomersView() {
             Nothing in flight{needle ? ' matches the search' : ''}.
           </div>
         ) : (
-          <DealsList deals={deals} />
+          <DealsTable deals={deals} />
         ))}
     </section>
-  );
-}
-
-function AccountsGrid({ rows }: { rows: CustomerRow[] }) {
-  const { visible, remaining, showMore } = useCapped(rows);
-  return (
-    <div>
-      <div className="grid gap-2 md:grid-cols-2 xl:grid-cols-3">
-        {visible.map((row) => (
-          <CustomerCard key={row.clientId} row={row} />
-        ))}
-      </div>
-      <div className="mt-2">
-        <ShowMore remaining={remaining} onClick={showMore} />
-      </div>
-      {rows.length >= 500 && (
-        <p className="mt-2 text-xs text-muted-foreground">
-          Showing the worst 500 accounts — the backend has no paging beyond that yet.
-        </p>
-      )}
-    </div>
-  );
-}
-
-function DealsList({ deals }: { deals: Array<Evaluation | Poc> }) {
-  const { visible, remaining, showMore } = useCapped(deals);
-  return (
-    <div className="space-y-2">
-      {visible.map((deal) =>
-        'pkg' in deal ? (
-          <EvaluationCard key={`ev-${deal.id}`} row={deal} />
-        ) : (
-          <PocCard key={`poc-${deal.id}`} row={deal} />
-        ),
-      )}
-      <ShowMore remaining={remaining} onClick={showMore} />
-    </div>
   );
 }

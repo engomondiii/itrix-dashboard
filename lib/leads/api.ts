@@ -24,6 +24,8 @@ const V1 = '/api/v1';
 export interface LeadListParams {
   status?: LeadStatus | '';
   tier?: number | null;
+  /** Server-side owner filter: email | display name | uuid. */
+  owner?: string;
   search?: string;
   page?: number;
   pageSize?: number;
@@ -35,6 +37,7 @@ export function listLeads(params: LeadListParams = {}): Promise<PaginatedEnvelop
   const q = new URLSearchParams();
   if (params.status) q.set('status', params.status);
   if (params.tier) q.set('tier', String(params.tier));
+  if (params.owner) q.set('owner', params.owner);
   if (params.search) q.set('search', params.search);
   q.set('page', String(params.page ?? 1));
   q.set('pageSize', String(params.pageSize ?? 50));
