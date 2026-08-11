@@ -50,7 +50,7 @@ export function MessageComposer({ conversationId }: { conversationId: string }) 
           },
         );
       }}
-      className="glass-surface sticky bottom-4 mt-6 space-y-2 rounded-xl p-3"
+      className="sticky bottom-4 z-10 mt-6 space-y-2 rounded-xl border border-border bg-card p-3 shadow-[var(--shadow-brand-2)]"
     >
       <textarea
         value={draft}

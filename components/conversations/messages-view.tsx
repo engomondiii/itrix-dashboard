@@ -36,7 +36,7 @@ function Message({ message }: { message: ConsoleMessage }) {
   const fromUs = message.senderKind === 'agent' || message.senderKind === 'team';
   return (
     <li className={cn('flex', fromUs ? 'justify-end' : 'justify-start')}>
-      <div className={cn('max-w-[42rem] rounded-xl px-3.5 py-2.5 text-sm', fromUs ? 'bg-secondary' : 'glass-surface')}>
+      <div className={cn('max-w-[42rem] rounded-xl px-3.5 py-2.5 text-sm break-words', fromUs ? 'bg-secondary' : 'glass-surface')}>
         <p className="mb-1 text-xs text-muted-foreground">
           <span className="font-medium text-foreground">
             {message.senderKind === 'team' ? 'Team' : message.senderKind === 'agent' ? 'AI' : 'Visitor'}

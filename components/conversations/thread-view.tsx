@@ -55,7 +55,7 @@ function Turn({ turn }: { turn: ThreadTurn }) {
     <li className={cn('flex', fromUs ? 'justify-end' : 'justify-start')}>
       <div
         className={cn(
-          'max-w-[46rem] rounded-xl px-3.5 py-2.5 text-sm',
+          'max-w-[46rem] rounded-xl px-3.5 py-2.5 text-sm break-words',
           fromUs ? 'bg-secondary' : 'glass-surface',
           turn.governanceStatus === 'blocked' && 'opacity-70',
         )}
