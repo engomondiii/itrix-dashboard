@@ -58,5 +58,19 @@ Staff-facing language is a design rule: no spec jargon in the UI (claim level
 `lib/leads/journey-labels.ts`). Brand: itriX mathematical-glass light theme
 matching itrix.co.kr, with a derived dark theme (`app/globals.css`).
 
+## Two sites, one clock
+
+The business runs on Korean time; the staff do not all sit in Korea. So there
+is one operating clock — **KST** — and it is named wherever a time is shown
+(`lib/time/zones.ts`). The top bar carries it, with the viewer's own zone and
+its offset beside it when they differ. Every timestamp renders through
+`<Stamp>` (`components/shared/timestamp.tsx`): relative text by default,
+exact KST instant on hover, machine-readable in the DOM either way.
+
+Handing a lead to *another person* is a team-leader action; self-claim stays
+open to everyone. Both policies live in one file, `lib/auth/roles.ts` — the
+backend has no TEAM_LEAD role, so "team leader" currently means ADMIN, and
+that mapping is a single edit when it changes.
+
 Built on [Fronted_Web_Template](https://github.com/Nrad8394/Fronted_Web_Template);
 its conventions are documented in `PATTERNS.md`.

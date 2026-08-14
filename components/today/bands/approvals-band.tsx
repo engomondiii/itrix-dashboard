@@ -17,12 +17,12 @@ import { Button } from '@/components/ui/button';
 import { normalizeError } from '@/lib/api/errors';
 import { useAuth } from '@/lib/auth/auth-context';
 import { useApprovalAction, useApprovalQueue } from '@/lib/today/hooks';
-import { formatRelative } from '@/lib/entity/format';
 import type { ApprovalRow } from '@/lib/today/types';
 import { QueueCard } from '../queue-card';
 import { ReasonAction } from '../reason-action';
 import { TodayBand } from '../today-band';
 import { ShowMore, useCapped } from '../use-capped';
+import { Stamp } from '@/components/shared/timestamp';
 
 /** Staff-facing risk vocabulary (spec: claim level). */
 const RISK_LABEL: Record<number, string> = {
@@ -73,7 +73,7 @@ function ApprovalCard({ row }: { row: ApprovalRow }) {
         <>
           “{snippet}
           {snippet.length < (row.finalBody || row.draftBody).length ? '…' : ''}” ·{' '}
-          {formatRelative(row.at)}
+          <Stamp at={row.at} />
         </>
       }
       actions={

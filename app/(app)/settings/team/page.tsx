@@ -6,36 +6,18 @@
  * deactivation is an admin PATCH we don't surface yet).
  */
 
-import { useQuery } from '@tanstack/react-query';
 import { useState } from 'react';
 
-import { http } from '@/lib/api/client';
 import { cn } from '@/lib/utils';
 import { useDebouncedValue } from '@/lib/use-debounced-value';
 import { SettingsSection } from '@/components/ui/settings-section';
-import type { PaginatedEnvelope } from '@/lib/today/types';
-
-interface TeamMember {
-  id: string;
-  name: string;
-  email: string;
-  role: string;
-  avatarUrl: string | null;
-  active: boolean;
-  openLeads: number;
-}
+import { useTeam } from '@/lib/team';
 
 export default function TeamSettingsPage() {
   // Server-side search (?search= over name and email).
   const [search, setSearch] = useState('');
   const debounced = useDebouncedValue(search);
-  const team = useQuery({
-    queryKey: ['settings', 'team', debounced],
-    queryFn: () =>
-      http.get<PaginatedEnvelope<TeamMember>>(
-        `/api/v1/team/?pageSize=100${debounced ? `&search=${encodeURIComponent(debounced)}` : ''}`,
-      ),
-  });
+  const team = useTeam(debounced);
 
   return (
     <SettingsSection

@@ -11,10 +11,10 @@ import Link from 'next/link';
 import { ArrowLeft } from 'lucide-react';
 
 import { cn } from '@/lib/utils';
-import { formatRelative } from '@/lib/entity/format';
 import { useCustomer, useCustomerSupport } from '@/lib/customers/hooks';
 import { ShowMore, useCapped } from '@/components/today/use-capped';
 import type { HealthClass } from '@/lib/customers/types';
+import { Stamp } from '@/components/shared/timestamp';
 
 const HEALTH_STYLE: Record<HealthClass, string> = {
   critical: 'bg-destructive-soft text-destructive',
@@ -106,7 +106,7 @@ export function CustomerDetailView({ clientId }: { clientId: string }) {
                 <p className="text-xs text-muted-foreground">
                   {row.status.replace(/_/g, ' ')} · {row.urgency}
                   {row.slaBreaching && ' · past its response window'} · {row.owner || 'unowned'} · opened{' '}
-                  {formatRelative(row.createdAt)}
+                  <Stamp at={row.createdAt} />
                 </p>
               </li>
             ))}

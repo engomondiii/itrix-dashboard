@@ -21,7 +21,6 @@ import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 import { Bell } from 'lucide-react';
 
-import { formatRelative } from '@/lib/entity/format';
 import {
   useMarkAllRead,
   useMarkRead,
@@ -30,6 +29,7 @@ import {
   type NotificationRecord,
 } from '@/lib/notifications';
 import { Button } from '@/components/ui/button';
+import { Stamp } from '@/components/shared/timestamp';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -132,7 +132,7 @@ export function NotificationBell() {
                       {notification.title}
                     </span>
                     <span className="shrink-0 text-[11px] text-muted-foreground">
-                      {formatRelative(notification.created_at)}
+                      <Stamp at={notification.created_at} />
                     </span>
                   </span>
                   <span className="line-clamp-2 w-full text-xs text-muted-foreground">

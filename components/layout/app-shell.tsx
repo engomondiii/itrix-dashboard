@@ -22,6 +22,7 @@ import { ThemeToggle } from '@/components/theme-toggle';
 import { AppSidebar } from '@/components/layout/app-sidebar';
 import { CommandPalette } from '@/components/layout/command-palette';
 import { NotificationBell } from '@/components/layout/notification-bell';
+import { OfficeClock } from '@/components/layout/office-clock';
 import {
   SidebarInset,
   SidebarProvider,
@@ -105,6 +106,8 @@ export function AppShell({ children }: { children: ReactNode }) {
 
           <div className="flex-1" />
 
+          <OfficeClock />
+          <div className="mx-0.5 hidden h-5 w-px bg-border sm:block" />
           <CommandPalette />
           <NotificationBell />
           <ThemeToggle className="text-foreground/80 hover:bg-muted" />

@@ -10,11 +10,11 @@
  */
 
 import { useThreadBoard } from '@/lib/today/hooks';
-import { formatRelative } from '@/lib/entity/format';
 import type { ThreadRow } from '@/lib/today/types';
 import { QueueCard } from '../queue-card';
 import { TodayBand } from '../today-band';
 import { ShowMore, useCapped } from '../use-capped';
+import { Stamp } from '@/components/shared/timestamp';
 
 const ACTIVE_WINDOW_MS = 24 * 60 * 60 * 1000;
 
@@ -53,7 +53,7 @@ export function ThreadsBand({ forceOpen = false }: { forceOpen?: boolean }) {
           meta={
             <>
               {row.visitorTurns} visitor {row.visitorTurns === 1 ? 'turn' : 'turns'} · last activity{' '}
-              {formatRelative(row.lastActivityAt ?? row.createdAt)}
+              <Stamp at={row.lastActivityAt ?? row.createdAt} />
             </>
           }
         />

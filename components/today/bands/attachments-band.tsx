@@ -13,12 +13,13 @@ import { useToast } from '@/components/ui/toast';
 import { normalizeError } from '@/lib/api/errors';
 import { ATTACHMENT_REASON_MIN_CHARS } from '@/lib/today/api';
 import { useAttachmentAction, useAttachmentQueue } from '@/lib/today/hooks';
-import { formatRelative, formatValue } from '@/lib/entity/format';
+import { formatValue } from '@/lib/entity/format';
 import type { AttachmentRow } from '@/lib/today/types';
 import { QueueCard } from '../queue-card';
 import { ReasonAction } from '../reason-action';
 import { TodayBand } from '../today-band';
 import { ShowMore, useCapped } from '../use-capped';
+import { Stamp } from '@/components/shared/timestamp';
 
 function AttachmentCard({ row }: { row: AttachmentRow }) {
   const { toast } = useToast();
@@ -57,7 +58,7 @@ function AttachmentCard({ row }: { row: AttachmentRow }) {
           {row.riskFlags.length ? ` · flags: ${row.riskFlags.join(', ')}` : ''}
           {row.preNda ? ' · pre-NDA' : ''}
           {' · '}
-          {formatRelative(row.createdAt)}
+          <Stamp at={row.createdAt} />
         </>
       }
       actions={

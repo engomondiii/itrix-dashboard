@@ -15,12 +15,12 @@ import { Button } from '@/components/ui/button';
 import { normalizeError } from '@/lib/api/errors';
 import { useAuth } from '@/lib/auth/auth-context';
 import { useFollowUp, useFollowUpAction } from '@/lib/today/hooks';
-import { formatRelative } from '@/lib/entity/format';
 import type { FollowUpRow } from '@/lib/today/types';
 import { QueueCard } from '../queue-card';
 import { inScope, type TodayScope } from '../scope';
 import { TodayBand } from '../today-band';
 import { ShowMore, useCapped } from '../use-capped';
+import { Stamp } from '@/components/shared/timestamp';
 
 function FollowUpCard({ row, urgent }: { row: FollowUpRow; urgent: boolean }) {
   const { toast } = useToast();
@@ -60,7 +60,7 @@ function FollowUpCard({ row, urgent }: { row: FollowUpRow; urgent: boolean }) {
       }
       meta={
         <>
-          {row.note || 'Follow up'} · P{row.tier} · due {formatRelative(row.dueAt)}
+          {row.note || 'Follow up'} · P{row.tier} · due <Stamp at={row.dueAt} />
           {row.owner ? ` · ${row.owner}` : ' · unassigned'}
         </>
       }

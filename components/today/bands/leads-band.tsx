@@ -11,12 +11,12 @@ import { Button } from '@/components/ui/button';
 import { normalizeError } from '@/lib/api/errors';
 import { useAuth } from '@/lib/auth/auth-context';
 import { useNewLeads, useTakeLead } from '@/lib/today/hooks';
-import { formatRelative } from '@/lib/entity/format';
 import type { LeadRow } from '@/lib/today/types';
 import { QueueCard } from '../queue-card';
 import { inScope, type TodayScope } from '../scope';
 import { TodayBand } from '../today-band';
 import { ShowMore, useCapped } from '../use-capped';
+import { Stamp } from '@/components/shared/timestamp';
 
 function LeadCard({ row }: { row: LeadRow }) {
   const { toast } = useToast();
@@ -38,7 +38,7 @@ function LeadCard({ row }: { row: LeadRow }) {
       }
       meta={
         <>
-          {row.primaryPain || row.productRoute || 'New enquiry'} · {formatRelative(row.submittedAt)}
+          {row.primaryPain || row.productRoute || 'New enquiry'} · <Stamp at={row.submittedAt} />
           {row.owner ? ` · ${row.owner}` : ''}
         </>
       }

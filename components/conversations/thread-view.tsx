@@ -22,7 +22,6 @@ import { ArrowLeft } from 'lucide-react';
 
 import { cn } from '@/lib/utils';
 import { journeyLabel } from '@/lib/leads/journey-labels';
-import { formatRelative } from '@/lib/entity/format';
 import { useConversation, useConversations, useThreadDetail } from '@/lib/conversations/hooks';
 import type {
   ConversationSummary,
@@ -33,6 +32,7 @@ import type {
 } from '@/lib/conversations/types';
 import { MessageBody } from './message-body';
 import { MessageComposer } from './message-composer';
+import { Stamp } from '@/components/shared/timestamp';
 
 const SENDER_LABEL: Record<SenderKind, string> = {
   visitor: 'Visitor',
@@ -70,7 +70,7 @@ function Turn({ turn }: { turn: ThreadTurn }) {
               {badge.label}
             </span>
           )}
-          <span>{formatRelative(turn.at)}</span>
+          <span><Stamp at={turn.at} /></span>
         </p>
         {turn.governanceStatus === 'pending' && !turn.body ? (
           <p className="italic text-muted-foreground">Held for a human OK — the draft is in Approvals.</p>
@@ -174,7 +174,7 @@ export function ThreadView({ threadId }: { threadId: string }) {
             </h1>
             <p className="mt-0.5 text-xs text-muted-foreground">
               {detail.company || (detail.anonymous ? 'Anonymous visitor' : '')} · {journeyLabel(detail.journeyState)} ·{' '}
-              started {formatRelative(detail.createdAt)}
+              started <Stamp at={detail.createdAt} />
               {detail.leadId && (
                 <>
                   {' · '}
@@ -223,7 +223,7 @@ export function ThreadView({ threadId }: { threadId: string }) {
                 <span className="font-medium">{hit.category}</span>
                 <span className="text-muted-foreground">
                   {' '}
-                  · {hit.kind} · {formatRelative(hit.at)}
+                  · {hit.kind} · <Stamp at={hit.at} />
                 </span>
                 {hit.matchedText && (
                   <span className="mt-0.5 block text-muted-foreground">“{hit.matchedText}”</span>

@@ -378,6 +378,19 @@ const pocs = makeStore('demo:today:pocs', () => [
   },
 ]);
 
+/**
+ * The staff roster. Shared by GET /team/ and the assign handler, so demo mode
+ * resolves an assignee's email to their name the same way the backend does.
+ */
+function demoTeam() {
+  return [
+    { id: 'tm-01', name: 'Demo User', email: 'demo@example.com', role: 'Operations', avatarUrl: null, active: true, openLeads: 4 },
+    { id: 'tm-02', name: 'Naomi Kim', email: 'naomi@example.com', role: 'Design', avatarUrl: null, active: true, openLeads: 0 },
+    { id: 'tm-03', name: 'Daehyuk Park', email: 'park@example.com', role: 'Strategy', avatarUrl: null, active: true, openLeads: 2 },
+    { id: 'tm-04', name: 'Former Staffer', email: 'gone@example.com', role: 'Ops', avatarUrl: null, active: false, openLeads: 0 },
+  ];
+}
+
 function logActivity(leadId: string, type: string, label: string): void {
   const rows = leadActivity.load();
   rows.unshift({
@@ -744,9 +757,15 @@ export const todayHandlers = [
     const row = rows.find((l) => l.id === params.id);
     if (!row) return errorEnvelope(404, 'not_found', 'Not found.');
     const body = (await request.json().catch(() => ({}))) as { owner?: string | null };
-    row.owner = body.owner ? 'Demo User' : null;
+    // Resolve the posted email against the roster so reassigning to a
+    // teammate shows their NAME, the way the real serializer does — a demo
+    // that always answers "Demo User" hides the whole feature.
+    const assignee = body.owner
+      ? (demoTeam().find((member) => member.email === body.owner)?.name ?? body.owner)
+      : null;
+    row.owner = assignee;
     leads.save(rows);
-    logActivity(row.id, 'owner_change', body.owner ? 'Assigned to Demo User' : 'Unassigned');
+    logActivity(row.id, 'owner_change', assignee ? `Assigned to ${assignee}` : 'Unassigned');
     return HttpResponse.json(leadDetail(row));
   }),
 
@@ -1131,12 +1150,7 @@ export const todayHandlers = [
     const denied = requireAuth(request);
     if (denied) return denied;
     const teamSearch = (new URL(request.url).searchParams.get('search') ?? '').toLowerCase();
-    const results = [
-      { id: 'tm-01', name: 'Demo User', email: 'demo@example.com', role: 'Operations', avatarUrl: null, active: true, openLeads: 4 },
-      { id: 'tm-02', name: 'Naomi Kim', email: 'naomi@example.com', role: 'Design', avatarUrl: null, active: true, openLeads: 0 },
-      { id: 'tm-03', name: 'Daehyuk Park', email: 'park@example.com', role: 'Strategy', avatarUrl: null, active: true, openLeads: 2 },
-      { id: 'tm-04', name: 'Former Staffer', email: 'gone@example.com', role: 'Ops', avatarUrl: null, active: false, openLeads: 0 },
-    ].filter(
+    const results = demoTeam().filter(
       (m) =>
         !teamSearch ||
         m.name.toLowerCase().includes(teamSearch) ||

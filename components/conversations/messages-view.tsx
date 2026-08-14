@@ -19,10 +19,10 @@ import { Button } from '@/components/ui/button';
 import { useToast } from '@/components/ui/toast';
 import { cn } from '@/lib/utils';
 import { normalizeError } from '@/lib/api/errors';
-import { formatRelative } from '@/lib/entity/format';
 import { useConversation, useSendMessage } from '@/lib/conversations/hooks';
 import type { ConsoleMessage } from '@/lib/conversations/types';
 import { MessageBody } from './message-body';
+import { Stamp } from '@/components/shared/timestamp';
 
 const RISK_OPTIONS = [
   { level: 1, label: 'Risk 1 · conversational' },
@@ -41,7 +41,7 @@ function Message({ message }: { message: ConsoleMessage }) {
           <span className="font-medium text-foreground">
             {message.senderKind === 'team' ? 'Team' : message.senderKind === 'agent' ? 'AI' : 'Visitor'}
           </span>{' '}
-          · {formatRelative(message.at)}
+          · <Stamp at={message.at} />
         </p>
         {message.underReview && !message.body ? (
           <p className="italic text-muted-foreground">

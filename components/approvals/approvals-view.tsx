@@ -18,11 +18,11 @@ import { useToast } from '@/components/ui/toast';
 import { cn } from '@/lib/utils';
 import { normalizeError } from '@/lib/api/errors';
 import { useAuth } from '@/lib/auth/auth-context';
-import { formatRelative } from '@/lib/entity/format';
 import { useApprovalAction, useApprovalQueue } from '@/lib/today/hooks';
 import type { ApprovalRow } from '@/lib/today/types';
 import { ReasonAction } from '@/components/today/reason-action';
 import { ShowMore, useCapped } from '@/components/today/use-capped';
+import { Stamp } from '@/components/shared/timestamp';
 
 const RISK_LABEL: Record<number, string> = {
   1: 'Risk 1 · conversational',
@@ -64,7 +64,7 @@ function ApprovalCard({ row, canAct }: { row: ApprovalRow; canAct: boolean }) {
         {secondOk && row.firstApprover && (
           <span className="text-xs text-muted-foreground">first OK: {row.firstApprover}</span>
         )}
-        <span className="ml-auto text-xs text-muted-foreground">{formatRelative(row.at)}</span>
+        <span className="ml-auto text-xs text-muted-foreground"><Stamp at={row.at} /></span>
       </header>
 
       {editing ? (

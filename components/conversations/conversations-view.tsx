@@ -18,12 +18,12 @@
 import Link from 'next/link';
 import { useState } from 'react';
 
-import { formatRelative } from '@/lib/entity/format';
 import { useThreadBoard } from '@/lib/today/hooks';
 import type { ThreadRow } from '@/lib/today/types';
 import { cn } from '@/lib/utils';
 import { journeyLabel } from '@/lib/leads/journey-labels';
 import { ShowMore, useCapped } from '@/components/today/use-capped';
+import { Stamp } from '@/components/shared/timestamp';
 
 const HOUR_MS = 60 * 60 * 1000;
 
@@ -75,7 +75,7 @@ function Row({ row }: { row: ThreadRow }) {
           {row.turnCount} turns ({row.visitorTurns} from the visitor) · {journeyLabel(row.journeyState)}
         </span>
       </span>
-      <span className="shrink-0 text-xs text-muted-foreground">{formatRelative(lastTouch(row))}</span>
+      <span className="shrink-0 text-xs text-muted-foreground"><Stamp at={lastTouch(row)} /></span>
     </Link>
   );
 }

@@ -18,7 +18,6 @@ import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/components/ui/toast';
 import { cn } from '@/lib/utils';
-import { formatRelative } from '@/lib/entity/format';
 import { normalizeError } from '@/lib/api/errors';
 import {
   useCustomers,
@@ -28,6 +27,7 @@ import {
   usePocMutation,
 } from '@/lib/customers/hooks';
 import { PaginationFooter, useClientPage } from '@/components/shared/client-pagination';
+import { Stamp } from '@/components/shared/timestamp';
 import type {
   CustomerRow,
   Evaluation,
@@ -328,7 +328,7 @@ function DealRow({
             </select>
           )}
         </td>
-        <td className="px-4 py-2.5 text-xs text-muted-foreground">{formatRelative(deal.updatedAt)}</td>
+        <td className="px-4 py-2.5 text-xs text-muted-foreground"><Stamp at={deal.updatedAt} /></td>
         <td className="px-4 py-2.5">
           <button type="button" onClick={onToggle} className="text-xs text-muted-foreground underline">
             {open ? 'hide' : isEval ? `${deal.kpis.length} KPIs` : 'milestones'}

@@ -8,12 +8,12 @@
 
 import { useAuth } from '@/lib/auth/auth-context';
 import { useSupportQueue } from '@/lib/today/hooks';
-import { formatRelative } from '@/lib/entity/format';
 import type { SupportRow } from '@/lib/today/types';
 import { QueueCard } from '../queue-card';
 import { inScope, type TodayScope } from '../scope';
 import { TodayBand } from '../today-band';
 import { ShowMore, useCapped } from '../use-capped';
+import { Stamp } from '@/components/shared/timestamp';
 
 function tone(row: SupportRow): 'urgent' | 'warn' | 'neutral' {
   if (row.blocking || row.slaBreaching || row.urgency === 'critical') return 'urgent';
@@ -55,7 +55,7 @@ export function SupportBand({ ownerScope, forceOpen = false }: { ownerScope: Tod
               {row.urgency}
               {row.slaBreaching ? ' · past its response window' : ''}
               {' · '}
-              {row.owner || 'unowned'} · opened {formatRelative(row.createdAt)}
+              {row.owner || 'unowned'} · opened <Stamp at={row.createdAt} />
             </>
           }
         />

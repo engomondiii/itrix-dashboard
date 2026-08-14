@@ -20,16 +20,18 @@ import { ChevronDown, ChevronUp } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
-import { formatRelative } from '@/lib/entity/format';
 import { useDebouncedValue } from '@/lib/use-debounced-value';
 import { useBulkLeadAction, useLeads, usePipeline } from '@/lib/leads/hooks';
 import { useToast } from '@/components/ui/toast';
 import { normalizeError } from '@/lib/api/errors';
 import { useAuth } from '@/lib/auth/auth-context';
+import { canAssignToOthers } from '@/lib/auth/roles';
+import { assignableMembers, useTeam } from '@/lib/team';
 import { ShowMore, useCapped } from '@/components/today/use-capped';
 import { PARKED_STAGES } from '@/lib/leads/api';
 import type { LeadRow, LeadStatus } from '@/lib/today/types';
 import type { PipelineStage } from '@/lib/leads/types';
+import { Stamp } from '@/components/shared/timestamp';
 
 /** Server-side sortable fields (LeadFilter's sort= vocabulary). */
 type SortField = 'submittedAt' | 'score' | 'tier' | 'status';
@@ -40,6 +42,15 @@ const LIST_STAGES: LeadStatus[] = [
   'New', 'Contacted', 'Meeting Booked', 'NDA', 'Evaluation', 'PoC',
   'Negotiation', 'Licensed',
 ];
+
+/**
+ * Every stage a lead can be filtered or moved to.
+ *
+ * Deduped because "Negotiation" is in both lists — it's a visible board
+ * column AND in PARKED_STAGES. Concatenating them rendered it twice in the
+ * chips row and the move-to select, with a duplicate React key each time.
+ */
+const ALL_LIST_STAGES: LeadStatus[] = [...new Set([...LIST_STAGES, ...PARKED_STAGES])];
 
 const PRIORITIES = [1, 2, 3, 4] as const;
 
@@ -244,7 +255,7 @@ function LeadsInner() {
               </Chip>
             ))}
             <span className="mx-1 hidden h-5 w-px bg-border sm:block" />
-            {[...LIST_STAGES, ...PARKED_STAGES].map((s) => (
+            {ALL_LIST_STAGES.map((s) => (
               <Chip key={s} active={stage === s} onClick={() => setParams({ stage: stage === s ? null : s })}>
                 {stageLabel(s)}
               </Chip>
@@ -351,6 +362,12 @@ function BulkBar({ selected, onClear }: { selected: Set<string>; onClear: () => 
   const [stageTo, setStageTo] = useState<LeadStatus | ''>('');
   const ids = [...selected];
 
+  // Handing a batch to someone else is the team-leader power; self-claim
+  // stays available to everyone (lib/auth/roles.ts).
+  const isLeader = canAssignToOthers(user);
+  const team = useTeam('', isLeader);
+  const members = assignableMembers(team.data?.results);
+
   function report(result: { done: number; failed: number }, verb: string) {
     toast({
       title: result.failed
@@ -384,6 +401,34 @@ function BulkBar({ selected, onClear }: { selected: Set<string>; onClear: () => 
           Assign to me
         </Button>
       )}
+      {isLeader && (
+        <label className="flex items-center gap-1.5 text-xs text-muted-foreground">
+          Assign to
+          <select
+            value=""
+            disabled={bulk.isPending || members.length === 0}
+            onChange={(e) => {
+              const member = members.find((m) => m.email === e.target.value);
+              if (!member) return;
+              bulk.mutate(
+                { kind: 'assign', ids, owner: member.email },
+                {
+                  onSuccess: (r) => report(r, `Assigned to ${member.name} —`),
+                  onError: (err) => toast({ title: normalizeError(err).message, tone: 'destructive' }),
+                },
+              );
+            }}
+            className="h-7 rounded-md border border-input bg-card px-1.5 text-xs focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+          >
+            <option value="">someone…</option>
+            {members.map((member) => (
+              <option key={member.id} value={member.email}>
+                {member.name} ({member.openLeads} open)
+              </option>
+            ))}
+          </select>
+        </label>
+      )}
       <label className="flex items-center gap-1.5 text-xs text-muted-foreground">
         Move to
         <select
@@ -392,7 +437,7 @@ function BulkBar({ selected, onClear }: { selected: Set<string>; onClear: () => 
           className="h-7 rounded-md border border-input bg-card px-1.5 text-xs focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
         >
           <option value="">stage…</option>
-          {[...LIST_STAGES, ...PARKED_STAGES].map((stageOption) => (
+          {ALL_LIST_STAGES.map((stageOption) => (
             <option key={stageOption} value={stageOption}>
               {stageOption}
             </option>
@@ -503,7 +548,7 @@ function LeadTable({
                 {row.score}
               </td>
               <td className="px-4 py-2.5 text-muted-foreground">{row.owner ?? '—'}</td>
-              <td className="px-4 py-2.5 text-muted-foreground">{formatRelative(row.submittedAt)}</td>
+              <td className="px-4 py-2.5 text-muted-foreground"><Stamp at={row.submittedAt} /></td>
             </tr>
           ))}
         </tbody>

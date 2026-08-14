@@ -7,10 +7,10 @@
  */
 
 import { useNdaInFlight } from '@/lib/today/hooks';
-import { formatRelative } from '@/lib/entity/format';
 import { QueueCard } from '../queue-card';
 import { TodayBand } from '../today-band';
 import { ShowMore, useCapped } from '../use-capped';
+import { Stamp } from '@/components/shared/timestamp';
 
 export function NdaBand({ forceOpen = false }: { forceOpen?: boolean }) {
   const nda = useNdaInFlight();
@@ -43,10 +43,10 @@ export function NdaBand({ forceOpen = false }: { forceOpen?: boolean }) {
           meta={
             row.status === 'sent' && row.sentAt ? (
               <>
-                sent {formatRelative(row.sentAt)} to {row.signerEmail || 'unknown signer'}
+                sent <Stamp at={row.sentAt} /> to {row.signerEmail || 'unknown signer'}
               </>
             ) : (
-              <>requested {formatRelative(row.requestedAt)} · {row.docType}</>
+              <>requested <Stamp at={row.requestedAt} /> · {row.docType}</>
             )
           }
         />

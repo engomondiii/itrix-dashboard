@@ -5,6 +5,7 @@
  * never means visiting three destinations:
  *
  *   header    identity, priority, score, owner ("Take it"), stage control
+ *   company   who they work for, the actionable email, other leads there
  *   signals   Deal signals (cockpit, staff-worded) + suggested next step
  *   NDA       the panel formerly known as the /nda pages — request, send,
  *             mark signed, decline, all in place (404 = "no NDA yet")
@@ -23,10 +24,7 @@ import { Button } from '@/components/ui/button';
 import { useToast } from '@/components/ui/toast';
 import { cn } from '@/lib/utils';
 import { normalizeError } from '@/lib/api/errors';
-import { useAuth } from '@/lib/auth/auth-context';
-import { formatRelative } from '@/lib/entity/format';
 import {
-  useAssignLead,
   useAddNote,
   useDealSignals,
   useLead,
@@ -43,20 +41,15 @@ import { useConversations } from '@/lib/conversations/hooks';
 import { useThreadBoard } from '@/lib/today/hooks';
 import { ReasonAction } from '@/components/today/reason-action';
 import { ShowMore, useCapped } from '@/components/today/use-capped';
+import { Panel } from '@/components/shared/panel';
+import { Stamp } from '@/components/shared/timestamp';
+import { AssignControl } from '@/components/leads/assign-control';
+import { CompanyCard } from '@/components/leads/company-card';
 
 const ALL_STAGES: LeadStatus[] = [
   'New', 'Qualifying', 'Contacted', 'Meeting Booked', 'NDA', 'Evaluation',
   'PoC', 'Negotiation', 'Licensed', 'Nurture', 'Closed', 'Lost',
 ];
-
-function Panel({ title, children, className }: { title: string; children: React.ReactNode; className?: string }) {
-  return (
-    <section className={cn('glass-surface rounded-xl p-4', className)}>
-      <h2 className="font-display tracking-display mb-3 text-sm font-semibold">{title}</h2>
-      {children}
-    </section>
-  );
-}
 
 function Meter({ label, value }: { label: string; value: number }) {
   return (
@@ -77,8 +70,6 @@ function Meter({ label, value }: { label: string; value: number }) {
 
 function Header({ lead }: { lead: LeadDetail }) {
   const { toast } = useToast();
-  const { user } = useAuth();
-  const assign = useAssignLead(lead.id);
   const setStatus = useSetStatus(lead.id);
 
   return (
@@ -94,32 +85,20 @@ function Header({ lead }: { lead: LeadDetail }) {
           <h1 className="font-display tracking-display text-2xl font-semibold">
             {lead.company || lead.visitorName || 'Unknown lead'}
           </h1>
+          {/* Email moved to the Company card, where it's actionable rather
+              than decorative. */}
           <p className="mt-1 text-sm text-muted-foreground">
-            {[lead.visitorName, lead.role, lead.email].filter(Boolean).join(' · ')}
+            {[lead.visitorName, lead.role].filter(Boolean).join(' · ')}
           </p>
           <p className="mt-0.5 text-xs text-muted-foreground">
-            P{lead.tier} · score {lead.score} · submitted {formatRelative(lead.submittedAt)}
+            P{lead.tier} · score {lead.score} · submitted <Stamp at={lead.submittedAt} />
             {lead.productRoute ? ` · ${lead.productRoute}` : ''}
             {lead.journeyState ? ` · ${journeyLabel(lead.journeyState)}` : ''}
           </p>
         </div>
 
         <div className="flex items-center gap-2">
-          {!lead.owner && user?.email && (
-            <Button
-              size="sm"
-              disabled={assign.isPending}
-              onClick={() =>
-                assign.mutate(user.email, {
-                  onSuccess: () => toast({ title: 'This lead is yours', tone: 'success' }),
-                  onError: (e) => toast({ title: normalizeError(e).message, tone: 'destructive' }),
-                })
-              }
-            >
-              Take it
-            </Button>
-          )}
-          {lead.owner && <span className="text-xs text-muted-foreground">Owner: {lead.owner}</span>}
+          <AssignControl leadId={lead.id} owner={lead.owner} />
 
           <label className="flex items-center gap-1.5 text-xs text-muted-foreground">
             Stage
@@ -272,7 +251,7 @@ function NdaPanel({ lead }: { lead: LeadDetail }) {
           {record.status === 'sent' && (
             <div className="flex flex-wrap items-center gap-2">
               <p className="w-full text-xs text-muted-foreground">
-                Sent {record.sentAt ? formatRelative(record.sentAt) : ''} to {record.signerEmail}
+                Sent <Stamp at={record.sentAt} fallback="" /> to {record.signerEmail}
               </p>
               <Button
                 size="sm"
@@ -302,7 +281,7 @@ function NdaPanel({ lead }: { lead: LeadDetail }) {
           )}
 
           {record.status === 'signed' && record.signedAt && (
-            <p className="text-xs text-muted-foreground">Signed {formatRelative(record.signedAt)}.</p>
+            <p className="text-xs text-muted-foreground">Signed <Stamp at={record.signedAt} />.</p>
           )}
           {record.status === 'declined' && record.declineReason && (
             <p className="text-xs text-muted-foreground">Reason: {record.declineReason}</p>
@@ -440,7 +419,7 @@ function ConversationsPanel({ lead }: { lead: LeadDetail }) {
             </Link>
             <span className="text-xs text-muted-foreground">
               {thread.visitorTurns} visitor {thread.visitorTurns === 1 ? 'turn' : 'turns'} ·{' '}
-              {formatRelative(thread.lastActivityAt ?? thread.createdAt)}
+              <Stamp at={thread.lastActivityAt ?? thread.createdAt} />
             </span>
             <Link
               href={`/conversations/${thread.threadId}`}
@@ -462,7 +441,7 @@ function ConversationsPanel({ lead }: { lead: LeadDetail }) {
                 {c.title || 'Messages'}
               </Link>
               {c.lastMessageAt && (
-                <span className="text-xs text-muted-foreground">{formatRelative(c.lastMessageAt)}</span>
+                <span className="text-xs text-muted-foreground"><Stamp at={c.lastMessageAt} /></span>
               )}
               <Link
                 href={`/conversations/messages/${c.id}`}
@@ -515,7 +494,7 @@ function NotesPanel({ lead }: { lead: LeadDetail }) {
             <li key={note.id} className="rounded-lg bg-muted/60 px-3 py-2 text-sm">
               <p>{note.body}</p>
               <p className="mt-0.5 text-xs text-muted-foreground">
-                {note.author} · {formatRelative(note.createdAt)}
+                {note.author} · <Stamp at={note.createdAt} />
               </p>
             </li>
           ))}
@@ -552,7 +531,7 @@ function TimelinePanel({ lead }: { lead: LeadDetail }) {
           {cap.visible.map((entry) => (
             <li key={entry.id} className="flex items-baseline gap-2 text-sm">
               <span className="w-20 shrink-0 text-xs text-muted-foreground" title={entry.at}>
-                {formatRelative(entry.at)}
+                <Stamp at={entry.at} />
               </span>
               <span className="min-w-0">
                 {entry.text}
@@ -596,6 +575,7 @@ export function LeadDetailView({ leadId }: { leadId: string }) {
           <TimelinePanel lead={detail} />
         </div>
         <div className="min-w-0 space-y-4">
+          <CompanyCard lead={detail} />
           <SignalsPanel leadId={detail.id} />
           <NdaPanel lead={detail} />
         </div>

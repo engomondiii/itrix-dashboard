@@ -15,9 +15,9 @@ import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/components/ui/toast';
 import { cn } from '@/lib/utils';
-import { formatRelative } from '@/lib/entity/format';
 import { normalizeError } from '@/lib/api/errors';
 import { PaginationFooter, useClientPage } from '@/components/shared/client-pagination';
+import { Stamp } from '@/components/shared/timestamp';
 import {
   usePersona,
   usePersonas,
@@ -123,7 +123,7 @@ function TemplateRow({
             ? template.variables.map((v) => `{{${v}}}`).join(' ')
             : '—'}
         </td>
-        <td className="px-4 py-2.5 text-xs text-muted-foreground">{formatRelative(template.updatedAt)}</td>
+        <td className="px-4 py-2.5 text-xs text-muted-foreground"><Stamp at={template.updatedAt} /></td>
         <td className="px-4 py-2.5 text-right">
           <Button size="sm" variant="outline" onClick={onEdit}>
             {editing ? 'Close' : 'Edit'}
