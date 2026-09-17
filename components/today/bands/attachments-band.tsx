@@ -20,8 +20,10 @@ import { ReasonAction } from '../reason-action';
 import { TodayBand } from '../today-band';
 import { ShowMore, useCapped } from '../use-capped';
 import { Stamp } from '@/components/shared/timestamp';
+import { useCopy } from '@/lib/i18n/locale-provider';
 
 function AttachmentCard({ row }: { row: AttachmentRow }) {
+  const copy = useCopy();
   const { toast } = useToast();
   const act = useAttachmentAction();
 
@@ -31,7 +33,8 @@ function AttachmentCard({ row }: { row: AttachmentRow }) {
       {
         onSuccess: () =>
           toast({
-            title: action === 'release' ? 'File released' : 'File quarantined',
+            title:
+              action === 'release' ? copy.today.fileReleasedToast : copy.today.fileQuarantinedToast,
             tone: 'success',
           }),
         onError: (error) =>
@@ -65,7 +68,7 @@ function AttachmentCard({ row }: { row: AttachmentRow }) {
         <>
           {row.status === 'quarantined' && (
             <ReasonAction
-              label="Release"
+              label={copy.today.release}
               placeholder={`Why it's safe (≥${ATTACHMENT_REASON_MIN_CHARS} chars)`}
               minChars={ATTACHMENT_REASON_MIN_CHARS}
               busy={act.isPending}
@@ -74,7 +77,7 @@ function AttachmentCard({ row }: { row: AttachmentRow }) {
           )}
           {row.status !== 'quarantined' && (
             <ReasonAction
-              label="Quarantine"
+              label={copy.today.quarantine}
               placeholder={`Why it's suspect (≥${ATTACHMENT_REASON_MIN_CHARS} chars)`}
               minChars={ATTACHMENT_REASON_MIN_CHARS}
               variant="destructive"
@@ -89,6 +92,7 @@ function AttachmentCard({ row }: { row: AttachmentRow }) {
 }
 
 export function AttachmentsBand({ forceOpen = false }: { forceOpen?: boolean }) {
+  const copy = useCopy();
   const queue = useAttachmentQueue();
   const rows = queue.data?.results ?? [];
   const { visible, remaining, showMore } = useCapped(rows);
@@ -96,8 +100,9 @@ export function AttachmentsBand({ forceOpen = false }: { forceOpen?: boolean }) 
   return (
     <TodayBand
       forceOpen={forceOpen}
-      title="Files awaiting review"
-      hint="quarantined or failed scans — oldest first"
+      title={copy.today.filesTitle}
+      storageKey="files"
+      hint={copy.today.filesHint}
       count={rows.length}
       isLoading={queue.isLoading}
       tone="warn"

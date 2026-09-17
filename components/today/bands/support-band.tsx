@@ -14,6 +14,7 @@ import { inScope, type TodayScope } from '../scope';
 import { TodayBand } from '../today-band';
 import { ShowMore, useCapped } from '../use-capped';
 import { Stamp } from '@/components/shared/timestamp';
+import { useCopy } from '@/lib/i18n/locale-provider';
 
 function tone(row: SupportRow): 'urgent' | 'warn' | 'neutral' {
   if (row.blocking || row.slaBreaching || row.urgency === 'critical') return 'urgent';
@@ -22,6 +23,7 @@ function tone(row: SupportRow): 'urgent' | 'warn' | 'neutral' {
 }
 
 export function SupportBand({ ownerScope, forceOpen = false }: { ownerScope: TodayScope; forceOpen?: boolean }) {
+  const copy = useCopy();
   const { user } = useAuth();
   const queue = useSupportQueue();
   const rows = (queue.data?.results ?? []).filter((row) =>
@@ -32,8 +34,9 @@ export function SupportBand({ ownerScope, forceOpen = false }: { ownerScope: Tod
   return (
     <TodayBand
       forceOpen={forceOpen}
-      title="Open support requests"
-      hint="handled outside this screen for now — read-only heads-up"
+      title={copy.today.supportTitle}
+      storageKey="support"
+      hint={copy.today.supportHint}
       count={rows.length}
       isLoading={queue.isLoading}
       tone="warn"

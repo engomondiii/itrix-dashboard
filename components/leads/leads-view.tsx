@@ -32,6 +32,7 @@ import { PARKED_STAGES } from '@/lib/leads/api';
 import type { LeadRow, LeadStatus } from '@/lib/today/types';
 import type { PipelineStage } from '@/lib/leads/types';
 import { Stamp } from '@/components/shared/timestamp';
+import { useCopy } from '@/lib/i18n/locale-provider';
 
 /** Server-side sortable fields (LeadFilter's sort= vocabulary). */
 type SortField = 'submittedAt' | 'score' | 'tier' | 'status';
@@ -54,13 +55,14 @@ const ALL_LIST_STAGES: LeadStatus[] = [...new Set([...LIST_STAGES, ...PARKED_STA
 
 const PRIORITIES = [1, 2, 3, 4] as const;
 
-/** Stage → compact board/chip label (staff language). */
-const STAGE_LABEL: Partial<Record<LeadStatus, string>> = {
-  'Meeting Booked': 'Meeting',
-};
-
-function stageLabel(stage: LeadStatus): string {
-  return STAGE_LABEL[stage] ?? stage;
+/**
+ * Stage → display label. The argument is the backend's literal wire value;
+ * the catalogue owns the shortening ("Meeting Booked" → "Meeting") as well as
+ * the translation, so both locales stay in step.
+ */
+function useStageLabel(): (stage: LeadStatus) => string {
+  const copy = useCopy();
+  return (stage) => copy.status.leadStatus(stage);
 }
 
 function Chip({
@@ -105,6 +107,8 @@ function PriorityDot({ tier }: { tier: number }) {
 }
 
 function LeadsInner() {
+  const copy = useCopy();
+  const stageLabel = useStageLabel();
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
@@ -203,10 +207,10 @@ function LeadsInner() {
     <section>
       <header className="mb-5 flex flex-wrap items-center justify-between gap-3">
         <div>
-          <h1 className="font-display tracking-display text-2xl font-semibold">Leads</h1>
-          <p className="mt-1 text-sm text-muted-foreground">
-            Every lead in one place — filter the list, or see the funnel as a board.
-          </p>
+          <h1 className="font-display tracking-display text-2xl font-semibold">
+            {copy.leads.title}
+          </h1>
+          <p className="mt-1 text-sm text-muted-foreground">{copy.leads.subtitle}</p>
         </div>
         <div className="flex rounded-lg border border-border p-0.5">
           {(['list', 'board'] as const).map((v) => (
@@ -216,11 +220,11 @@ function LeadsInner() {
               onClick={() => setParams({ view: v === 'list' ? null : v })}
               aria-pressed={view === v}
               className={cn(
-                'rounded-md px-3 py-1 text-xs font-medium capitalize',
+                'rounded-md px-3 py-1 text-xs font-medium',
                 view === v ? 'bg-primary text-primary-foreground' : 'text-muted-foreground hover:bg-muted',
               )}
             >
-              {v}
+              {v === 'list' ? copy.leads.viewList : copy.leads.viewBoard}
             </button>
           ))}
         </div>
@@ -232,21 +236,21 @@ function LeadsInner() {
             <input
               value={searchInput}
               onChange={(e) => setSearchInput(e.target.value)}
-              placeholder="Search company, name, pain…"
+              placeholder={copy.leads.searchPlaceholder}
               className="h-8 w-56 rounded-md border border-input bg-card px-2.5 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
             />
             <span className="mx-1 hidden h-5 w-px bg-border sm:block" />
             <Chip active={mine} onClick={() => setParams({ mine: mine ? null : '1' })}>
-              Mine
+              {copy.leads.filterMine}
             </Chip>
             <Chip active={who === 'named'} onClick={() => setParams({ who: who === 'named' ? null : 'named' })}>
-              Known
+              {copy.leads.filterKnown}
             </Chip>
             <Chip
               active={who === 'unnamed'}
               onClick={() => setParams({ who: who === 'unnamed' ? null : 'unnamed' })}
             >
-              Unknown
+              {copy.leads.filterUnknown}
             </Chip>
             <span className="mx-1 hidden h-5 w-px bg-border sm:block" />
             {PRIORITIES.map((p) => (
@@ -356,6 +360,8 @@ function SortableTh({
 }
 
 function BulkBar({ selected, onClear }: { selected: Set<string>; onClear: () => void }) {
+  const copy = useCopy();
+  const stageLabel = useStageLabel();
   const { toast } = useToast();
   const { user } = useAuth();
   const bulk = useBulkLeadAction();
@@ -371,8 +377,8 @@ function BulkBar({ selected, onClear }: { selected: Set<string>; onClear: () => 
   function report(result: { done: number; failed: number }, verb: string) {
     toast({
       title: result.failed
-        ? `${verb} ${result.done}, ${result.failed} failed`
-        : `${verb} ${result.done} lead${result.done === 1 ? '' : 's'}`,
+        ? copy.leads.bulkPartial(verb, result.done, result.failed)
+        : copy.leads.bulkDone(verb, result.done),
       tone: result.failed ? 'destructive' : 'success',
     });
     onClear();
@@ -381,7 +387,7 @@ function BulkBar({ selected, onClear }: { selected: Set<string>; onClear: () => 
   return (
     <div className="mb-3 flex flex-wrap items-center gap-2 rounded-xl bg-secondary px-3 py-2 text-sm">
       <span className="font-medium" data-numeric>
-        {selected.size} selected
+        {copy.leads.selectedCount(selected.size)}
       </span>
       {user?.email && (
         <Button
@@ -392,18 +398,18 @@ function BulkBar({ selected, onClear }: { selected: Set<string>; onClear: () => 
             bulk.mutate(
               { kind: 'assign', ids, owner: user.email },
               {
-                onSuccess: (r) => report(r, 'Assigned'),
+                onSuccess: (r) => report(r, copy.leads.verbAssigned),
                 onError: (e) => toast({ title: normalizeError(e).message, tone: 'destructive' }),
               },
             )
           }
         >
-          Assign to me
+          {copy.leads.assignToMe}
         </Button>
       )}
       {isLeader && (
         <label className="flex items-center gap-1.5 text-xs text-muted-foreground">
-          Assign to
+          {copy.leads.assignTo}
           <select
             value=""
             disabled={bulk.isPending || members.length === 0}
@@ -413,33 +419,33 @@ function BulkBar({ selected, onClear }: { selected: Set<string>; onClear: () => 
               bulk.mutate(
                 { kind: 'assign', ids, owner: member.email },
                 {
-                  onSuccess: (r) => report(r, `Assigned to ${member.name} —`),
+                  onSuccess: (r) => report(r, copy.leads.verbAssignedTo(member.name)),
                   onError: (err) => toast({ title: normalizeError(err).message, tone: 'destructive' }),
                 },
               );
             }}
             className="h-7 rounded-md border border-input bg-card px-1.5 text-xs focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
           >
-            <option value="">someone…</option>
+            <option value="">{copy.leads.someonePlaceholder}</option>
             {members.map((member) => (
               <option key={member.id} value={member.email}>
-                {member.name} ({member.openLeads} open)
+                {copy.leads.memberOpenLeads(member.name, member.openLeads)}
               </option>
             ))}
           </select>
         </label>
       )}
       <label className="flex items-center gap-1.5 text-xs text-muted-foreground">
-        Move to
+        {copy.leads.moveTo}
         <select
           value={stageTo}
           onChange={(e) => setStageTo(e.target.value as LeadStatus)}
           className="h-7 rounded-md border border-input bg-card px-1.5 text-xs focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
         >
-          <option value="">stage…</option>
+          <option value="">{copy.leads.stagePlaceholder}</option>
           {ALL_LIST_STAGES.map((stageOption) => (
             <option key={stageOption} value={stageOption}>
-              {stageOption}
+              {stageLabel(stageOption)}
             </option>
           ))}
         </select>
@@ -452,16 +458,16 @@ function BulkBar({ selected, onClear }: { selected: Set<string>; onClear: () => 
           bulk.mutate(
             { kind: 'status', ids, status: stageTo },
             {
-              onSuccess: (r) => report(r, 'Moved'),
+              onSuccess: (r) => report(r, copy.leads.verbMoved),
               onError: (e) => toast({ title: normalizeError(e).message, tone: 'destructive' }),
             },
           )
         }
       >
-        {bulk.isPending ? 'Working…' : 'Apply'}
+        {bulk.isPending ? copy.leads.working : copy.leads.apply}
       </Button>
       <Button size="sm" variant="ghost" className="ml-auto" onClick={onClear}>
-        Clear
+        {copy.leads.clear}
       </Button>
     </div>
   );
@@ -486,8 +492,10 @@ function LeadTable({
   onToggleRow: (id: string) => void;
   onToggleAll: () => void;
 }) {
+  const copy = useCopy();
+  const stageLabel = useStageLabel();
   if (isLoading && rows.length === 0) {
-    return <div className="glass-surface animate-pulse rounded-xl p-10 text-sm text-muted-foreground">Loading…</div>;
+    return <div className="glass-surface animate-pulse rounded-xl p-10 text-sm text-muted-foreground">{copy.leads.loading}</div>;
   }
   if (rows.length === 0) {
     return (
@@ -504,18 +512,18 @@ function LeadTable({
             <th className="w-10 px-4 py-2.5">
               <input
                 type="checkbox"
-                aria-label="Select all on this page"
+                aria-label={copy.leads.selectAll}
                 checked={rows.length > 0 && selected.size === rows.length}
                 onChange={onToggleAll}
                 className="h-3.5 w-3.5 accent-[hsl(var(--primary))]"
               />
             </th>
-            <th className="px-4 py-2.5 font-medium">Company / contact</th>
-            <SortableTh label="Priority" field="tier" sort={sort} dir={dir} onSort={onSort} />
-            <SortableTh label="Stage" field="status" sort={sort} dir={dir} onSort={onSort} />
-            <SortableTh label="Score" field="score" sort={sort} dir={dir} onSort={onSort} />
-            <th className="px-4 py-2.5 font-medium">Owner</th>
-            <SortableTh label="Submitted" field="submittedAt" sort={sort} dir={dir} onSort={onSort} />
+            <th className="px-4 py-2.5 font-medium">{copy.leads.colCompany}</th>
+            <SortableTh label={copy.leads.colPriority} field="tier" sort={sort} dir={dir} onSort={onSort} />
+            <SortableTh label={copy.leads.colStage} field="status" sort={sort} dir={dir} onSort={onSort} />
+            <SortableTh label={copy.leads.colScore} field="score" sort={sort} dir={dir} onSort={onSort} />
+            <th className="px-4 py-2.5 font-medium">{copy.leads.colOwner}</th>
+            <SortableTh label={copy.leads.colSubmitted} field="submittedAt" sort={sort} dir={dir} onSort={onSort} />
           </tr>
         </thead>
         <tbody>
@@ -532,7 +540,7 @@ function LeadTable({
               </td>
               <td className="px-4 py-2.5">
                 <Link href={`/leads/${row.id}`} className="font-medium hover:underline">
-                  {row.company || row.visitorName || 'Unknown'}
+                  {row.company || row.visitorName || copy.leads.unknownLead}
                 </Link>
                 {row.primaryPain && (
                   <div className="max-w-[28ch] truncate text-xs text-muted-foreground">{row.primaryPain}</div>
@@ -558,8 +566,9 @@ function LeadTable({
 }
 
 function LeadBoard({ stages, isLoading }: { stages: PipelineStage[]; isLoading: boolean }) {
+  const copy = useCopy();
   if (isLoading && stages.length === 0) {
-    return <div className="glass-surface animate-pulse rounded-xl p-10 text-sm text-muted-foreground">Loading…</div>;
+    return <div className="glass-surface animate-pulse rounded-xl p-10 text-sm text-muted-foreground">{copy.leads.loading}</div>;
   }
 
   return (
@@ -574,6 +583,8 @@ function LeadBoard({ stages, isLoading }: { stages: PipelineStage[]; isLoading: 
 }
 
 function BoardColumn({ stage }: { stage: PipelineStage }) {
+  const copy = useCopy();
+  const stageLabel = useStageLabel();
   const { visible, remaining, showMore } = useCapped(stage.leads);
   return (
     <div className="w-56 shrink-0 rounded-xl bg-muted/50 p-2">
@@ -592,10 +603,12 @@ function BoardColumn({ stage }: { stage: PipelineStage }) {
                 >
                   <div className="flex items-center gap-1.5 font-medium">
                     <PriorityDot tier={row.tier} />
-                    <span className="truncate">{row.company || row.visitorName || 'Unknown'}</span>
+                    <span className="truncate">
+                      {row.company || row.visitorName || copy.leads.unknownLead}
+                    </span>
                     {row.overdue && (
                       <span className="ml-auto rounded-full bg-destructive-soft px-1.5 text-[10px] font-semibold text-destructive">
-                        overdue
+                        {copy.leads.overdue}
                       </span>
                     )}
                   </div>
@@ -603,7 +616,7 @@ function BoardColumn({ stage }: { stage: PipelineStage }) {
                     <span>
                       P{row.tier} · {row.score}
                     </span>
-                    <span>{row.owner ? row.owner.split(/\s+/)[0] : 'unowned'}</span>
+                    <span>{row.owner ? row.owner.split(/\s+/)[0] : copy.leads.unowned}</span>
                   </div>
                 </Link>
               ))}

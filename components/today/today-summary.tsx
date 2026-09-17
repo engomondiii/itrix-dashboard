@@ -22,6 +22,7 @@ import {
   useThreadBoard,
 } from '@/lib/today/hooks';
 import { inScope, isProbablyWaiting, type TodayScope } from './scope';
+import { useCopy } from '@/lib/i18n/locale-provider';
 
 export function TodaySummary({
   scope,
@@ -33,6 +34,7 @@ export function TodaySummary({
   onFocus: (id: string | null) => void;
 }) {
   const { user } = useAuth();
+  const copy = useCopy();
   const approvals = useApprovalQueue();
   const overdue = useFollowUp('overdue');
   const dueToday = useFollowUp('today');
@@ -46,39 +48,39 @@ export function TodaySummary({
     rows.filter((row) => inScope(scope, owner(row), user?.name)).length;
 
   const chips: Array<{ id: string; label: string; count: number; tone: 'urgent' | 'warn' | 'neutral' }> = [
-    { id: 'band-approvals', label: 'Approvals', count: (approvals.data ?? []).length, tone: 'urgent' },
+    { id: 'band-approvals', label: copy.today.chipApprovals, count: (approvals.data ?? []).length, tone: 'urgent' },
     {
       id: 'band-overdue',
-      label: 'Overdue',
+      label: copy.today.chipOverdue,
       count: scoped(overdue.data?.results ?? [], (r) => r.owner),
       tone: 'urgent',
     },
     {
       id: 'band-waiting',
-      label: 'Waiting',
+      label: copy.today.chipWaiting,
       count: (board.data?.results ?? []).filter(isProbablyWaiting).length,
       tone: 'warn',
     },
     {
       id: 'band-leads',
-      label: 'New leads',
+      label: copy.today.chipNewLeads,
       count: scoped(leads.data?.results ?? [], (r) => r.owner),
       tone: 'neutral',
     },
-    { id: 'band-nda', label: 'NDAs', count: nda.data?.results.length ?? 0, tone: 'neutral' },
+    { id: 'band-nda', label: copy.today.chipNdas, count: nda.data?.results.length ?? 0, tone: 'neutral' },
     {
       id: 'band-due-today',
-      label: 'Due today',
+      label: copy.today.chipDueToday,
       count: scoped(dueToday.data?.results ?? [], (r) => r.owner),
       tone: 'neutral',
     },
     {
       id: 'band-support',
-      label: 'Support',
+      label: copy.today.chipSupport,
       count: scoped(support.data?.results ?? [], (r) => r.owner),
       tone: 'warn',
     },
-    { id: 'band-files', label: 'Files', count: attachments.data?.results.length ?? 0, tone: 'warn' },
+    { id: 'band-files', label: copy.today.chipFiles, count: attachments.data?.results.length ?? 0, tone: 'warn' },
   ];
 
   return (

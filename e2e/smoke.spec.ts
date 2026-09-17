@@ -38,9 +38,12 @@ test('demo sign-in reaches Today, leads list works, sign-out returns', async ({
   // The approvals band always renders — it is the queue's front door.
   await expect(page.getByRole('heading', { name: 'Waiting for your OK' })).toBeVisible();
 
-  // Leads list renders real (mock-backend) seed data.
+  // Prospective-customer list renders real (mock-backend) seed data. The route
+  // stays /leads; only the presented wording changed.
   await page.goto('/leads');
-  await expect(page.getByRole('heading', { level: 1, name: 'Leads' })).toBeVisible();
+  await expect(
+    page.getByRole('heading', { level: 1, name: 'Prospective Customers (In Discussion)' }),
+  ).toBeVisible();
   await expect(page.getByRole('link', { name: 'Hanul Engineering' })).toBeVisible();
 
   // Search narrows the list via the URL-backed state (the demo handler

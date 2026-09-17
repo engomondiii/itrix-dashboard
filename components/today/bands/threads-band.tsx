@@ -15,6 +15,7 @@ import { QueueCard } from '../queue-card';
 import { TodayBand } from '../today-band';
 import { ShowMore, useCapped } from '../use-capped';
 import { Stamp } from '@/components/shared/timestamp';
+import { useCopy } from '@/lib/i18n/locale-provider';
 
 const ACTIVE_WINDOW_MS = 24 * 60 * 60 * 1000;
 
@@ -25,6 +26,7 @@ function probablyWaiting(row: ThreadRow): boolean {
 }
 
 export function ThreadsBand({ forceOpen = false }: { forceOpen?: boolean }) {
+  const copy = useCopy();
   const board = useThreadBoard();
   const rows = (board.data?.results ?? []).filter(probablyWaiting);
   const { visible, remaining, showMore } = useCapped(rows);
@@ -32,8 +34,9 @@ export function ThreadsBand({ forceOpen = false }: { forceOpen?: boolean }) {
   return (
     <TodayBand
       forceOpen={forceOpen}
-      title="Conversations probably waiting"
-      hint="visitor engaged in the last 24h — worth a look"
+      title={copy.today.threadsTitle}
+      storageKey="threads"
+      hint={copy.today.threadsHint}
       count={rows.length}
       isLoading={board.isLoading}
       tone="warn"
@@ -45,14 +48,14 @@ export function ThreadsBand({ forceOpen = false }: { forceOpen?: boolean }) {
           href="/conversations"
           title={
             <>
-              {row.title || 'Untitled conversation'}
+              {row.title || copy.today.untitledConversation}
               {row.company ? <span className="text-muted-foreground"> · {row.company}</span> : null}
               {row.anonymous ? <span className="text-muted-foreground"> · anonymous</span> : null}
             </>
           }
           meta={
             <>
-              {row.visitorTurns} visitor {row.visitorTurns === 1 ? 'turn' : 'turns'} · last activity{' '}
+              {copy.today.visitorTurns(row.visitorTurns)} · {copy.today.lastActivity}{' '}
               <Stamp at={row.lastActivityAt ?? row.createdAt} />
             </>
           }

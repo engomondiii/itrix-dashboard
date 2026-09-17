@@ -81,19 +81,35 @@ function seedThreads(): ThreadRow[] {
   return [
     {
       threadId: 'th-01', title: 'Survey correction throughput', anonymous: false,
-      leadId: 'ld-02', company: 'Shinkai Instruments', journeyState: 'ENGAGED',
+      leadId: 'ld-02', company: 'Shinkai Instruments',
+      relationshipState: 'customer', mirrorStatus: 'confirmed',
+      engagementStage: 'assessment', threadState: 'ASSESSMENT',
       turnCount: 14, visitorTurns: 6, working: true,
       lastActivityAt: hoursAgo(0.5), createdAt: hoursAgo(6), ownerKind: 'lead',
     },
     {
+      // Same lead as th-01, deliberately. One conversation can be mid-assessment
+      // while another is barely started, and the board has to show both truthfully.
+      threadId: 'th-04', title: 'Second question from a colleague', anonymous: false,
+      leadId: 'ld-02', company: 'Shinkai Instruments',
+      relationshipState: 'visitor', mirrorStatus: 'pending',
+      engagementStage: 'exploration', threadState: 'IN_REVIEW',
+      turnCount: 3, visitorTurns: 2, working: true,
+      lastActivityAt: hoursAgo(1.5), createdAt: hoursAgo(2), ownerKind: 'lead',
+    },
+    {
       threadId: 'th-02', title: 'Pricing for a 3-team rollout', anonymous: true,
-      leadId: null, company: '', journeyState: 'ARRIVED',
+      leadId: null, company: '',
+      relationshipState: 'visitor', mirrorStatus: 'not_required',
+      engagementStage: 'exploration', threadState: 'ARRIVED',
       turnCount: 5, visitorTurns: 3, working: true,
       lastActivityAt: hoursAgo(2), createdAt: hoursAgo(3), ownerKind: 'session',
     },
     {
       threadId: 'th-03', title: 'Old exploratory chat', anonymous: true,
-      leadId: null, company: '', journeyState: 'ARRIVED',
+      leadId: null, company: '',
+      relationshipState: 'visitor', mirrorStatus: 'not_required',
+      engagementStage: 'exploration', threadState: 'ARRIVED',
       turnCount: 4, visitorTurns: 2, working: true,
       lastActivityAt: hoursAgo(70), createdAt: hoursAgo(72), ownerKind: 'session',
     },
@@ -596,7 +612,10 @@ export const todayHandlers = [
     });
     return HttpResponse.json({
       threadId: row.threadId, title: row.title, anonymous: row.anonymous,
-      leadId: row.leadId, company: row.company, journeyState: row.journeyState,
+      leadId: row.leadId, company: row.company,
+      relationshipState: row.relationshipState, mirrorStatus: row.mirrorStatus,
+      engagementStage: row.engagementStage, threadState: row.threadState,
+      leadJourneyState: row.leadId ? 'ASSESSMENT' : null,
       ownerKind: row.ownerKind, createdAt: row.createdAt, lastActivityAt: row.lastActivityAt,
       turns: [
         mk(1, 'visitor', 'How fast can your pipeline process a full survey correction batch?'),

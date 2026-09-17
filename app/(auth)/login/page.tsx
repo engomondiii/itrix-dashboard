@@ -15,8 +15,11 @@ import { Suspense, useState, type FormEvent } from 'react';
 
 import { normalizeError, type FieldError } from '@/lib/api/errors';
 import { useAuth } from '@/lib/auth/auth-context';
+import { useCopy } from '@/lib/i18n/locale-provider';
 import { isDemoMode } from '@/lib/env';
 import { GuestRoute } from '@/components/auth/protected-route';
+import { LocaleToggle } from '@/components/locale-toggle';
+import { ThemeToggle } from '@/components/theme-toggle';
 import { Button } from '@/components/ui/button';
 import { Field } from '@/components/ui/field';
 
@@ -36,6 +39,7 @@ function safeRedirect(target: string | null, fallback = '/today'): string {
 
 function LoginForm() {
   const { login } = useAuth();
+  const copy = useCopy();
   const router = useRouter();
   const searchParams = useSearchParams();
 
@@ -96,14 +100,26 @@ function LoginForm() {
 
   return (
     <main className="mx-auto flex min-h-screen w-full max-w-sm flex-col justify-center px-4">
-      <h1 className="mb-6 text-2xl font-semibold">Sign in</h1>
+      {/*
+        Language and theme belong BEFORE sign-in, not only after it. The person
+        who cannot read this form is exactly the one who needs the language
+        switch, and they have no way to reach Settings from here. Fixed to the
+        corner rather than in the column so it does not push the form off
+        centre on a short viewport.
+      */}
+      <div className="fixed right-4 top-4 flex items-center gap-1">
+        <LocaleToggle className="text-foreground/70 hover:bg-muted" />
+        <ThemeToggle className="text-foreground/70 hover:bg-muted" />
+      </div>
+
+      <h1 className="mb-6 text-2xl font-semibold">{copy.auth.signIn}</h1>
 
       {isDemoMode() && (
         <div className="mb-4 rounded-md border border-border bg-muted px-3 py-2 text-sm text-muted-foreground">
           <p>
-            Demo mode — sign in with <code className="font-mono">demo@example.com</code> /{' '}
-            <code className="font-mono">demo1234</code>. A wrong password shows the real
-            error flow (a 401, deliberately without saying which field was wrong).
+            {copy.auth.demoIntro} <code className="font-mono">demo@example.com</code> /{' '}
+            <code className="font-mono">demo1234</code>
+            {copy.auth.demoOutro}
           </p>
           <Button
             variant="outline"
@@ -112,7 +128,7 @@ function LoginForm() {
             onClick={handleDemoLogin}
             className="mt-2 w-full"
           >
-            {submitting ? 'Signing in…' : 'One-click demo sign-in'}
+            {submitting ? copy.auth.signingIn : copy.auth.demoSignIn}
           </Button>
         </div>
       )}
@@ -128,7 +144,7 @@ function LoginForm() {
         )}
 
         <Field
-          label="Email"
+          label={copy.auth.email}
           type="email"
           name="email"
           // Lets password managers recognise the field.
@@ -140,7 +156,7 @@ function LoginForm() {
         />
 
         <Field
-          label="Password"
+          label={copy.auth.password}
           type="password"
           name="password"
           autoComplete="current-password"
@@ -151,14 +167,11 @@ function LoginForm() {
         />
 
         <Button type="submit" disabled={submitting} className="w-full">
-          {submitting ? 'Signing in…' : 'Sign in'}
+          {submitting ? copy.auth.signingIn : copy.auth.signIn}
         </Button>
       </form>
 
-      <p className="mt-4 text-sm text-muted-foreground">
-        Locked out? Ask an admin to reset your account — staff accounts are
-        provisioned, not self-served.
-      </p>
+      <p className="mt-4 text-sm text-muted-foreground">{copy.auth.lockedOut}</p>
     </main>
   );
 }

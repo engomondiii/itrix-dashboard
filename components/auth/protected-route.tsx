@@ -19,6 +19,7 @@ import { useRouter, usePathname } from 'next/navigation';
 import { useEffect, type ReactNode } from 'react';
 
 import { useAuth } from '@/lib/auth/auth-context';
+import { useCopy } from '@/lib/i18n/locale-provider';
 
 interface ProtectedRouteProps {
   children: ReactNode;
@@ -31,13 +32,15 @@ interface ProtectedRouteProps {
 }
 
 function DefaultFallback() {
+  const copy = useCopy();
+
   return (
     <div
       className="flex min-h-[50vh] items-center justify-center"
       role="status"
       aria-live="polite"
     >
-      <span className="sr-only">Loading</span>
+      <span className="sr-only">{copy.common.loading}</span>
       <div
         className="h-8 w-8 animate-spin rounded-full border-2 border-current border-t-transparent"
         aria-hidden="true"
@@ -53,6 +56,7 @@ export function ProtectedRoute({
   fallback,
 }: ProtectedRouteProps) {
   const { isAuthenticated, isLoading, hasPermission } = useAuth();
+  const copy = useCopy();
   const router = useRouter();
   const pathname = usePathname();
 
@@ -81,10 +85,8 @@ export function ProtectedRoute({
   if (permission && !hasPermission(permission)) {
     return (
       <div className="flex min-h-[50vh] flex-col items-center justify-center gap-3 p-8 text-center">
-        <h2 className="text-xl font-semibold">Access denied</h2>
-        <p className="text-sm opacity-70">
-          You do not have permission to view this page.
-        </p>
+        <h2 className="text-xl font-semibold">{copy.common.accessDenied}</h2>
+        <p className="text-sm opacity-70">{copy.common.accessDeniedBody}</p>
       </div>
     );
   }

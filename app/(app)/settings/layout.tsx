@@ -21,48 +21,58 @@ import { usePathname } from 'next/navigation';
 import { Palette, UserRound, UsersRound, type LucideIcon } from 'lucide-react';
 import type { ReactNode } from 'react';
 
+import { useCopy } from '@/lib/i18n/locale-provider';
+import type { Messages } from '@/lib/i18n/messages';
 import { cn } from '@/lib/utils';
 
+type SettingsCopyKey = keyof Messages['settings'];
+
 interface SettingsNavItem {
-  label: string;
+  /** Keys into `copy.settings`, resolved at render — see NAV_GROUPS in app-sidebar. */
+  labelKey: SettingsCopyKey;
   href: string;
   icon: LucideIcon;
   /** Shown as the page subtitle while this section is active. */
-  description: string;
+  descriptionKey: SettingsCopyKey;
 }
 
 const SETTINGS_NAV: SettingsNavItem[] = [
   {
-    label: 'Profile',
+    labelKey: 'profile',
     href: '/settings/profile',
     icon: UserRound,
-    description: 'Your name and account details.',
+    descriptionKey: 'profileDescription',
   },
   {
-    label: 'Team',
+    labelKey: 'team',
     href: '/settings/team',
     icon: UsersRound,
-    description: 'Who has staff access, and their load.',
+    descriptionKey: 'teamDescription',
   },
   // No Security section: the team plane has no password-change endpoint —
   // password resets go through an admin. Restore when the backend grows one.
   {
-    label: 'Appearance',
+    labelKey: 'appearance',
     href: '/settings/appearance',
     icon: Palette,
-    description: 'Theme and display preferences.',
+    descriptionKey: 'appearanceDescription',
   },
 ];
 
 export default function SettingsLayout({ children }: { children: ReactNode }) {
   const pathname = usePathname() ?? '';
+  const copy = useCopy();
   const active = SETTINGS_NAV.find((item) => pathname.startsWith(item.href));
 
   return (
     <div>
       <header className="mb-6">
-        <h1 className="text-2xl font-semibold">Settings</h1>
-        {active && <p className="mt-1 text-sm text-muted-foreground">{active.description}</p>}
+        <h1 className="text-2xl font-semibold">{copy.nav.settings}</h1>
+        {active && (
+          <p className="mt-1 text-sm text-muted-foreground">
+            {copy.settings[active.descriptionKey]}
+          </p>
+        )}
       </header>
 
       <div className="flex flex-col gap-6 lg:flex-row lg:gap-10">
@@ -70,7 +80,7 @@ export default function SettingsLayout({ children }: { children: ReactNode }) {
           Desktop: a sticky left rail. Mobile: the same list as a horizontal
           scroller — tabs without a second component to maintain.
         */}
-        <nav aria-label="Settings sections" className="lg:w-48 lg:shrink-0">
+        <nav aria-label={copy.settings.sectionsLabel} className="lg:w-48 lg:shrink-0">
           <ul className="flex gap-1 overflow-x-auto lg:sticky lg:top-6 lg:flex-col lg:overflow-visible">
             {SETTINGS_NAV.map((item) => {
               const isActive = pathname.startsWith(item.href);
@@ -87,7 +97,7 @@ export default function SettingsLayout({ children }: { children: ReactNode }) {
                     )}
                   >
                     <item.icon className="h-4 w-4" aria-hidden="true" />
-                    {item.label}
+                    {copy.settings[item.labelKey]}
                   </Link>
                 </li>
               );

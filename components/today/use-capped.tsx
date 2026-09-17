@@ -10,6 +10,7 @@
 import { useState } from 'react';
 
 import { Button } from '@/components/ui/button';
+import { useCopy } from '@/lib/i18n/locale-provider';
 
 const INITIAL = 6;
 const CHUNK = 20;
@@ -26,10 +27,11 @@ export function useCapped<T>(rows: T[]) {
 }
 
 export function ShowMore({ remaining, onClick }: { remaining: number; onClick: () => void }) {
+  const copy = useCopy();
   if (remaining <= 0) return null;
   return (
     <Button size="sm" variant="ghost" onClick={onClick} className="w-full text-muted-foreground">
-      Show {Math.min(remaining, 20)} more ({remaining} hidden)
+      {copy.today.showMore(Math.min(remaining, 20), remaining)}
     </Button>
   );
 }

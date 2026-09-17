@@ -1,6 +1,11 @@
+import { getCopy } from '@/lib/i18n/server';
+
 import { CustomerDetailView } from '@/components/customers/customer-detail-view';
 
-export const metadata = { title: 'Account' };
+export async function generateMetadata() {
+  const copy = await getCopy();
+  return { title: copy.conversations.accountTitle };
+}
 
 export default async function CustomerPage({
   params,

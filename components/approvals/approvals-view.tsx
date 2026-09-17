@@ -23,16 +23,10 @@ import type { ApprovalRow } from '@/lib/today/types';
 import { ReasonAction } from '@/components/today/reason-action';
 import { ShowMore, useCapped } from '@/components/today/use-capped';
 import { Stamp } from '@/components/shared/timestamp';
-
-const RISK_LABEL: Record<number, string> = {
-  1: 'Risk 1 · conversational',
-  2: 'Risk 2 · qualitative',
-  3: 'Risk 3 · needs citation',
-  4: 'Risk 4 · commercial',
-  5: 'Risk 5 · legal',
-};
+import { useCopy } from '@/lib/i18n/locale-provider';
 
 function ApprovalCard({ row, canAct }: { row: ApprovalRow; canAct: boolean }) {
+  const copy = useCopy();
   const { toast } = useToast();
   const act = useApprovalAction();
   const [editing, setEditing] = useState(false);
@@ -52,17 +46,21 @@ function ApprovalCard({ row, canAct }: { row: ApprovalRow; canAct: boolean }) {
       )}
     >
       <header className="mb-2 flex flex-wrap items-center gap-2 text-sm">
-        <span className="font-medium">{secondOk ? 'Needs a second OK' : 'Needs an OK'}</span>
+        <span className="font-medium">
+          {secondOk ? copy.today.needsSecondOk : copy.today.needsOk}
+        </span>
         <span
           className={cn(
             'rounded-full px-2 py-0.5 text-xs font-semibold',
             row.claimLevel >= 4 ? 'bg-destructive-soft text-destructive' : 'bg-warning-soft text-warning',
           )}
         >
-          {RISK_LABEL[row.claimLevel]}
+          {copy.status.riskLabel(row.claimLevel)}
         </span>
         {secondOk && row.firstApprover && (
-          <span className="text-xs text-muted-foreground">first OK: {row.firstApprover}</span>
+          <span className="text-xs text-muted-foreground">
+            {copy.approvals.firstOkBy(row.firstApprover)}
+          </span>
         )}
         <span className="ml-auto text-xs text-muted-foreground"><Stamp at={row.at} /></span>
       </header>
@@ -91,17 +89,17 @@ function ApprovalCard({ row, canAct }: { row: ApprovalRow; canAct: boolean }) {
                     {
                       onSuccess: () => {
                         setEditing(false);
-                        toast({ title: 'Draft updated — still needs its OK' });
+                        toast({ title: copy.approvals.draftUpdated });
                       },
                       onError,
                     },
                   )
                 }
               >
-                Save edit
+                {copy.approvals.saveEdit}
               </Button>
               <Button size="sm" variant="ghost" onClick={() => setEditing(false)}>
-                Cancel
+                {copy.common.cancel}
               </Button>
             </>
           ) : (
@@ -114,25 +112,28 @@ function ApprovalCard({ row, canAct }: { row: ApprovalRow; canAct: boolean }) {
                     { id: row.id, action: 'approve' },
                     {
                       onSuccess: () =>
-                        toast({ title: secondOk ? 'Second OK given — sending' : 'Approved', tone: 'success' }),
+                        toast({
+                          title: secondOk ? copy.approvals.secondOkToast : copy.approvals.approvedToast,
+                          tone: 'success',
+                        }),
                       onError,
                     },
                   )
                 }
               >
-                {secondOk ? 'Give second OK' : 'Approve'}
+                {secondOk ? copy.today.giveSecondOk : copy.today.approve}
               </Button>
               <Button size="sm" variant="outline" onClick={() => setEditing(true)}>
-                Edit first
+                {copy.approvals.editFirst}
               </Button>
               <ReasonAction
-                label="Reject"
-                placeholder="Why this can't go out"
+                label={copy.today.reject}
+                placeholder={copy.today.rejectPlaceholder}
                 busy={act.isPending}
                 onConfirm={(reason) =>
                   act.mutate(
                     { id: row.id, action: 'reject', reason },
-                    { onSuccess: () => toast({ title: 'Rejected' }), onError },
+                    { onSuccess: () => toast({ title: copy.approvals.rejectedToast }), onError },
                   )
                 }
               />
@@ -145,6 +146,7 @@ function ApprovalCard({ row, canAct }: { row: ApprovalRow; canAct: boolean }) {
 }
 
 export function ApprovalsView() {
+  const copy = useCopy();
   const queue = useApprovalQueue();
   const { hasPermission } = useAuth();
   const canAct = hasPermission(['ADMIN', 'ASSESSMENT']);
@@ -162,10 +164,12 @@ export function ApprovalsView() {
     <section>
       <header className="mb-5 flex flex-wrap items-end justify-between gap-3">
         <div>
-          <h1 className="font-display tracking-display text-2xl font-semibold">Approvals</h1>
+          <h1 className="font-display tracking-display text-2xl font-semibold">
+            {copy.approvals.title}
+          </h1>
           <p className="mt-1 text-sm text-muted-foreground">
-            Messages the AI wants to send that need a human OK before they go out.
-            {!canAct && ' Your role can watch this queue but not act on it.'}
+            {copy.approvals.subtitle}
+            {!canAct && copy.approvals.watchOnly}
           </p>
         </div>
         <div className="flex flex-wrap items-center gap-2">
@@ -182,7 +186,7 @@ export function ApprovalsView() {
                   : 'border-border bg-card text-muted-foreground hover:bg-accent',
               )}
             >
-              Risk {level}+
+              {copy.approvals.riskAtLeast(level)}
             </button>
           ))}
           <button
@@ -190,13 +194,13 @@ export function ApprovalsView() {
             onClick={() => setOrder(order === 'oldest' ? 'newest' : 'oldest')}
             className="rounded-md border border-border px-3 py-1 text-xs font-medium text-muted-foreground hover:bg-accent"
           >
-            {order === 'oldest' ? 'Oldest first' : 'Newest first'}
+            {order === 'oldest' ? copy.approvals.oldestFirst : copy.approvals.newestFirst}
           </button>
         </div>
       </header>
 
       {queue.isLoading && rows.length === 0 ? (
-        <div className="glass-surface animate-pulse rounded-xl p-10 text-sm text-muted-foreground">Loading…</div>
+        <div className="glass-surface animate-pulse rounded-xl p-10 text-sm text-muted-foreground">{copy.approvals.loading}</div>
       ) : rows.length === 0 ? (
         <div className="glass-surface rounded-xl p-10 text-center text-sm text-muted-foreground">
           Nothing waiting — the AI has no held drafts right now.

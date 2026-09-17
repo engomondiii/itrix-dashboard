@@ -3,6 +3,7 @@ import Script from 'next/script';
 
 import { Providers } from '@/components/providers';
 import { THEME_INIT_SCRIPT } from '@/components/theme-provider';
+import { getLocale } from '@/lib/i18n/server';
 
 /*
  * Brand faces as npm deps (@fontsource / pretendard) — woff2 ships with the
@@ -64,13 +65,22 @@ export const metadata: Metadata = {
  * It stays one deliberately. Adding `'use client'` here would opt every route
  * below out of server rendering; all the client-side state lives in
  * `<Providers>` instead, which is a leaf.
+ *
+ * It is `async` only to read the locale cookie. Doing that here is what keeps
+ * the language out of the flash-of-wrong-content category the theme has to
+ * work around: `lang` is correct in the served HTML, so `:lang(ko)` styling
+ * applies to the first paint, and `<Providers>` starts in the right language
+ * instead of switching to it after hydration.
  */
-export default function RootLayout({ children }: { children: React.ReactNode }) {
+export default async function RootLayout({ children }: { children: React.ReactNode }) {
+  const locale = await getLocale();
+
   return (
     // suppressHydrationWarning: the theme script below mutates <html> before
     // React hydrates, so the mismatch React reports here is expected. See
-    // components/theme-provider.tsx.
-    <html lang="en" suppressHydrationWarning>
+    // components/theme-provider.tsx. (The `lang` attribute is not part of
+    // that — it is server-rendered and matches.)
+    <html lang={locale} suppressHydrationWarning>
       <head>
         {/*
           Runtime configuration, written by docker-entrypoint.sh at container
@@ -92,7 +102,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <script dangerouslySetInnerHTML={{ __html: THEME_INIT_SCRIPT }} />
       </head>
       <body className="font-sans antialiased">
-        <Providers>{children}</Providers>
+        <Providers initialLocale={locale}>{children}</Providers>
       </body>
     </html>
   );

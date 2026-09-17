@@ -21,8 +21,10 @@ import { inScope, type TodayScope } from '../scope';
 import { TodayBand } from '../today-band';
 import { ShowMore, useCapped } from '../use-capped';
 import { Stamp } from '@/components/shared/timestamp';
+import { useCopy } from '@/lib/i18n/locale-provider';
 
 function FollowUpCard({ row, urgent }: { row: FollowUpRow; urgent: boolean }) {
+  const copy = useCopy();
   const { toast } = useToast();
   const act = useFollowUpAction();
 
@@ -34,10 +36,10 @@ function FollowUpCard({ row, urgent }: { row: FollowUpRow; urgent: boolean }) {
           toast({
             title:
               action === 'complete'
-                ? 'Done'
+                ? copy.today.doneToast
                 : action === 'snooze'
-                  ? 'Snoozed 24h'
-                  : 'Dismissed',
+                  ? copy.today.snoozedToast
+                  : copy.today.dismissedToast,
             tone: action === 'complete' ? 'success' : 'default',
           }),
         onError: (error) =>
@@ -60,20 +62,21 @@ function FollowUpCard({ row, urgent }: { row: FollowUpRow; urgent: boolean }) {
       }
       meta={
         <>
-          {row.note || 'Follow up'} · P{row.tier} · due <Stamp at={row.dueAt} />
-          {row.owner ? ` · ${row.owner}` : ' · unassigned'}
+          {row.note || copy.today.followUpFallback} · P{row.tier} · {copy.today.due}{' '}
+          <Stamp at={row.dueAt} />
+          {row.owner ? ` · ${row.owner}` : ` · ${copy.status.unassigned}`}
         </>
       }
       actions={
         <>
           <Button size="sm" disabled={act.isPending} onClick={() => run('complete')}>
-            Done
+            {copy.today.done}
           </Button>
           <Button size="sm" variant="outline" disabled={act.isPending} onClick={() => run('snooze')}>
-            Snooze 24h
+            {copy.today.snooze24h}
           </Button>
           <Button size="sm" variant="ghost" disabled={act.isPending} onClick={() => run('dismiss')}>
-            Dismiss
+            {copy.today.dismiss}
           </Button>
         </>
       }
@@ -90,6 +93,7 @@ export function FollowUpBand({
   ownerScope: TodayScope;
   forceOpen?: boolean;
 }) {
+  const copy = useCopy();
   const { user } = useAuth();
   const list = useFollowUp(scope);
   const rows = (list.data?.results ?? []).filter((row) =>
@@ -101,8 +105,9 @@ export function FollowUpBand({
   return (
     <TodayBand
       forceOpen={forceOpen}
-      title={urgent ? 'Overdue follow-ups' : 'Due today'}
-      hint={urgent ? 'oldest first — these slipped' : 'still ahead of you today'}
+      title={urgent ? copy.today.overdueTitle : copy.today.dueTodayTitle}
+      storageKey={urgent ? 'overdue' : 'due-today'}
+      hint={urgent ? copy.today.overdueHint : copy.today.dueTodayHint}
       count={rows.length}
       isLoading={list.isLoading}
       tone={urgent ? 'urgent' : 'neutral'}

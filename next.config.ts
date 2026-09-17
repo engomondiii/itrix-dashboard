@@ -3,6 +3,33 @@ import type { NextConfig } from 'next';
 const isDev = process.env.NODE_ENV === 'development';
 
 /**
+ * The API origin the browser is actually allowed to talk to.
+ *
+ * `NEXT_PUBLIC_API_URL` is inlined at build time, so it CAN be enumerated in the
+ * policy — the note on `connect-src` below asked for exactly this. Deriving it
+ * here fixes a failure that only appears in a production build: `connect-src`
+ * permitted `'self' https:`, so a backend served over plain http on another port
+ * (every local `next start` against a local API) was blocked by the browser
+ * before the request left it, and the app reported it as "cannot reach the
+ * server" — which pointed the diagnosis at the network rather than at the page.
+ *
+ * The websocket origin is derived from the same value rather than configured
+ * separately: they are the same host by construction, and two settings that must
+ * agree are one setting plus a bug waiting to happen.
+ */
+const apiOrigins = (() => {
+  const raw = process.env.NEXT_PUBLIC_API_URL?.trim();
+  if (!raw) return [] as string[];
+  try {
+    const { origin } = new URL(raw);
+    return [origin, origin.replace(/^http/, 'ws')];
+  } catch {
+    // A malformed value must not take the whole build down over a header.
+    return [] as string[];
+  }
+})();
+
+/**
  * Content-Security-Policy.
  *
  * The most valuable header here by a distance: it is what turns an XSS from
@@ -36,11 +63,14 @@ const csp = [
 
   "font-src 'self' data:",
 
-  // Where the app may send requests. The API host is injected at runtime, so
-  // it cannot be enumerated here — narrow this to your API origin once you
-  // know it. This is the directive that limits data exfiltration, so it is
-  // worth the effort.
-  `connect-src 'self' https: ${isDev ? 'http://localhost:* ws://localhost:*' : ''}`,
+  // Where the app may send requests. This is the directive that limits data
+  // exfiltration, so it is worth being precise: the configured API origin is
+  // named explicitly rather than relying on the blanket `https:`, which means a
+  // production build talks to the API it was built for and nothing else on the
+  // open web is reachable by accident.
+  `connect-src 'self' https: ${[...apiOrigins, isDev ? 'http://localhost:* ws://localhost:*' : '']
+    .filter(Boolean)
+    .join(' ')}`,
 
   // No plugins, no framing, no <base> hijacking, no cross-origin form posts.
   "object-src 'none'",

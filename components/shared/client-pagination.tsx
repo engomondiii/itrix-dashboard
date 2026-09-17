@@ -9,6 +9,7 @@
 import { useState } from 'react';
 
 import { Button } from '@/components/ui/button';
+import { useCopy } from '@/lib/i18n/locale-provider';
 
 const SIZES = [20, 50, 100] as const;
 
@@ -48,15 +49,16 @@ export function PaginationFooter({
   onPage: (page: number) => void;
   onPageSize: (n: number) => void;
 }) {
+  const copy = useCopy();
   if (total === 0) return null;
   return (
     <div className="mt-4 flex flex-wrap items-center justify-between gap-3 text-sm text-muted-foreground">
       <span data-numeric>
-        Showing {(page - 1) * pageSize + 1}–{Math.min(page * pageSize, total)} of {total} {noun}
+        {copy.ui.showingRange((page - 1) * pageSize + 1, Math.min(page * pageSize, total), total, noun)}
       </span>
       <div className="flex items-center gap-2">
         <label className="flex items-center gap-1.5 text-xs">
-          Per page
+          {copy.ui.perPage}
           <select
             value={pageSize}
             onChange={(e) => onPageSize(Number(e.target.value))}
@@ -70,10 +72,10 @@ export function PaginationFooter({
           </select>
         </label>
         <Button size="sm" variant="outline" disabled={page <= 1} onClick={() => onPage(page - 1)}>
-          Previous
+          {copy.ui.previous}
         </Button>
         <Button size="sm" variant="outline" disabled={page >= totalPages} onClick={() => onPage(page + 1)}>
-          Next
+          {copy.ui.next}
         </Button>
       </div>
     </div>

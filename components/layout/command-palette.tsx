@@ -29,9 +29,10 @@ import {
   useState,
   type ReactNode,
 } from 'react';
-import { LogOut, Moon, Monitor, Search, Sun } from 'lucide-react';
+import { Languages, LogOut, Moon, Monitor, Search, Sun } from 'lucide-react';
 
 import { useAuth } from '@/lib/auth/auth-context';
+import { useCopy, useLocale } from '@/lib/i18n/locale-provider';
 import { Button } from '@/components/ui/button';
 import { useTheme } from '@/components/theme-provider';
 import { NAV_GROUPS } from '@/components/layout/app-sidebar';
@@ -74,6 +75,8 @@ export function CommandPalette() {
   const router = useRouter();
   const { logout } = useAuth();
   const { setTheme } = useTheme();
+  const { setLocale } = useLocale();
+  const copy = useCopy();
 
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState('');
@@ -84,27 +87,37 @@ export function CommandPalette() {
     const nav: Command[] = NAV_GROUPS.flatMap((group) =>
       group.items.map((item) => ({
         id: `nav:${item.href}`,
-        label: item.label,
-        group: group.label ?? 'Navigate',
+        label: copy.nav[item.labelKey],
+        group: group.labelKey ? copy.nav[group.labelKey] : copy.nav.navigate,
         icon: <item.icon className="h-4 w-4" aria-hidden="true" />,
+        // The href is kept as a keyword so "/leads" still finds Leads while
+        // the console is in Korean — the URL does not translate.
         keywords: item.href,
         run: () => router.push(item.href),
       })),
     );
 
     const theme: Command[] = [
-      { id: 'theme:light', label: 'Theme: Light', icon: <Sun className="h-4 w-4" aria-hidden="true" />, run: () => setTheme('light') },
-      { id: 'theme:dark', label: 'Theme: Dark', icon: <Moon className="h-4 w-4" aria-hidden="true" />, run: () => setTheme('dark') },
-      { id: 'theme:system', label: 'Theme: System', icon: <Monitor className="h-4 w-4" aria-hidden="true" />, run: () => setTheme('system') },
-    ].map((c) => ({ ...c, group: 'Appearance', keywords: 'theme dark light mode' }));
+      { id: 'theme:light', label: copy.palette.themeLight, icon: <Sun className="h-4 w-4" aria-hidden="true" />, run: () => setTheme('light') },
+      { id: 'theme:dark', label: copy.palette.themeDark, icon: <Moon className="h-4 w-4" aria-hidden="true" />, run: () => setTheme('dark') },
+      { id: 'theme:system', label: copy.palette.themeSystem, icon: <Monitor className="h-4 w-4" aria-hidden="true" />, run: () => setTheme('system') },
+    ].map((c) => ({ ...c, group: copy.palette.groupAppearance, keywords: copy.palette.themeKeywords }));
+
+    // Switching language from the palette matters more than it looks: someone
+    // who has landed in a language they cannot read needs a way out that does
+    // not require reading a settings menu to find it.
+    const language: Command[] = [
+      { id: 'locale:en', label: copy.palette.languageEnglish, icon: <Languages className="h-4 w-4" aria-hidden="true" />, run: () => setLocale('en') },
+      { id: 'locale:ko', label: copy.palette.languageKorean, icon: <Languages className="h-4 w-4" aria-hidden="true" />, run: () => setLocale('ko') },
+    ].map((c) => ({ ...c, group: copy.palette.groupAppearance, keywords: copy.palette.languageKeywords }));
 
     const session: Command[] = [
       {
         id: 'auth:sign-out',
-        label: 'Sign out',
-        group: 'Session',
+        label: copy.nav.signOut,
+        group: copy.palette.groupSession,
         icon: <LogOut className="h-4 w-4" aria-hidden="true" />,
-        keywords: 'logout',
+        keywords: copy.palette.signOutKeywords,
         noRecent: true,
         run: async () => {
           await logout();
@@ -113,8 +126,8 @@ export function CommandPalette() {
       },
     ];
 
-    return [...nav, ...theme, ...session];
-  }, [router, setTheme, logout]);
+    return [...nav, ...theme, ...language, ...session];
+  }, [router, setTheme, setLocale, logout, copy]);
 
   const visible = useMemo(() => {
     const needle = query.trim().toLowerCase();
@@ -128,10 +141,10 @@ export function CommandPalette() {
     const recent = recents
       .map((id) => byId.get(id))
       .filter((c): c is Command => Boolean(c))
-      .map((c) => ({ ...c, group: 'Recent' }));
+      .map((c) => ({ ...c, group: copy.palette.recent }));
     const rest = commands.filter((c) => !recents.includes(c.id));
     return [...recent, ...rest];
-  }, [commands, query, recents]);
+  }, [commands, query, recents, copy]);
 
   // Clamp rather than reset on every keystroke so the arrow-key position
   // survives typing when the filtered list still contains it.
@@ -189,7 +202,7 @@ export function CommandPalette() {
         className="hidden gap-2 px-2.5 text-xs font-normal text-muted-foreground sm:flex"
       >
         <Search className="h-3.5 w-3.5" aria-hidden="true" />
-        <span>Search…</span>
+        <span>{copy.palette.trigger}</span>
         <kbd className="rounded border border-border bg-muted px-1 font-mono text-[10px]">
           Ctrl K
         </kbd>
@@ -206,10 +219,8 @@ export function CommandPalette() {
               (document.getElementById('command-palette-input') as HTMLInputElement | null)?.focus();
             }}
           >
-            <Dialog.Title className="sr-only">Command palette</Dialog.Title>
-            <Dialog.Description className="sr-only">
-              Type to filter commands, arrow keys to choose, Enter to run.
-            </Dialog.Description>
+            <Dialog.Title className="sr-only">{copy.palette.title}</Dialog.Title>
+            <Dialog.Description className="sr-only">{copy.palette.instructions}</Dialog.Description>
 
             <div className="flex items-center gap-2 border-b border-border px-3">
               <Search className="h-4 w-4 shrink-0 text-muted-foreground" aria-hidden="true" />
@@ -219,14 +230,14 @@ export function CommandPalette() {
                 aria-expanded="true"
                 aria-controls="command-palette-list"
                 aria-activedescendant={visible[active] ? `command-${visible[active].id}` : undefined}
-                aria-label="Search commands"
+                aria-label={copy.palette.inputLabel}
                 value={query}
                 onChange={(e) => {
                   setQuery(e.target.value);
                   setActiveIndex(0);
                 }}
                 onKeyDown={handleInputKeyDown}
-                placeholder="Type a command or destination…"
+                placeholder={copy.palette.placeholder}
                 className="h-11 w-full bg-transparent text-sm outline-none placeholder:text-muted-foreground"
                 autoComplete="off"
                 spellCheck={false}
@@ -236,12 +247,12 @@ export function CommandPalette() {
             <ul
               id="command-palette-list"
               role="listbox"
-              aria-label="Commands"
+              aria-label={copy.palette.listLabel}
               className="max-h-72 overflow-y-auto p-1.5"
             >
               {visible.length === 0 && (
                 <li className="px-3 py-6 text-center text-sm text-muted-foreground">
-                  Nothing matches “{query}”.
+                  {copy.palette.nothingMatches(query)}
                 </li>
               )}
 

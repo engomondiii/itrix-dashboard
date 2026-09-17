@@ -2,7 +2,7 @@
 
 /**
  * The authenticated app chrome: collapsible icon sidebar plus a top bar with
- * the sidebar trigger, theme toggle and a user menu. Mounted once by
+ * the sidebar trigger, language and theme toggles, and a user menu. Mounted once by
  * `app/(app)/layout.tsx`, which also guards the whole group — pages inside
  * it render content only.
  *
@@ -18,6 +18,8 @@ import type { ReactNode } from 'react';
 import { LogOut, Settings } from 'lucide-react';
 
 import { useAuth } from '@/lib/auth/auth-context';
+import { useCopy } from '@/lib/i18n/locale-provider';
+import { LocaleToggle } from '@/components/locale-toggle';
 import { ThemeToggle } from '@/components/theme-toggle';
 import { AppSidebar } from '@/components/layout/app-sidebar';
 import { CommandPalette } from '@/components/layout/command-palette';
@@ -38,6 +40,7 @@ import {
 
 function UserMenu() {
   const { user, logout } = useAuth();
+  const copy = useCopy();
   const router = useRouter();
 
   if (!user) return null;
@@ -80,7 +83,7 @@ function UserMenu() {
         <DropdownMenuItem asChild>
           <Link href="/settings/profile">
             <Settings />
-            <span>Settings</span>
+            <span>{copy.nav.settings}</span>
           </Link>
         </DropdownMenuItem>
         <DropdownMenuSeparator />
@@ -89,7 +92,7 @@ function UserMenu() {
           className="text-destructive focus:bg-destructive/10 focus:text-destructive"
         >
           <LogOut />
-          <span>Sign out</span>
+          <span>{copy.nav.signOut}</span>
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>
@@ -110,6 +113,7 @@ export function AppShell({ children }: { children: ReactNode }) {
           <div className="mx-0.5 hidden h-5 w-px bg-border sm:block" />
           <CommandPalette />
           <NotificationBell />
+          <LocaleToggle className="text-foreground/80 hover:bg-muted" />
           <ThemeToggle className="text-foreground/80 hover:bg-muted" />
           <div className="mx-0.5 hidden h-5 w-px bg-border sm:block" />
           <UserMenu />

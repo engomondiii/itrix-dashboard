@@ -55,7 +55,7 @@ handled:
 
 Staff-facing language is a design rule: no spec jargon in the UI (claim level
 → "Risk level", personas → "Buyer profiles", journey codes →
-`lib/leads/journey-labels.ts`). Brand: itriX mathematical-glass light theme
+`copy.status.journeyLabel`). Brand: itriX mathematical-glass light theme
 matching itrix.co.kr, with a derived dark theme (`app/globals.css`).
 
 ## Two sites, one clock
@@ -71,6 +71,50 @@ Handing a lead to *another person* is a team-leader action; self-claim stays
 open to everyone. Both policies live in one file, `lib/auth/roles.ts` — the
 backend has no TEAM_LEAD role, so "team leader" currently means ADMIN, and
 that mapping is a single edit when it changes.
+
+## Two languages
+
+English and Korean (`lib/i18n/`). English is the source of truth; Korean is a
+full translation of it, covering every screen — the shell, all seven
+destinations, settings, login and the error pages.
+
+Switch language from the top bar (next to the theme toggle), from
+Settings → Appearance, or from the command palette (Ctrl+K, "Language").
+
+The preference lives in a **cookie** (`itrix-locale`), not localStorage. That
+is the whole design: `app/layout.tsx` reads it while it is still a Server
+Component, so the HTML that leaves the server already has the right `lang`
+attribute and the right strings. Surface 1 stores its locale in localStorage
+and pays for it — an English first paint that flips after hydration, and
+`:lang(ko)` CSS that never applies to the first frame.
+
+To add a user-facing string:
+
+1. Add the key to `lib/i18n/messages/en.ts`.
+2. Add it to `ko.ts`. **The build fails until you do** — `ko` is annotated
+   `: Messages`, which is the only translation-coverage check this stack has.
+   Never silence it with `as Messages`.
+3. Read it with `useCopy()` in a Client Component, `await getCopy()` in a
+   Server Component.
+
+Interpolation is a plain function (`nothingMatches: (q) => …`), not an ICU
+template, so TypeScript checks the call site. Brand and protected identifiers
+— itriX, ALPHA Compute, NDA, PoC, KPI, KST — are never translated.
+
+Three things stay in English on purpose:
+
+- the **operating clock** (en-GB, 24-hour, so "15:04 KST" reads identically in
+  Seoul and Nairobi — only relative times localize)
+- `app/global-error.tsx`, which replaces the root layout and so renders outside
+  every provider
+- **backend-supplied prose** — account health `reasons`, next-action text,
+  activity descriptions. These arrive already-written from the API; translating
+  them is a backend concern, not a frontend one.
+
+Wire values from the API are never translated in place either. `LeadStatus`,
+journey states and funnel stages stay as the API sends them and are mapped to
+display text in `copy.status.*` / `copy.insights.funnelStage`, so the contract
+and the wording stay separable.
 
 Built on [Fronted_Web_Template](https://github.com/Nrad8394/Fronted_Web_Template);
 its conventions are documented in `PATTERNS.md`.

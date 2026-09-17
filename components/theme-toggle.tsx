@@ -21,6 +21,8 @@
 
 import { useSyncExternalStore } from 'react';
 
+import { useCopy } from '@/lib/i18n/locale-provider';
+
 import { useTheme, type Theme } from './theme-provider';
 
 /**
@@ -39,12 +41,6 @@ function useMounted(): boolean {
 
 const ORDER: Theme[] = ['light', 'dark', 'system'];
 
-const LABEL: Record<Theme, string> = {
-  light: 'Light',
-  dark: 'Dark',
-  system: 'System',
-};
-
 /** Simple glyphs — no icon dependency for three states. */
 const GLYPH: Record<Theme, string> = {
   light: '☀',
@@ -54,9 +50,15 @@ const GLYPH: Record<Theme, string> = {
 
 export function ThemeToggle({ className = '' }: { className?: string }) {
   const { theme, setTheme } = useTheme();
+  const copy = useCopy();
   const mounted = useMounted();
 
   const next = ORDER[(ORDER.indexOf(theme) + 1) % ORDER.length];
+  const label: Record<Theme, string> = {
+    light: copy.appearance.light,
+    dark: copy.appearance.dark,
+    system: copy.appearance.system,
+  };
 
   return (
     <button
@@ -72,8 +74,14 @@ export function ThemeToggle({ className = '' }: { className?: string }) {
       }}
       // The accessible name states the current theme AND what the press will
       // do — "Theme: dark" alone leaves a screen-reader user guessing.
-      aria-label={mounted ? `Theme: ${LABEL[theme]}. Switch to ${LABEL[next]}.` : 'Theme'}
-      title={mounted ? `Theme: ${LABEL[theme]} — switch to ${LABEL[next]}` : 'Theme'}
+      aria-label={
+        mounted ? copy.appearance.themeToggle(label[theme], label[next]) : copy.appearance.themeTitle
+      }
+      title={
+        mounted
+          ? copy.appearance.themeToggleTitle(label[theme], label[next])
+          : copy.appearance.themeTitle
+      }
       className={[
         'inline-flex h-7 min-w-7 items-center justify-center gap-1.5 rounded-md',
         'px-2 text-xs font-medium',
@@ -85,7 +93,7 @@ export function ThemeToggle({ className = '' }: { className?: string }) {
         {mounted ? GLYPH[theme] : GLYPH.system}
       </span>
       <span className="hidden sm:inline" suppressHydrationWarning>
-        {mounted ? LABEL[theme] : ''}
+        {mounted ? label[theme] : ''}
       </span>
     </button>
   );

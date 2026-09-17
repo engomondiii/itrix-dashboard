@@ -17,6 +17,7 @@ import Link from 'next/link';
 import { useEffect } from 'react';
 
 import { Button } from '@/components/ui/button';
+import { useCopy } from '@/lib/i18n/locale-provider';
 
 export default function ErrorPage({
   error,
@@ -25,6 +26,8 @@ export default function ErrorPage({
   error: Error & { digest?: string };
   reset: () => void;
 }) {
+  const copy = useCopy();
+
   useEffect(() => {
     // Replace with your error-reporting call (Sentry etc.). Console is the
     // template default so the error is at least never swallowed silently.
@@ -33,21 +36,21 @@ export default function ErrorPage({
 
   return (
     <main className="mx-auto flex min-h-[60vh] w-full max-w-md flex-col items-center justify-center gap-4 px-4 text-center">
-      <h1 className="text-2xl font-semibold">Something went wrong</h1>
+      <h1 className="text-2xl font-semibold">{copy.errors.somethingWentWrong}</h1>
       <p className="text-sm text-muted-foreground">
-        The page hit an unexpected error. It has been logged
+        {copy.errors.unexpectedError}
         {error.digest ? (
           <>
             {' '}
-            (reference <code className="font-mono">{error.digest}</code>)
+            ({copy.errors.reference} <code className="font-mono">{error.digest}</code>)
           </>
         ) : null}
         .
       </p>
       <div className="flex gap-3">
-        <Button onClick={reset}>Try again</Button>
+        <Button onClick={reset}>{copy.common.tryAgain}</Button>
         <Button asChild variant="outline">
-          <Link href="/">Go home</Link>
+          <Link href="/">{copy.common.goHome}</Link>
         </Button>
       </div>
     </main>

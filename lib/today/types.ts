@@ -63,7 +63,19 @@ export interface ThreadRow {
   anonymous: boolean;
   leadId: string | null;
   company: string;
-  journeyState: string;
+  /**
+   * THIS CONVERSATION's state, not the lead's.
+   *
+   * A lead has many threads and each carries its own. The row used to show the
+   * lead's `journeyState`, which put one identical value on every conversation of
+   * a lead while describing none of them. `relationshipState` and `mirrorStatus`
+   * are the two that actually gate behaviour: what the assistant may recommend,
+   * and whether it may ask for contact details.
+   */
+  relationshipState: string;
+  mirrorStatus: string;
+  engagementStage: string;
+  threadState: string;
   turnCount: number;
   visitorTurns: number;
   /** Backend definition: visitorTurns > 0 (the visitor has engaged). */

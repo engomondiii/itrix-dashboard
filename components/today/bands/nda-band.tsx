@@ -11,8 +11,10 @@ import { QueueCard } from '../queue-card';
 import { TodayBand } from '../today-band';
 import { ShowMore, useCapped } from '../use-capped';
 import { Stamp } from '@/components/shared/timestamp';
+import { useCopy } from '@/lib/i18n/locale-provider';
 
 export function NdaBand({ forceOpen = false }: { forceOpen?: boolean }) {
+  const copy = useCopy();
   const nda = useNdaInFlight();
   const rows = nda.data?.results ?? [];
   const { visible, remaining, showMore } = useCapped(rows);
@@ -20,8 +22,9 @@ export function NdaBand({ forceOpen = false }: { forceOpen?: boolean }) {
   return (
     <TodayBand
       forceOpen={forceOpen}
-      title="NDAs in flight"
-      hint="to send, or waiting on a signature"
+      title={copy.today.ndaTitle}
+      storageKey="nda"
+      hint={copy.today.ndaHint}
       count={rows.length}
       isLoading={nda.isLoading}
       tone="neutral"

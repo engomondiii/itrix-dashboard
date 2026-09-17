@@ -28,6 +28,7 @@ import {
   useState,
   type ReactNode,
 } from 'react';
+import { useCopy } from '@/lib/i18n/locale-provider';
 
 export type ToastTone = 'default' | 'success' | 'destructive';
 
@@ -63,6 +64,7 @@ const TONE_BAR: Record<ToastTone, string> = {
 };
 
 export function ToastProvider({ children }: { children: ReactNode }) {
+  const copy = useCopy();
   const [toasts, setToasts] = useState<ToastRecord[]>([]);
   const nextId = useRef(1);
   const timers = useRef(new Map<number, ReturnType<typeof setTimeout>>());
@@ -104,7 +106,7 @@ export function ToastProvider({ children }: { children: ReactNode }) {
           the first toast means the first toast is never announced. */}
       <div
         aria-live="polite"
-        aria-label="Notifications"
+        aria-label={copy.ui.notifications}
         role="region"
         className="pointer-events-none fixed bottom-4 right-4 z-50 flex w-full max-w-sm flex-col gap-2"
       >
@@ -132,7 +134,7 @@ export function ToastProvider({ children }: { children: ReactNode }) {
             <button
               type="button"
               onClick={() => dismiss(t.id)}
-              aria-label="Dismiss notification"
+              aria-label={copy.ui.dismissNotification}
               className="rounded-md p-1 text-muted-foreground hover:bg-accent hover:text-foreground"
             >
               <span aria-hidden="true">✕</span>

@@ -1,6 +1,11 @@
+import { getCopy } from '@/lib/i18n/server';
+
 import { MessagesView } from '@/components/conversations/messages-view';
 
-export const metadata = { title: 'Messages' };
+export async function generateMetadata() {
+  const copy = await getCopy();
+  return { title: copy.conversations.messagesFallback };
+}
 
 export default async function MessagesPage({
   params,

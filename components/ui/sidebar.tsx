@@ -27,6 +27,7 @@ import { Slot } from '@radix-ui/react-slot';
 import { PanelLeft } from 'lucide-react';
 
 import { cn } from '@/lib/utils';
+import { useCopy } from '@/lib/i18n/locale-provider';
 
 const SIDEBAR_COOKIE_NAME = 'sidebar_state';
 const SIDEBAR_COOKIE_MAX_AGE = 60 * 60 * 24 * 7;
@@ -220,13 +221,14 @@ export function Sidebar({
 // ─── Trigger & rail ──────────────────────────────────────────────────────────
 
 export function SidebarTrigger({ className, onClick, ...props }: React.ComponentProps<'button'>) {
+  const copy = useCopy();
   const { toggleSidebar } = useSidebar();
 
   return (
     <button
       type="button"
       data-sidebar="trigger"
-      aria-label="Toggle sidebar"
+      aria-label={copy.ui.toggleSidebar}
       className={cn(
         'inline-flex h-7 w-7 items-center justify-center rounded-md text-foreground/80 transition-colors hover:bg-muted hover:text-foreground',
         'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',
@@ -245,16 +247,17 @@ export function SidebarTrigger({ className, onClick, ...props }: React.Component
 
 /** Invisible grab strip on the sidebar's edge — click anywhere on it to toggle. */
 export function SidebarRail({ className, ...props }: React.ComponentProps<'button'>) {
+  const copy = useCopy();
   const { toggleSidebar } = useSidebar();
 
   return (
     <button
       type="button"
       data-sidebar="rail"
-      aria-label="Toggle sidebar"
+      aria-label={copy.ui.toggleSidebar}
       tabIndex={-1}
       onClick={toggleSidebar}
-      title="Toggle sidebar"
+      title={copy.ui.toggleSidebar}
       className={cn(
         'absolute inset-y-0 -right-4 z-20 hidden w-4 -translate-x-1/2 transition-all ease-linear lg:flex',
         'after:absolute after:inset-y-0 after:left-1/2 after:w-[2px] hover:after:bg-sidebar-border',

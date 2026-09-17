@@ -29,9 +29,11 @@ import { ThreadsBand } from '@/components/today/bands/threads-band';
 import type { TodayScope } from '@/components/today/scope';
 import { TodaySummary } from '@/components/today/today-summary';
 import { useStoredState } from '@/components/today/use-stored';
+import { useCopy } from '@/lib/i18n/locale-provider';
 
 export default function TodayPage() {
   const { user } = useAuth();
+  const copy = useCopy();
   const firstName = user?.name?.split(/\s+/)[0];
 
   const [storedScope, changeScope] = useStoredState('today.scope', 'mine');
@@ -44,17 +46,22 @@ export default function TodayPage() {
     <section>
       <header className="mb-6 flex flex-wrap items-end justify-between gap-3">
         <div>
-          <h1 className="font-display tracking-display text-2xl font-semibold">Today</h1>
+          <h1 className="font-display tracking-display text-2xl font-semibold">
+            {copy.today.title}
+          </h1>
           <p className="mt-1 text-sm text-muted-foreground">
-            {firstName ? `${firstName} — what` : 'What'} needs your attention now, most urgent
-            first.
+            {copy.today.subtitle(firstName ?? null)}
           </p>
         </div>
-        <div className="flex rounded-lg border border-border p-0.5" role="group" aria-label="Whose work to show">
+        <div
+          className="flex rounded-lg border border-border p-0.5"
+          role="group"
+          aria-label={copy.today.scopeLabel}
+        >
           {(
             [
-              ['mine', 'Mine + unassigned'],
-              ['all', 'Everyone'],
+              ['mine', copy.today.scopeMine],
+              ['all', copy.today.scopeAll],
             ] as const
           ).map(([value, label]) => (
             <button

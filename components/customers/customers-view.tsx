@@ -28,6 +28,7 @@ import {
 } from '@/lib/customers/hooks';
 import { PaginationFooter, useClientPage } from '@/components/shared/client-pagination';
 import { Stamp } from '@/components/shared/timestamp';
+import { useCopy } from '@/lib/i18n/locale-provider';
 import type {
   CustomerRow,
   Evaluation,
@@ -45,11 +46,12 @@ const HEALTH_STYLE: Record<HealthClass, string> = {
   stable: 'bg-positive-soft text-positive',
 };
 
-const HEALTH_LABEL: Record<HealthClass, string> = {
-  critical: 'Critical',
-  at_risk: 'At risk',
-  unknown: 'Unknown',
-  stable: 'Stable',
+/** Keys into `copy.customers`, resolved at render. */
+const HEALTH_LABEL: Record<HealthClass, 'healthCritical' | 'healthAtRisk' | 'healthUnknown' | 'healthStable'> = {
+  critical: 'healthCritical',
+  at_risk: 'healthAtRisk',
+  unknown: 'healthUnknown',
+  stable: 'healthStable',
 };
 
 const EVAL_STATUSES: EvaluationStatus[] = ['proposed', 'in_progress', 'delivered', 'won', 'lost'];
@@ -68,6 +70,7 @@ function KpiEditor({
   evaluationId: string;
   kpi: Evaluation['kpis'][number];
 }) {
+  const copy = useCopy();
   const { toast } = useToast();
   const mutate = useEvaluationMutation();
   const [result, setResult] = useState(kpi.result ?? '');
@@ -81,7 +84,7 @@ function KpiEditor({
       <input
         value={result}
         onChange={(e) => setResult(e.target.value)}
-        placeholder="result"
+        placeholder={copy.customers.resultPlaceholder}
         className="h-7 w-24 rounded-md border border-input bg-card px-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
       />
       <Button
@@ -107,6 +110,7 @@ function KpiEditor({
 const HEALTH_RANK: Record<HealthClass, number> = { critical: 0, at_risk: 1, unknown: 2, stable: 3 };
 
 function AccountsTable({ rows }: { rows: CustomerRow[] }) {
+  const copy = useCopy();
   const [sort, setSort] = useState<'health' | 'company'>('health');
   const sorted = [...rows].sort((a, b) =>
     sort === 'company'
@@ -133,11 +137,11 @@ function AccountsTable({ rows }: { rows: CustomerRow[] }) {
         <table className="w-full min-w-[640px] text-sm">
           <thead>
             <tr className="border-b border-border text-left text-xs text-muted-foreground">
-              {header('Company', 'company')}
-              {header('Health', 'health')}
-              <th className="px-4 py-2.5 font-medium">Why</th>
-              <th className="px-4 py-2.5 font-medium">Flags</th>
-              <th className="px-4 py-2.5 font-medium">Expansion</th>
+              {header(copy.customers.colCompany, 'company')}
+              {header(copy.customers.colHealth, 'health')}
+              <th className="px-4 py-2.5 font-medium">{copy.customers.colWhy}</th>
+              <th className="px-4 py-2.5 font-medium">{copy.customers.colFlags}</th>
+              <th className="px-4 py-2.5 font-medium">{copy.customers.colExpansion}</th>
             </tr>
           </thead>
           <tbody>
@@ -150,7 +154,7 @@ function AccountsTable({ rows }: { rows: CustomerRow[] }) {
                 </td>
                 <td className="px-4 py-2.5">
                   <span className={cn('rounded-full px-2 py-0.5 text-[11px] font-semibold', HEALTH_STYLE[row.healthClass])}>
-                    {HEALTH_LABEL[row.healthClass]}
+                    {copy.customers[HEALTH_LABEL[row.healthClass]]}
                   </span>
                 </td>
                 <td className="max-w-[28ch] truncate px-4 py-2.5 text-xs text-muted-foreground">
@@ -158,16 +162,20 @@ function AccountsTable({ rows }: { rows: CustomerRow[] }) {
                 </td>
                 <td className="px-4 py-2.5 text-xs text-muted-foreground">
                   {[
-                    row.blockingSupport ? 'blocking support' : null,
-                    row.outcomesOffPlan > 0 ? `${row.outcomesOffPlan} off-plan` : null,
-                    row.negativePulse ? 'negative pulse' : null,
-                    row.degradedDeployments > 0 ? `${row.degradedDeployments} degraded` : null,
+                    row.blockingSupport ? copy.customers.flagBlockingSupport : null,
+                    row.outcomesOffPlan > 0 ? copy.customers.flagOffPlan(row.outcomesOffPlan) : null,
+                    row.negativePulse ? copy.customers.negativePulse : null,
+                    row.degradedDeployments > 0
+                      ? copy.customers.flagDegraded(row.degradedDeployments)
+                      : null,
                   ]
                     .filter(Boolean)
                     .join(' - ') || '—'}
                 </td>
                 <td className="px-4 py-2.5 text-xs text-muted-foreground">
-                  {row.expansionAllowed ? 'allowed' : 'on hold'}
+                  {row.expansionAllowed
+                    ? copy.customers.expansionAllowedShort
+                    : copy.customers.expansionOnHoldShort}
                 </td>
               </tr>
             ))}
@@ -179,13 +187,13 @@ function AccountsTable({ rows }: { rows: CustomerRow[] }) {
         pageSize={pager.pageSize}
         total={pager.total}
         totalPages={pager.totalPages}
-        noun="accounts"
+        noun={copy.customers.nounAccounts}
         onPage={pager.setPage}
         onPageSize={pager.setPageSize}
       />
       {rows.length >= 500 && (
         <p className="mt-2 text-xs text-muted-foreground">
-          Showing the worst 500 accounts — the backend has no paging beyond that yet.
+          {copy.customers.cappedNote}
         </p>
       )}
     </div>
@@ -193,6 +201,7 @@ function AccountsTable({ rows }: { rows: CustomerRow[] }) {
 }
 
 function DealsTable({ deals }: { deals: Array<Evaluation | Poc> }) {
+  const copy = useCopy();
   const [sort, setSort] = useState<'company' | 'status' | 'updated'>('updated');
   const [openId, setOpenId] = useState<string | null>(null);
   const sorted = [...deals].sort((a, b) => {
@@ -220,12 +229,12 @@ function DealsTable({ deals }: { deals: Array<Evaluation | Poc> }) {
         <table className="w-full min-w-[720px] text-sm">
           <thead>
             <tr className="border-b border-border text-left text-xs text-muted-foreground">
-              {header('Company', 'company')}
-              <th className="px-4 py-2.5 font-medium">Type</th>
-              <th className="px-4 py-2.5 font-medium">Scope</th>
-              {header('Status', 'status')}
-              {header('Updated', 'updated')}
-              <th className="px-4 py-2.5 font-medium">Details</th>
+              {header(copy.customers.colCompany, 'company')}
+              <th className="px-4 py-2.5 font-medium">{copy.customers.colType}</th>
+              <th className="px-4 py-2.5 font-medium">{copy.customers.colScope}</th>
+              {header(copy.customers.colStatus, 'status')}
+              {header(copy.customers.colUpdated, 'updated')}
+              <th className="px-4 py-2.5 font-medium">{copy.customers.colDetails}</th>
             </tr>
           </thead>
           <tbody>
@@ -248,7 +257,7 @@ function DealsTable({ deals }: { deals: Array<Evaluation | Poc> }) {
         pageSize={pager.pageSize}
         total={pager.total}
         totalPages={pager.totalPages}
-        noun="deals"
+        noun={copy.customers.nounDeals}
         onPage={pager.setPage}
         onPageSize={pager.setPageSize}
       />
@@ -265,6 +274,7 @@ function DealRow({
   open: boolean;
   onToggle: () => void;
 }) {
+  const copy = useCopy();
   const { toast } = useToast();
   const evalMutate = useEvaluationMutation();
   const pocMutate = usePocMutation();
@@ -365,7 +375,7 @@ function DealRow({
                         m.status === 'pending' && 'bg-muted text-muted-foreground',
                         m.status === 'missed' && 'bg-destructive-soft text-destructive',
                       )}
-                      title="Click to advance: pending, in progress, done"
+                      title={copy.customers.advanceHint}
                     >
                       {m.status.replace('_', ' ')}
                     </button>
@@ -399,6 +409,7 @@ function DealRow({
 }
 
 export function CustomersView() {
+  const copy = useCopy();
   const customers = useCustomers();
   const evaluations = useEvaluations();
   const pocs = usePocs();
@@ -424,15 +435,15 @@ export function CustomersView() {
     <section>
       <header className="mb-5 flex flex-wrap items-end justify-between gap-3">
         <div>
-          <h1 className="font-display tracking-display text-2xl font-semibold">Customers</h1>
-          <p className="mt-1 text-sm text-muted-foreground">
-            Licensed accounts by health, and every deal still in flight.
-          </p>
+          <h1 className="font-display tracking-display text-2xl font-semibold">
+            {copy.customers.title}
+          </h1>
+          <p className="mt-1 text-sm text-muted-foreground">{copy.customers.subtitle}</p>
         </div>
         <input
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          placeholder="Search company…"
+          placeholder={copy.customers.searchPlaceholder}
           className="h-8 w-48 rounded-md border border-input bg-card px-2.5 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
         />
       </header>
@@ -441,8 +452,8 @@ export function CustomersView() {
         <div className="flex rounded-lg border border-border p-0.5" role="tablist">
           {(
             [
-              ['accounts', `Accounts ${customerRows.length}`],
-              ['deals', `Deals in flight ${deals.length}`],
+              ['accounts', copy.customers.tabAccounts(customerRows.length)],
+              ['deals', copy.customers.tabDeals(deals.length)],
             ] as const
           ).map(([key, label]) => (
             <button
@@ -474,7 +485,7 @@ export function CustomersView() {
                   : 'border-border bg-card text-muted-foreground hover:bg-accent',
               )}
             >
-              {HEALTH_LABEL[h]}
+              {copy.customers[HEALTH_LABEL[h]]}
             </button>
           ))}
       </div>

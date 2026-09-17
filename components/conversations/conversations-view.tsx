@@ -5,7 +5,10 @@
  * many threads (every client-page visit can open one) and a flat list turns
  * into 70 look-alike rows.
  *
- *   Tabs      Needs attention (live or visitor-engaged) · Quiet · All
+ *   Tabs      Cumulative age windows — Ongoing · 24 hrs · 3 days · 1 week
+ *             · 1 month · All. Each includes everything newer, so a thread
+ *             never vanishes from view simply by ageing past the tab you
+ *             are on, and the counts read as a decay curve left to right.
  *   Grouping  by company (lead/client identity); anonymous visitors last.
  *             A company header collapses a person's many sessions into one
  *             readable block. Not every thread has a lead — anonymous and
@@ -21,34 +24,57 @@ import { useState } from 'react';
 import { useThreadBoard } from '@/lib/today/hooks';
 import type { ThreadRow } from '@/lib/today/types';
 import { cn } from '@/lib/utils';
-import { journeyLabel } from '@/lib/leads/journey-labels';
 import { ShowMore, useCapped } from '@/components/today/use-capped';
 import { Stamp } from '@/components/shared/timestamp';
+import { useCopy } from '@/lib/i18n/locale-provider';
 
 const HOUR_MS = 60 * 60 * 1000;
+const DAY_MS = 24 * HOUR_MS;
+
+/**
+ * A visitor-engaged thread stops counting as waiting on us after three days
+ * of silence. This is the same boundary as the "3 days" tab on purpose: the
+ * row accent stops nagging exactly where the tab says the thread went quiet.
+ */
+const SILENT_AFTER_MS = 72 * HOUR_MS;
 
 type Activity = 'active' | 'waiting' | 'quiet';
 
+function ageOf(row: ThreadRow): number {
+  return Date.now() - new Date(row.lastActivityAt ?? row.createdAt).getTime();
+}
+
 function activityOf(row: ThreadRow): Activity {
-  const last = new Date(row.lastActivityAt ?? row.createdAt).getTime();
-  const age = Date.now() - last;
+  const age = ageOf(row);
   if (age < HOUR_MS) return 'active';
-  if (row.visitorTurns > 0 && age < 24 * HOUR_MS) return 'waiting';
+  if (row.visitorTurns > 0 && age < SILENT_AFTER_MS) return 'waiting';
   return 'quiet';
 }
 
-type TabKey = 'attention' | 'quiet' | 'all';
+type TabKey = 'ongoing' | 'h24' | 'd3' | 'w1' | 'm1' | 'all';
 
-const TABS: Array<{ key: TabKey; label: string }> = [
-  { key: 'attention', label: 'Needs attention' },
-  { key: 'quiet', label: 'Quiet' },
-  { key: 'all', label: 'All' },
+type TabLabelKey = 'tabOngoing' | 'tab24h' | 'tab3d' | 'tab1w' | 'tab1m' | 'tabAll';
+
+/**
+ * Cumulative, not exclusive: `maxAgeMs` is a ceiling, so every tab contains
+ * the ones to its left. Ordered newest-first, which is also how the counts
+ * are meant to be read. `all` has no ceiling.
+ *
+ * Keys index `copy.conversations`, resolved at render.
+ */
+const TABS: Array<{ key: TabKey; labelKey: TabLabelKey; maxAgeMs: number }> = [
+  { key: 'ongoing', labelKey: 'tabOngoing', maxAgeMs: HOUR_MS },
+  { key: 'h24', labelKey: 'tab24h', maxAgeMs: DAY_MS },
+  { key: 'd3', labelKey: 'tab3d', maxAgeMs: SILENT_AFTER_MS },
+  { key: 'w1', labelKey: 'tab1w', maxAgeMs: 7 * DAY_MS },
+  { key: 'm1', labelKey: 'tab1m', maxAgeMs: 30 * DAY_MS },
+  { key: 'all', labelKey: 'tabAll', maxAgeMs: Number.POSITIVE_INFINITY },
 ];
 
-function inTab(tab: TabKey, activity: Activity): boolean {
-  if (tab === 'all') return true;
-  if (tab === 'attention') return activity !== 'quiet';
-  return activity === 'quiet';
+const MAX_AGE_BY_TAB = new Map<TabKey, number>(TABS.map((t) => [t.key, t.maxAgeMs]));
+
+function inTab(tab: TabKey, age: number): boolean {
+  return age < (MAX_AGE_BY_TAB.get(tab) ?? Number.POSITIVE_INFINITY);
 }
 
 function lastTouch(row: ThreadRow): string {
@@ -56,6 +82,7 @@ function lastTouch(row: ThreadRow): string {
 }
 
 function Row({ row }: { row: ThreadRow }) {
+  const copy = useCopy();
   const activity = activityOf(row);
   return (
     <Link
@@ -70,9 +97,11 @@ function Row({ row }: { row: ThreadRow }) {
       )}
     >
       <span className="min-w-0 flex-1">
-        <span className="block truncate font-medium">{row.title || 'Untitled conversation'}</span>
+        <span className="block truncate font-medium">{row.title || copy.conversations.untitled}</span>
         <span className="block text-xs text-muted-foreground">
-          {row.turnCount} turns ({row.visitorTurns} from the visitor) · {journeyLabel(row.journeyState)}
+          {copy.conversations.turnSummary(row.turnCount, row.visitorTurns)} ·{' '}
+          {copy.status.relationshipLabel(row.relationshipState ?? '')} ·{' '}
+          {copy.status.mirrorLabel(row.mirrorStatus ?? '')}
         </span>
       </span>
       <span className="shrink-0 text-xs text-muted-foreground"><Stamp at={lastTouch(row)} /></span>
@@ -81,6 +110,7 @@ function Row({ row }: { row: ThreadRow }) {
 }
 
 function IdentityGroup({ title, meta, rows }: { title: string; meta?: string; rows: ThreadRow[] }) {
+  const copy = useCopy();
   const sorted = [...rows].sort((a, b) => lastTouch(b).localeCompare(lastTouch(a)));
   const { visible, remaining, showMore } = useCapped(sorted);
   return (
@@ -88,7 +118,7 @@ function IdentityGroup({ title, meta, rows }: { title: string; meta?: string; ro
       <h2 className="font-display tracking-display mb-2 text-sm font-semibold">
         {title}{' '}
         <span className="font-sans text-xs font-normal text-muted-foreground">
-          — {rows.length} conversation{rows.length === 1 ? '' : 's'}
+          — {copy.conversations.conversationCount(rows.length)}
           {meta ? ` · ${meta}` : ''}
         </span>
       </h2>
@@ -103,8 +133,9 @@ function IdentityGroup({ title, meta, rows }: { title: string; meta?: string; ro
 }
 
 export function ConversationsView() {
+  const copy = useCopy();
   const board = useThreadBoard();
-  const [tab, setTab] = useState<TabKey>('attention');
+  const [tab, setTab] = useState<TabKey>('h24');
   const [search, setSearch] = useState('');
   const needle = search.trim().toLowerCase();
 
@@ -112,12 +143,12 @@ export function ConversationsView() {
   const searched = all.filter(
     (r) => !needle || r.title.toLowerCase().includes(needle) || r.company.toLowerCase().includes(needle),
   );
-  const counts: Record<TabKey, number> = {
-    attention: searched.filter((r) => inTab('attention', activityOf(r))).length,
-    quiet: searched.filter((r) => inTab('quiet', activityOf(r))).length,
-    all: searched.length,
-  };
-  const rows = searched.filter((r) => inTab(tab, activityOf(r)));
+  // One age per row, reused by every tab count and by the filter below.
+  const aged = searched.map((row) => ({ row, age: ageOf(row) }));
+  const counts = Object.fromEntries(
+    TABS.map(({ key }) => [key, aged.filter(({ age }) => inTab(key, age)).length]),
+  ) as Record<TabKey, number>;
+  const rows = aged.filter(({ age }) => inTab(tab, age)).map(({ row }) => row);
 
   // Group by identity: named companies first (most recent first), then the
   // anonymous pool. One person's many sessions collapse into one block.
@@ -139,21 +170,23 @@ export function ConversationsView() {
     <section>
       <header className="mb-5 flex flex-wrap items-end justify-between gap-3">
         <div>
-          <h1 className="font-display tracking-display text-2xl font-semibold">Conversations</h1>
+          <h1 className="font-display tracking-display text-2xl font-semibold">
+            {copy.conversations.title}
+          </h1>
           <p className="mt-1 text-sm text-muted-foreground">
-            Watch the AI talk to visitors, live — open a transcript to read and reply.
+            {copy.conversations.subtitle}
           </p>
         </div>
         <input
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          placeholder="Search title or company…"
+          placeholder={copy.conversations.searchPlaceholder}
           className="h-8 w-56 rounded-md border border-input bg-card px-2.5 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
         />
       </header>
 
-      <div className="mb-5 flex rounded-lg border border-border p-0.5" role="tablist">
-        {TABS.map(({ key, label }) => (
+      <div className="mb-5 flex flex-wrap rounded-lg border border-border p-0.5" role="tablist">
+        {TABS.map(({ key, labelKey }) => (
           <button
             key={key}
             type="button"
@@ -165,7 +198,7 @@ export function ConversationsView() {
               tab === key ? 'bg-primary text-primary-foreground' : 'text-muted-foreground hover:bg-muted',
             )}
           >
-            {label}{' '}
+            {copy.conversations[labelKey]}{' '}
             <span className={cn('tabular-nums', tab === key ? 'opacity-80' : 'text-muted-foreground')} data-numeric>
               {counts[key]}
             </span>
@@ -177,7 +210,7 @@ export function ConversationsView() {
         <div className="glass-surface animate-pulse rounded-xl p-10 text-sm text-muted-foreground">Loading…</div>
       ) : rows.length === 0 ? (
         <div className="glass-surface rounded-xl p-10 text-center text-sm text-muted-foreground">
-          {needle ? 'Nothing matches the search here.' : 'Nothing in this tab right now.'}
+          {needle ? copy.conversations.noMatch : copy.conversations.emptyTab}
         </div>
       ) : (
         <>
@@ -191,8 +224,8 @@ export function ConversationsView() {
           ))}
           {anonymous.length > 0 && (
             <IdentityGroup
-              title="Anonymous visitors"
-              meta="identity unknown until they qualify"
+              title={copy.conversations.anonymousVisitors}
+              meta={copy.conversations.identityUnknown}
               rows={anonymous}
             />
           )}

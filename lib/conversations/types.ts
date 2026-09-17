@@ -45,7 +45,17 @@ export interface ThreadDetail {
   anonymous: boolean;
   leadId: string | null;
   company: string;
-  journeyState: string;
+  /** This conversation's own state. */
+  relationshipState: string;
+  mirrorStatus: string;
+  engagementStage: string;
+  threadState: string;
+  /**
+   * The LEAD's state, named so it cannot be read as this conversation's. Present on
+   * detail — where an operator reading one thread still needs the subject's standing —
+   * and deliberately absent from the board row, where it repeated and misled.
+   */
+  leadJourneyState: string | null;
   ownerKind: string;
   createdAt: string;
   lastActivityAt: string | null;

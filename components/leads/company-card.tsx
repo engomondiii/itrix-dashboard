@@ -26,6 +26,7 @@ import { Stamp } from '@/components/shared/timestamp';
 import { useLeads } from '@/lib/leads/hooks';
 import type { LeadDetail } from '@/lib/leads/types';
 import { cn } from '@/lib/utils';
+import { useCopy } from '@/lib/i18n/locale-provider';
 
 function CopyButton({ value, label }: { value: string; label: string }) {
   const [copied, setCopied] = useState(false);
@@ -69,6 +70,7 @@ function domainOf(email: string): string {
 }
 
 function OtherLeads({ lead }: { lead: LeadDetail }) {
+  const copy = useCopy();
   // Only worth asking when there's a name to match on; an empty search would
   // return the entire lead table.
   const siblings = useLeads({ search: lead.company, pageSize: 20 });
@@ -87,7 +89,7 @@ function OtherLeads({ lead }: { lead: LeadDetail }) {
         {others.map((row) => (
           <li key={row.id} className="flex items-baseline gap-2 text-xs">
             <Link href={`/leads/${row.id}`} className="min-w-0 flex-1 truncate hover:underline">
-              {row.visitorName || 'Unknown contact'}
+              {row.visitorName || copy.leads.unknownContact}
               {row.role ? <span className="text-muted-foreground"> · {row.role}</span> : null}
             </Link>
             <span className="shrink-0 text-muted-foreground">{row.status}</span>
@@ -102,11 +104,12 @@ function OtherLeads({ lead }: { lead: LeadDetail }) {
 }
 
 export function CompanyCard({ lead }: { lead: LeadDetail }) {
+  const copy = useCopy();
   const domain = domainOf(lead.email);
 
   return (
     <Panel
-      title="Company"
+      title={copy.leads.companyTitle}
       action={
         lead.clientId ? (
           <Link
@@ -124,33 +127,33 @@ export function CompanyCard({ lead }: { lead: LeadDetail }) {
         </span>
         <span className="min-w-0">
           <span className={cn('block truncate font-medium', !lead.company && 'text-muted-foreground')}>
-            {lead.company || 'Company not given'}
+            {lead.company || copy.leads.companyNotGiven}
           </span>
           {domain && <span className="block truncate text-xs text-muted-foreground">{domain}</span>}
         </span>
       </div>
 
       <dl className="divide-y divide-border/40">
-        {lead.industry && <Row label="Industry">{lead.industry}</Row>}
+        {lead.industry && <Row label={copy.leads.rowIndustry}>{lead.industry}</Row>}
         {(lead.visitorName || lead.role) && (
-          <Row label="Contact">
-            {lead.visitorName || 'Unnamed'}
+          <Row label={copy.leads.rowContact}>
+            {lead.visitorName || copy.leads.unnamed}
             {lead.role && <span className="text-muted-foreground"> · {lead.role}</span>}
           </Row>
         )}
-        <Row label="Email">
+        <Row label={copy.leads.rowEmail}>
           {lead.email ? (
             <span className="flex items-center gap-1">
               <a href={`mailto:${lead.email}`} className="min-w-0 truncate hover:underline">
                 {lead.email}
               </a>
-              <CopyButton value={lead.email} label="email address" />
+              <CopyButton value={lead.email} label={copy.leads.emailAddress} />
             </span>
           ) : (
-            <span className="text-muted-foreground">Not shared yet</span>
+            <span className="text-muted-foreground">{copy.leads.notSharedYet}</span>
           )}
         </Row>
-        <Row label="First seen">
+        <Row label={copy.leads.rowFirstSeen}>
           <Stamp at={lead.submittedAt} absolute />
         </Row>
       </dl>

@@ -12,11 +12,12 @@ import { useState } from 'react';
 import { StatCard, StatGrid } from '@/components/ui/stat-card';
 import { cn } from '@/lib/utils';
 import { useAnalytics, type FunnelStage } from '@/lib/insights/api';
+import { useCopy } from '@/lib/i18n/locale-provider';
 
 const RANGES = [
-  { days: 7, label: '7 days' },
-  { days: 30, label: '30 days' },
-  { days: 90, label: '90 days' },
+  { days: 7 },
+  { days: 30 },
+  { days: 90 },
 ];
 
 function BarRow({ label, count, max }: { label: string; count: number; max: number }) {
@@ -37,6 +38,7 @@ function BarRow({ label, count, max }: { label: string; count: number; max: numb
 }
 
 function Funnel({ stages }: { stages: FunnelStage[] }) {
+  const copy = useCopy();
   const max = Math.max(...stages.map((s) => s.count), 1);
   return (
     <div className="space-y-2.5">
@@ -44,10 +46,10 @@ function Funnel({ stages }: { stages: FunnelStage[] }) {
         <div key={stage.stage}>
           {i > 0 && stage.conversion !== undefined && (
             <p className="mb-0.5 pl-40 text-[11px] text-muted-foreground" data-numeric>
-              ↓ {(stage.conversion * 100).toFixed(1)}% carry on
+              ↓ {copy.insights.carryOn((stage.conversion * 100).toFixed(1))}
             </p>
           )}
-          <BarRow label={stage.stage} count={stage.count} max={max} />
+          <BarRow label={copy.insights.funnelStage(stage.stage)} count={stage.count} max={max} />
         </div>
       ))}
     </div>
@@ -80,6 +82,7 @@ function Section({ title, children, className }: { title: string; children: Reac
 }
 
 export function InsightsView() {
+  const copy = useCopy();
   const [days, setDays] = useState(30);
   const analytics = useAnalytics(days);
   const data = analytics.data;
@@ -88,8 +91,10 @@ export function InsightsView() {
     <section>
       <header className="mb-5 flex flex-wrap items-center justify-between gap-3">
         <div>
-          <h1 className="font-display tracking-display text-2xl font-semibold">Insights</h1>
-          <p className="mt-1 text-sm text-muted-foreground">How we&apos;re doing — the numbers that matter.</p>
+          <h1 className="font-display tracking-display text-2xl font-semibold">
+            {copy.insights.title}
+          </h1>
+          <p className="mt-1 text-sm text-muted-foreground">{copy.insights.subtitle}</p>
         </div>
         <div className="flex rounded-lg border border-border p-0.5">
           {RANGES.map((range) => (
@@ -103,7 +108,7 @@ export function InsightsView() {
                 days === range.days ? 'bg-primary text-primary-foreground' : 'text-muted-foreground hover:bg-muted',
               )}
             >
-              {range.label}
+              {copy.insights.rangeDays(range.days)}
             </button>
           ))}
         </div>
@@ -111,42 +116,62 @@ export function InsightsView() {
 
       {!data ? (
         <div className="glass-surface animate-pulse rounded-xl p-10 text-sm text-muted-foreground">
-          {analytics.isLoading ? 'Loading…' : 'Analytics unavailable.'}
+          {analytics.isLoading ? copy.insights.loading : copy.insights.unavailable}
         </div>
       ) : (
         <div className="space-y-4">
           <StatGrid columns={4}>
-            <StatCard label="New leads" value={String(data.overview.newLeads)} detail={`last ${days} days`} />
-            <StatCard label="Priority 1" value={String(data.overview.tier1Count)} detail="strategic leads in play" />
-            <StatCard label="Priority 2" value={String(data.overview.tier2Count)} />
-            <StatCard label="Overdue follow-ups" value={String(data.overview.overdueFollowUps)} detail="right now" />
+            <StatCard
+              label={copy.insights.newLeads}
+              value={String(data.overview.newLeads)}
+              detail={copy.insights.lastDays(days)}
+            />
+            <StatCard
+              label={copy.insights.priority1}
+              value={String(data.overview.tier1Count)}
+              detail={copy.insights.strategicInPlay}
+            />
+            <StatCard label={copy.insights.priority2} value={String(data.overview.tier2Count)} />
+            <StatCard
+              label={copy.insights.overdueFollowUps}
+              value={String(data.overview.overdueFollowUps)}
+              detail={copy.insights.rightNow}
+            />
           </StatGrid>
 
           <div className="grid gap-4 lg:grid-cols-2">
-            <Section title="Funnel — how far leads get">
+            <Section title={copy.insights.funnelTitle}>
               <Funnel stages={data.funnel} />
             </Section>
 
-            <Section title="Response time — priority 1 and 2 only">
+            <Section title={copy.insights.responseTimeTitle}>
               <StatGrid columns={2}>
-                <StatCard label="P1 average" value={`${data.sla_compliance.tier1AvgHours}h`} detail={`${data.sla_compliance.tier1Breaches} over the bar`} />
-                <StatCard label="P2 average" value={`${data.sla_compliance.tier2AvgHours}h`} detail={`${data.sla_compliance.tier2Breaches} over the bar`} />
+                <StatCard
+                  label={copy.insights.p1Average}
+                  value={copy.insights.hours(data.sla_compliance.tier1AvgHours)}
+                  detail={copy.insights.overTheBar(data.sla_compliance.tier1Breaches)}
+                />
+                <StatCard
+                  label={copy.insights.p2Average}
+                  value={copy.insights.hours(data.sla_compliance.tier2AvgHours)}
+                  detail={copy.insights.overTheBar(data.sla_compliance.tier2Breaches)}
+                />
               </StatGrid>
               <p className="mt-3 text-sm">
                 <span className="font-display text-xl font-semibold" data-numeric>
                   {(data.sla_compliance.complianceRate * 100).toFixed(1)}%
                 </span>{' '}
-                <span className="text-xs text-muted-foreground">answered inside the response window</span>
+                <span className="text-xs text-muted-foreground">{copy.insights.answeredInside}</span>
               </p>
             </Section>
           </div>
 
-          <Section title={`Submissions — last ${days} days`}>
+          <Section title={copy.insights.submissionsTitle(days)}>
             <Trend points={data.submission_trend} />
           </Section>
 
           <div className="grid gap-4 lg:grid-cols-2">
-            <Section title="By product route">
+            <Section title={copy.insights.byProductRoute}>
               <div className="space-y-2">
                 {Object.entries(data.route_distribution).map(([route, count]) => (
                   <BarRow
@@ -159,12 +184,12 @@ export function InsightsView() {
               </div>
             </Section>
 
-            <Section title="By industry">
+            <Section title={copy.insights.byIndustry}>
               <div className="space-y-2">
                 {data.industry_breakdown.map((row) => (
                   <BarRow
                     key={row.industry}
-                    label={row.industry || 'Unknown'}
+                    label={row.industry || copy.insights.unknown}
                     count={row.count}
                     max={Math.max(...data.industry_breakdown.map((r) => r.count), 1)}
                   />
@@ -174,7 +199,7 @@ export function InsightsView() {
           </div>
 
           {data.patterns.length > 0 && (
-            <Section title="What leads keep saying">
+            <Section title={copy.insights.whatLeadsSay}>
               <div className="flex flex-wrap gap-2">
                 {data.patterns.map((pattern) => (
                   <span key={pattern.phrase} className="rounded-full bg-secondary px-3 py-1 text-xs">

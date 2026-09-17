@@ -300,6 +300,25 @@
   }
 
   /*
+   * Korean line breaking.
+   *
+   * The CSS default breaks Hangul between any two syllables, so a word wraps
+   * mid-word and the reader has to reassemble it. `keep-all` breaks at spaces
+   * (eojeol boundaries) instead, which is how Korean is actually set. This is
+   * the single highest-value rule for Korean legibility and it is missing on
+   * Surface 1 — do not drop it when copying styles between the two.
+   *
+   * `break-word` is its necessary companion: keep-all alone lets a long
+   * unbroken token (an id, a URL, an email) overflow its container rather
+   * than wrap. The attribute selector is driven by `<html lang>`, which the
+   * root layout renders from the locale cookie.
+   */
+  :lang(ko) {
+    word-break: keep-all;
+    overflow-wrap: break-word;
+  }
+
+  /*
    * Tabular figures for anything numeric-columnar (tables of amounts, IDs,
    * timestamps). Proportional figures make columns ragged and genuinely
    * harder to scan for an anomaly.

@@ -17,8 +17,10 @@ import { Button } from '@/components/ui/button';
 import { Field } from '@/components/ui/field';
 import { FormAlert, useFieldErrors } from '@/components/ui/form-feedback';
 import { SettingsSection } from '@/components/ui/settings-section';
+import { useCopy } from '@/lib/i18n/locale-provider';
 
 export default function ProfileSettingsPage() {
+  const copy = useCopy();
   const { user, updateProfile } = useAuth();
   const errors = useFieldErrors();
 
@@ -45,19 +47,19 @@ export default function ProfileSettingsPage() {
   return (
     <form onSubmit={handleSubmit} noValidate>
       <SettingsSection
-        title="Profile"
-        description={`Signed in as ${user?.email ?? ''}. Name changes apply everywhere your account appears.`}
+        title={copy.profile.title}
+        description={copy.profile.description(user?.email ?? '')}
         footer={
           <Button type="submit" disabled={saving}>
-            {saving ? 'Saving…' : 'Save changes'}
+            {saving ? copy.profile.saving : copy.profile.saveChanges}
           </Button>
         }
       >
         {errors.formError && <FormAlert tone="error" message={errors.formError} />}
-        {saved && <FormAlert tone="success" message="Profile updated." />}
+        {saved && <FormAlert tone="success" message={copy.profile.updated} />}
 
         <Field
-          label="Name"
+          label={copy.profile.name}
           name="name"
           autoComplete="name"
           value={name}

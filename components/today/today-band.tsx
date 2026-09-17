@@ -15,9 +15,16 @@ import { ChevronDown } from 'lucide-react';
 
 import { cn } from '@/lib/utils';
 import { useStoredState } from './use-stored';
+import { useCopy } from '@/lib/i18n/locale-provider';
 
 interface TodayBandProps {
   title: string;
+  /**
+   * Stable id for the collapse preference. Separate from `title` because the
+   * title is translated — keying storage on it would reset every band's
+   * open/closed state the moment someone switches language.
+   */
+  storageKey: string;
   /** One short sentence under the title, staff language. */
   hint?: string;
   count: number;
@@ -39,6 +46,7 @@ const TONE_PILL: Record<NonNullable<TodayBandProps['tone']>, string> = {
 
 export function TodayBand({
   title,
+  storageKey,
   hint,
   count,
   isLoading = false,
@@ -49,7 +57,10 @@ export function TodayBand({
 }: TodayBandProps) {
   // Collapse choice persists per band — someone who folds "Due today" away
   // shouldn't have to re-fold it on every visit.
-  const [stored, setStored] = useStoredState(`today.band.${title}`, 'open');
+  const copy = useCopy();
+  // Keyed on the English title so a language switch does not reset every
+  // band's collapse state — the key is storage, not display.
+  const [stored, setStored] = useStoredState(`today.band.${storageKey ?? title}`, 'open');
   const open = forceOpen || stored !== 'closed';
   const toggle = () => setStored(open ? 'closed' : 'open');
 
@@ -83,7 +94,7 @@ export function TodayBand({
         <div className="mt-2 space-y-2">
           {isLoading && count === 0 ? (
             <div className="glass-surface animate-pulse rounded-xl px-4 py-6 text-sm text-muted-foreground">
-              Loading…
+              {copy.today.loading}
             </div>
           ) : (
             children

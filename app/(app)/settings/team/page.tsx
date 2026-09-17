@@ -12,8 +12,10 @@ import { cn } from '@/lib/utils';
 import { useDebouncedValue } from '@/lib/use-debounced-value';
 import { SettingsSection } from '@/components/ui/settings-section';
 import { useTeam } from '@/lib/team';
+import { useCopy } from '@/lib/i18n/locale-provider';
 
 export default function TeamSettingsPage() {
+  const copy = useCopy();
   // Server-side search (?search= over name and email).
   const [search, setSearch] = useState('');
   const debounced = useDebouncedValue(search);
@@ -21,17 +23,17 @@ export default function TeamSettingsPage() {
 
   return (
     <SettingsSection
-      title="Team"
-      description="Everyone with staff access. Accounts are provisioned by an admin — there's no self-serve invite."
+      title={copy.team.title}
+      description={copy.team.description}
     >
       <input
         value={search}
         onChange={(e) => setSearch(e.target.value)}
-        placeholder="Search name or email…"
+        placeholder={copy.team.searchPlaceholder}
         className="mb-3 h-8 w-56 rounded-md border border-input bg-card px-2.5 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
       />
       {team.isLoading ? (
-        <p className="text-sm text-muted-foreground">Loading…</p>
+        <p className="text-sm text-muted-foreground">{copy.team.loading}</p>
       ) : (
         <ul className="divide-y divide-border/60">
           {(team.data?.results ?? []).map((member) => (
@@ -55,7 +57,7 @@ export default function TeamSettingsPage() {
               </span>
               <span className="ml-auto text-xs text-muted-foreground">{member.role}</span>
               <span className="w-20 text-right text-xs text-muted-foreground" data-numeric>
-                {member.active ? `${member.openLeads} open` : 'inactive'}
+                {member.active ? copy.team.openLeads(member.openLeads) : copy.team.inactive}
               </span>
             </li>
           ))}

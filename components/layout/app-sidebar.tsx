@@ -28,6 +28,8 @@ import {
 } from 'lucide-react';
 
 import { useAuth } from '@/lib/auth/auth-context';
+import { useCopy } from '@/lib/i18n/locale-provider';
+import type { Messages } from '@/lib/i18n/messages';
 import {
   Sidebar,
   SidebarContent,
@@ -44,18 +46,24 @@ import {
   useSidebar,
 } from '@/components/ui/sidebar';
 
-const APP_NAME = 'itriX';
-const APP_TAGLINE = 'Staff console';
+/** A key into `copy.nav`, so a destination cannot be added without a label in both locales. */
+export type NavLabelKey = keyof Messages['nav'];
 
 export interface NavItem {
-  label: string;
+  /**
+   * Not the label itself. The rail and the command palette both render this
+   * model, so resolving the key at render is what keeps one nav definition
+   * working in two languages — and makes an untranslated destination a
+   * compile error rather than an English word in a Korean menu.
+   */
+  labelKey: NavLabelKey;
   icon: LucideIcon;
   href: string;
   badge?: string;
 }
 
 export interface NavGroup {
-  label?: string;
+  labelKey?: NavLabelKey;
   items: NavItem[];
 }
 
@@ -68,18 +76,18 @@ export interface NavGroup {
 export const NAV_GROUPS: NavGroup[] = [
   {
     items: [
-      { label: 'Today', icon: ListTodo, href: '/today' },
-      { label: 'Leads', icon: Users, href: '/leads' },
-      { label: 'Conversations', icon: MessagesSquare, href: '/conversations' },
-      { label: 'Approvals', icon: ShieldCheck, href: '/approvals' },
-      { label: 'Customers', icon: Building2, href: '/customers' },
-      { label: 'Insights', icon: ChartLine, href: '/insights' },
-      { label: 'Library', icon: BookOpen, href: '/library' },
+      { labelKey: 'today', icon: ListTodo, href: '/today' },
+      { labelKey: 'leads', icon: Users, href: '/leads' },
+      { labelKey: 'conversations', icon: MessagesSquare, href: '/conversations' },
+      { labelKey: 'approvals', icon: ShieldCheck, href: '/approvals' },
+      { labelKey: 'customers', icon: Building2, href: '/customers' },
+      { labelKey: 'insights', icon: ChartLine, href: '/insights' },
+      { labelKey: 'library', icon: BookOpen, href: '/library' },
     ],
   },
   {
-    label: 'Account',
-    items: [{ label: 'Settings', icon: Settings, href: '/settings' }],
+    labelKey: 'account',
+    items: [{ labelKey: 'settings', icon: Settings, href: '/settings' }],
   },
 ];
 
@@ -88,6 +96,7 @@ export function AppSidebar() {
   const router = useRouter();
   const { logout } = useAuth();
   const { isMobile, setOpenMobile } = useSidebar();
+  const copy = useCopy();
 
   // Longest matching prefix wins, so overlapping hrefs (/products,
   // /products/archive) highlight only the more specific item.
@@ -116,9 +125,9 @@ export function AppSidebar() {
             <Image src="/brand/itrix-x-inverse.png" alt="" width={16} height={16} className="h-4 w-4" />
           </span>
           <span className="min-w-0 group-data-[collapsible=icon]:hidden">
-            <span className="block truncate text-base font-semibold">{APP_NAME}</span>
+            <span className="block truncate text-base font-semibold">{copy.app.name}</span>
             <span className="block truncate text-[11px] font-normal text-sidebar-foreground/60">
-              {APP_TAGLINE}
+              {copy.app.tagline}
             </span>
           </span>
         </Link>
@@ -126,15 +135,15 @@ export function AppSidebar() {
 
       <SidebarContent>
         {NAV_GROUPS.map((group, gi) => (
-          <SidebarGroup key={group.label ?? gi}>
-            {group.label && <SidebarGroupLabel>{group.label}</SidebarGroupLabel>}
+          <SidebarGroup key={group.labelKey ?? gi}>
+            {group.labelKey && <SidebarGroupLabel>{copy.nav[group.labelKey]}</SidebarGroupLabel>}
             <SidebarGroupContent>
               <SidebarMenu>
                 {group.items.map((item) => (
                   <SidebarMenuItem key={item.href}>
                     <SidebarMenuButton
                       asChild
-                      tooltip={item.label}
+                      tooltip={copy.nav[item.labelKey]}
                       isActive={item.href === activeHref}
                     >
                       <Link
@@ -146,7 +155,7 @@ export function AppSidebar() {
                         }}
                       >
                         <item.icon />
-                        <span>{item.label}</span>
+                        <span>{copy.nav[item.labelKey]}</span>
                       </Link>
                     </SidebarMenuButton>
                     {item.badge && <SidebarMenuBadge>{item.badge}</SidebarMenuBadge>}
@@ -163,11 +172,11 @@ export function AppSidebar() {
           <SidebarMenuItem>
             <SidebarMenuButton
               onClick={handleSignOut}
-              tooltip="Sign out"
+              tooltip={copy.nav.signOut}
               className="text-sidebar-foreground/70 hover:bg-destructive/10 hover:text-destructive"
             >
               <LogOut />
-              <span>Sign out</span>
+              <span>{copy.nav.signOut}</span>
             </SidebarMenuButton>
           </SidebarMenuItem>
         </SidebarMenu>

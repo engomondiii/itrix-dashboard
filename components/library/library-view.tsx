@@ -18,6 +18,7 @@ import { cn } from '@/lib/utils';
 import { normalizeError } from '@/lib/api/errors';
 import { PaginationFooter, useClientPage } from '@/components/shared/client-pagination';
 import { Stamp } from '@/components/shared/timestamp';
+import { useCopy } from '@/lib/i18n/locale-provider';
 import {
   usePersona,
   usePersonas,
@@ -28,12 +29,16 @@ import {
   type TemplateKind,
 } from '@/lib/library/api';
 
-const KINDS: Array<{ kind: TemplateKind; label: string }> = [
-  { kind: 'email', label: 'Email' },
-  { kind: 'follow-up', label: 'Follow-up' },
-  { kind: 'evaluation', label: 'Evaluation' },
-  { kind: 'poc', label: 'PoC' },
-  { kind: 'handoff', label: 'Handoff' },
+/** Keys into `copy.library`, resolved at render. "PoC" is a protected term. */
+const KINDS: Array<{
+  kind: TemplateKind;
+  labelKey: 'kindEmail' | 'kindFollowUp' | 'kindEvaluation' | 'kindPoc' | 'kindHandoff';
+}> = [
+  { kind: 'email', labelKey: 'kindEmail' },
+  { kind: 'follow-up', labelKey: 'kindFollowUp' },
+  { kind: 'evaluation', labelKey: 'kindEvaluation' },
+  { kind: 'poc', labelKey: 'kindPoc' },
+  { kind: 'handoff', labelKey: 'kindHandoff' },
 ];
 
 // ---------------------------------------------------------------------------
@@ -49,6 +54,7 @@ function TemplateEditorRow({
   kind: TemplateKind;
   onClose: () => void;
 }) {
+  const copy = useCopy();
   const { toast } = useToast();
   const save = useSaveTemplate(kind);
   const [name, setName] = useState(template.name);
@@ -79,7 +85,7 @@ function TemplateEditorRow({
                   {
                     onSuccess: () => {
                       onClose();
-                      toast({ title: 'Template saved', tone: 'success' });
+                      toast({ title: copy.library.templateSaved, tone: 'success' });
                     },
                     onError: (e) => toast({ title: normalizeError(e).message, tone: 'destructive' }),
                   },
@@ -109,6 +115,7 @@ function TemplateRow({
   editing: boolean;
   onEdit: () => void;
 }) {
+  const copy = useCopy();
   return (
     <>
       <tr className="border-b border-border/60 hover:bg-accent/40">
@@ -126,7 +133,7 @@ function TemplateRow({
         <td className="px-4 py-2.5 text-xs text-muted-foreground"><Stamp at={template.updatedAt} /></td>
         <td className="px-4 py-2.5 text-right">
           <Button size="sm" variant="outline" onClick={onEdit}>
-            {editing ? 'Close' : 'Edit'}
+            {editing ? copy.library.close : copy.library.edit}
           </Button>
         </td>
       </tr>
@@ -136,6 +143,7 @@ function TemplateRow({
 }
 
 function TemplatesTab() {
+  const copy = useCopy();
   const [kind, setKind] = useState<TemplateKind>('email');
   const templates = useTemplates(kind);
   const save = useSaveTemplate(kind);
@@ -154,7 +162,7 @@ function TemplatesTab() {
   return (
     <div>
       <div className="mb-4 flex flex-wrap items-center gap-2">
-        {KINDS.map(({ kind: k, label }) => (
+        {KINDS.map(({ kind: k, labelKey }) => (
           <button
             key={k}
             type="button"
@@ -167,17 +175,17 @@ function TemplatesTab() {
                 : 'border-border bg-card text-muted-foreground hover:bg-accent',
             )}
           >
-            {label}
+            {copy.library[labelKey]}
           </button>
         ))}
         <input
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          placeholder="Search templates…"
+          placeholder={copy.library.searchTemplates}
           className="ml-auto h-8 w-44 rounded-md border border-input bg-card px-2.5 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
         />
         <Button size="sm" variant="outline" onClick={() => setCreating((v) => !v)}>
-          {creating ? 'Cancel' : 'New template'}
+          {creating ? copy.common.cancel : copy.library.newTemplate}
         </Button>
       </div>
 
@@ -186,14 +194,14 @@ function TemplatesTab() {
           <input
             value={newName}
             onChange={(e) => setNewName(e.target.value)}
-            placeholder="Template name"
+            placeholder={copy.library.templateName}
             className="h-8 w-full rounded-md border border-input bg-card px-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
           />
           <textarea
             value={newBody}
             onChange={(e) => setNewBody(e.target.value)}
             rows={5}
-            placeholder="Body — use {{variables}} for the parts that change per lead"
+            placeholder={copy.library.templateBody}
             className="w-full rounded-md border border-input bg-card p-2.5 font-mono text-xs focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
           />
           <Button
@@ -207,7 +215,7 @@ function TemplatesTab() {
                     setCreating(false);
                     setNewName('');
                     setNewBody('');
-                    toast({ title: 'Template created', tone: 'success' });
+                    toast({ title: copy.library.templateCreated, tone: 'success' });
                   },
                   onError: (e) => toast({ title: normalizeError(e).message, tone: 'destructive' }),
                 },
@@ -223,7 +231,7 @@ function TemplatesTab() {
         <div className="glass-surface animate-pulse rounded-xl p-8 text-sm text-muted-foreground">Loading…</div>
       ) : matching.length === 0 ? (
         <div className="glass-surface rounded-xl p-8 text-center text-sm text-muted-foreground">
-          {needle ? 'No templates match the search.' : `No ${kind} templates yet.`}
+          {needle ? copy.library.noTemplatesMatch : copy.library.noTemplatesOfKind(kind)}
         </div>
       ) : (
         <>
@@ -231,9 +239,9 @@ function TemplatesTab() {
             <table className="w-full min-w-[640px] text-sm">
               <thead>
                 <tr className="border-b border-border text-left text-xs text-muted-foreground">
-                  <th className="px-4 py-2.5 font-medium">Name</th>
-                  <th className="px-4 py-2.5 font-medium">Fills in</th>
-                  <th className="px-4 py-2.5 font-medium">Updated</th>
+                  <th className="px-4 py-2.5 font-medium">{copy.library.colName}</th>
+                  <th className="px-4 py-2.5 font-medium">{copy.library.colFillsIn}</th>
+                  <th className="px-4 py-2.5 font-medium">{copy.library.colUpdated}</th>
                   <th className="px-4 py-2.5 font-medium" />
                 </tr>
               </thead>
@@ -255,7 +263,7 @@ function TemplatesTab() {
             pageSize={pager.pageSize}
             total={pager.total}
             totalPages={pager.totalPages}
-            noun="templates"
+            noun={copy.library.nounTemplates}
             onPage={pager.setPage}
             onPageSize={pager.setPageSize}
           />
@@ -270,6 +278,7 @@ function TemplatesTab() {
 // ---------------------------------------------------------------------------
 
 function ProfileDetailRow({ personaId }: { personaId: string }) {
+  const copy = useCopy();
   const detail = usePersona(personaId);
   if (!detail.data) {
     return (
@@ -283,14 +292,14 @@ function ProfileDetailRow({ personaId }: { personaId: string }) {
   const d = detail.data;
   const facts: Array<[string, string]> = (
     [
-      ['What they care about', d.primaryKpi],
-      ['Their mandate', d.departmentMandate],
-      ['What sets them off', d.triggerEvent],
-      ['What they want', d.desiredGain],
-      ['Likely champion', d.likelyChampion],
-      ['Likely blocker', d.likelyBlocker],
-      ['Likely objection', d.likelyObjection],
-      ['How to answer it', d.responseAngle],
+      [copy.library.pWhatTheyCareAbout, d.primaryKpi],
+      [copy.library.pTheirMandate, d.departmentMandate],
+      [copy.library.pWhatSetsThemOff, d.triggerEvent],
+      [copy.library.pWhatTheyWant, d.desiredGain],
+      [copy.library.pLikelyChampion, d.likelyChampion],
+      [copy.library.pLikelyBlocker, d.likelyBlocker],
+      [copy.library.pLikelyObjection, d.likelyObjection],
+      [copy.library.pHowToAnswerIt, d.responseAngle],
     ] as Array<[string, string]>
   ).filter(([, value]) => Boolean(value));
 
@@ -339,6 +348,7 @@ function ProfileRow({
 }
 
 function ProfilesTab() {
+  const copy = useCopy();
   const personas = usePersonas();
   const [openId, setOpenId] = useState<string | null>(null);
   const [search, setSearch] = useState('');
@@ -375,12 +385,12 @@ function ProfilesTab() {
     <div>
       <div className="mb-4 flex flex-wrap items-center gap-3">
         <p className="rounded-lg bg-warning-soft px-3 py-2 text-xs font-medium text-warning">
-          Internal only — buyer profiles must never be shared with or shown to customers.
+          {copy.library.internalOnly}
         </p>
         <input
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          placeholder="Search company, role, family…"
+          placeholder={copy.library.searchProfiles}
           className="ml-auto h-8 w-56 rounded-md border border-input bg-card px-2.5 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
         />
       </div>
@@ -389,7 +399,7 @@ function ProfilesTab() {
         <div className="glass-surface animate-pulse rounded-xl p-8 text-sm text-muted-foreground">Loading…</div>
       ) : rows.length === 0 ? (
         <div className="glass-surface rounded-xl p-8 text-center text-sm text-muted-foreground">
-          {needle ? 'No profiles match the search.' : 'No profiles seeded yet.'}
+          {needle ? copy.library.noProfilesMatch : copy.library.noProfilesSeeded}
         </div>
       ) : (
         <>
@@ -397,11 +407,11 @@ function ProfilesTab() {
             <table className="w-full min-w-[720px] text-sm">
               <thead>
                 <tr className="border-b border-border text-left text-xs text-muted-foreground">
-                  {header('Company', 'company')}
+                  {header(copy.library.colCompany, 'company')}
                   <th className="px-4 py-2.5 font-medium">Person / role</th>
                   <th className="px-4 py-2.5 font-medium">Family</th>
                   <th className="px-4 py-2.5 font-medium">Pitch angle</th>
-                  {header('Priority', 'priority')}
+                  {header(copy.library.colPriority, 'priority')}
                   <th className="px-4 py-2.5 font-medium">Status</th>
                 </tr>
               </thead>
@@ -422,7 +432,7 @@ function ProfilesTab() {
             pageSize={pager.pageSize}
             total={pager.total}
             totalPages={pager.totalPages}
-            noun="profiles"
+            noun={copy.library.nounProfiles}
             onPage={pager.setPage}
             onPageSize={pager.setPageSize}
           />
@@ -433,22 +443,23 @@ function ProfilesTab() {
 }
 
 export function LibraryView() {
+  const copy = useCopy();
   const [tab, setTab] = useState<'templates' | 'profiles'>('templates');
 
   return (
     <section>
       <header className="mb-5 flex flex-wrap items-center justify-between gap-3">
         <div>
-          <h1 className="font-display tracking-display text-2xl font-semibold">Library</h1>
-          <p className="mt-1 text-sm text-muted-foreground">
-            The reference shelf: reusable wording and who we&apos;re selling to.
-          </p>
+          <h1 className="font-display tracking-display text-2xl font-semibold">
+            {copy.library.title}
+          </h1>
+          <p className="mt-1 text-sm text-muted-foreground">{copy.library.subtitle}</p>
         </div>
         <div className="flex rounded-lg border border-border p-0.5">
           {(
             [
-              ['templates', 'Message templates'],
-              ['profiles', 'Buyer profiles'],
+              ['templates', copy.library.tabTemplates],
+              ['profiles', copy.library.tabProfiles],
             ] as const
           ).map(([key, label]) => (
             <button

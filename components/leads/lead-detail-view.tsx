@@ -36,7 +36,6 @@ import {
 } from '@/lib/leads/hooks';
 import type { LeadStatus } from '@/lib/today/types';
 import type { LeadDetail } from '@/lib/leads/types';
-import { journeyLabel } from '@/lib/leads/journey-labels';
 import { useConversations } from '@/lib/conversations/hooks';
 import { useThreadBoard } from '@/lib/today/hooks';
 import { ReasonAction } from '@/components/today/reason-action';
@@ -45,6 +44,7 @@ import { Panel } from '@/components/shared/panel';
 import { Stamp } from '@/components/shared/timestamp';
 import { AssignControl } from '@/components/leads/assign-control';
 import { CompanyCard } from '@/components/leads/company-card';
+import { useCopy } from '@/lib/i18n/locale-provider';
 
 const ALL_STAGES: LeadStatus[] = [
   'New', 'Qualifying', 'Contacted', 'Meeting Booked', 'NDA', 'Evaluation',
@@ -69,6 +69,7 @@ function Meter({ label, value }: { label: string; value: number }) {
 }
 
 function Header({ lead }: { lead: LeadDetail }) {
+  const copy = useCopy();
   const { toast } = useToast();
   const setStatus = useSetStatus(lead.id);
 
@@ -78,12 +79,12 @@ function Header({ lead }: { lead: LeadDetail }) {
         href="/leads"
         className="mb-2 inline-flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground"
       >
-        <ArrowLeft className="h-3 w-3" /> All leads
+        <ArrowLeft className="h-3 w-3" /> {copy.leads.allLeads}
       </Link>
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
           <h1 className="font-display tracking-display text-2xl font-semibold">
-            {lead.company || lead.visitorName || 'Unknown lead'}
+            {lead.company || lead.visitorName || copy.leads.unknownLeadTitle}
           </h1>
           {/* Email moved to the Company card, where it's actionable rather
               than decorative. */}
@@ -91,9 +92,9 @@ function Header({ lead }: { lead: LeadDetail }) {
             {[lead.visitorName, lead.role].filter(Boolean).join(' · ')}
           </p>
           <p className="mt-0.5 text-xs text-muted-foreground">
-            P{lead.tier} · score {lead.score} · submitted <Stamp at={lead.submittedAt} />
+            {copy.leads.scoreLine(lead.tier, lead.score)} <Stamp at={lead.submittedAt} />
             {lead.productRoute ? ` · ${lead.productRoute}` : ''}
-            {lead.journeyState ? ` · ${journeyLabel(lead.journeyState)}` : ''}
+            {lead.journeyState ? ` · ${copy.status.journeyLabel(lead.journeyState)}` : ''}
           </p>
         </div>
 
@@ -101,13 +102,17 @@ function Header({ lead }: { lead: LeadDetail }) {
           <AssignControl leadId={lead.id} owner={lead.owner} />
 
           <label className="flex items-center gap-1.5 text-xs text-muted-foreground">
-            Stage
+            {copy.leads.stage}
             <select
               value={lead.status}
               disabled={setStatus.isPending}
               onChange={(e) =>
                 setStatus.mutate(e.target.value as LeadStatus, {
-                  onSuccess: () => toast({ title: `Moved to ${e.target.value}`, tone: 'success' }),
+                  onSuccess: () =>
+                    toast({
+                      title: copy.leads.movedTo(copy.status.leadStatus(e.target.value)),
+                      tone: 'success',
+                    }),
                   onError: (err) => toast({ title: normalizeError(err).message, tone: 'destructive' }),
                 })
               }
@@ -115,7 +120,7 @@ function Header({ lead }: { lead: LeadDetail }) {
             >
               {ALL_STAGES.map((s) => (
                 <option key={s} value={s}>
-                  {s}
+                  {copy.status.leadStatus(s)}
                 </option>
               ))}
             </select>
@@ -127,19 +132,20 @@ function Header({ lead }: { lead: LeadDetail }) {
 }
 
 function SignalsPanel({ leadId }: { leadId: string }) {
+  const copy = useCopy();
   const signals = useDealSignals(leadId);
   const nextAction = useNextAction(leadId);
   const s = signals.data;
 
   return (
-    <Panel title="Deal signals">
+    <Panel title={copy.leads.dealSignals}>
       {!s ? (
-        <p className="text-sm text-muted-foreground">{signals.isLoading ? 'Loading…' : 'Unavailable.'}</p>
+        <p className="text-sm text-muted-foreground">{signals.isLoading ? copy.leads.loading : copy.leads.unavailable}</p>
       ) : (
         <div className="space-y-4">
           {nextAction.data?.primary && (
             <div className="rounded-lg bg-secondary px-3 py-2">
-              <p className="text-xs font-medium">Suggested next step</p>
+              <p className="text-xs font-medium">{copy.leads.suggestedNextStep}</p>
               <p className="text-sm">{nextAction.data.primary.label}</p>
               {nextAction.data.reason && (
                 <p className="mt-0.5 text-xs text-muted-foreground">{nextAction.data.reason}</p>
@@ -148,15 +154,15 @@ function SignalsPanel({ leadId }: { leadId: string }) {
           )}
 
           <div className="space-y-2.5">
-            <Meter label="NDA readiness" value={s.readiness.nda} />
-            <Meter label="Evaluation readiness" value={s.readiness.assessment} />
-            <Meter label="PoC readiness" value={s.readiness.poc} />
-            <Meter label="License-out likelihood" value={s.licenseOutProbability} />
+            <Meter label={copy.leads.ndaReadiness} value={s.readiness.nda} />
+            <Meter label={copy.leads.evaluationReadiness} value={s.readiness.assessment} />
+            <Meter label={copy.leads.pocReadiness} value={s.readiness.poc} />
+            <Meter label={copy.leads.licenseOutLikelihood} value={s.licenseOutProbability} />
           </div>
 
           {s.objectionSignals.length > 0 && (
             <div>
-              <p className="text-xs font-medium text-warning">Watch for</p>
+              <p className="text-xs font-medium text-warning">{copy.leads.watchFor}</p>
               <ul className="mt-1 list-disc pl-4 text-xs text-muted-foreground">
                 {s.objectionSignals.map((o) => (
                   <li key={o}>{o}</li>
@@ -167,7 +173,7 @@ function SignalsPanel({ leadId }: { leadId: string }) {
 
           {s.pain && (
             <p className="text-xs text-muted-foreground">
-              <span className="font-medium text-foreground">Their problem:</span> {s.pain}
+              <span className="font-medium text-foreground">{copy.leads.theirProblemLabel}</span> {s.pain}
             </p>
           )}
         </div>
@@ -177,6 +183,7 @@ function SignalsPanel({ leadId }: { leadId: string }) {
 }
 
 function NdaPanel({ lead }: { lead: LeadDetail }) {
+  const copy = useCopy();
   const { toast } = useToast();
   const nda = useNdaRecord(lead.id);
   const request = useRequestNda(lead.id);
@@ -190,23 +197,23 @@ function NdaPanel({ lead }: { lead: LeadDetail }) {
   }
 
   return (
-    <Panel title="NDA">
+    <Panel title={copy.leads.ndaTitle}>
       {nda.isLoading ? (
-        <p className="text-sm text-muted-foreground">Loading…</p>
+        <p className="text-sm text-muted-foreground">{copy.leads.loading}</p>
       ) : !record ? (
         <div className="space-y-2">
-          <p className="text-sm text-muted-foreground">No NDA yet.</p>
+          <p className="text-sm text-muted-foreground">{copy.leads.noNdaYet}</p>
           <Button
             size="sm"
             disabled={request.isPending}
             onClick={() =>
               request.mutate(undefined, {
-                onSuccess: () => toast({ title: 'NDA requested', tone: 'success' }),
+                onSuccess: () => toast({ title: copy.leads.ndaRequested, tone: 'success' }),
                 onError,
               })
             }
           >
-            Request NDA
+            {copy.leads.requestNda}
           </Button>
         </div>
       ) : (
@@ -230,7 +237,7 @@ function NdaPanel({ lead }: { lead: LeadDetail }) {
                 type="email"
                 value={signerEmail}
                 onChange={(e) => setSignerEmail(e.target.value)}
-                placeholder="Signer's email"
+                placeholder={copy.leads.signerEmail}
                 className="h-8 w-52 rounded-md border border-input bg-card px-2 text-xs focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
               />
               <Button
@@ -239,7 +246,7 @@ function NdaPanel({ lead }: { lead: LeadDetail }) {
                 onClick={() =>
                   act.mutate(
                     { action: 'send', signerEmail },
-                    { onSuccess: () => toast({ title: 'NDA sent', tone: 'success' }), onError },
+                    { onSuccess: () => toast({ title: copy.leads.ndaSent, tone: 'success' }), onError },
                   )
                 }
               >
@@ -259,21 +266,21 @@ function NdaPanel({ lead }: { lead: LeadDetail }) {
                 onClick={() =>
                   act.mutate(
                     { action: 'sign' },
-                    { onSuccess: () => toast({ title: 'Marked signed', tone: 'success' }), onError },
+                    { onSuccess: () => toast({ title: copy.leads.markedSigned, tone: 'success' }), onError },
                   )
                 }
               >
-                Mark signed
+                {copy.leads.markSigned}
               </Button>
               <ReasonAction
-                label="Mark declined"
-                placeholder="Their stated reason"
+                label={copy.leads.markDeclined}
+                placeholder={copy.leads.declineReason}
                 minChars={1}
                 busy={act.isPending}
                 onConfirm={(reason) =>
                   act.mutate(
                     { action: 'decline', reason },
-                    { onSuccess: () => toast({ title: 'Marked declined' }), onError },
+                    { onSuccess: () => toast({ title: copy.leads.markedDeclined }), onError },
                   )
                 }
               />
@@ -281,7 +288,9 @@ function NdaPanel({ lead }: { lead: LeadDetail }) {
           )}
 
           {record.status === 'signed' && record.signedAt && (
-            <p className="text-xs text-muted-foreground">Signed <Stamp at={record.signedAt} />.</p>
+            <p className="text-xs text-muted-foreground">
+              {copy.leads.signedOn} <Stamp at={record.signedAt} />.
+            </p>
           )}
           {record.status === 'declined' && record.declineReason && (
             <p className="text-xs text-muted-foreground">Reason: {record.declineReason}</p>
@@ -305,17 +314,18 @@ function qualLabel(key: string): string {
  * Empty fields are simply omitted; no dash-filled skeletons.
  */
 function AboutPanel({ lead }: { lead: LeadDetail }) {
+  const copy = useCopy();
   const facts: Array<[string, React.ReactNode]> = [];
   const add = (label: string, value: React.ReactNode) => {
     if (value !== null && value !== undefined && value !== '') facts.push([label, value]);
   };
 
-  add('Industry', lead.industry);
-  add('Their problem', lead.primaryPain);
-  add('Compute bottleneck', lead.computeBottleneck);
-  add('Workload', lead.workloadType);
+  add(copy.leads.fIndustry, lead.industry);
+  add(copy.leads.fTheirProblem, lead.primaryPain);
+  add(copy.leads.fComputeBottleneck, lead.computeBottleneck);
+  add(copy.leads.fWorkload, lead.workloadType);
   add(
-    'Current stack',
+    copy.leads.fCurrentStack,
     lead.currentStack.length > 0 ? (
       <span className="flex flex-wrap gap-1">
         {lead.currentStack.map((tool) => (
@@ -328,38 +338,38 @@ function AboutPanel({ lead }: { lead: LeadDetail }) {
       ''
     ),
   );
-  add('Commercial intent', lead.commercialIntent);
-  add('Timeline', lead.timeline);
-  add('Product route', lead.productRoute);
-  add('Commercial path', lead.commercialPath);
-  if (lead.specialRights && lead.specialRights !== 'None') add('Special rights', lead.specialRights);
+  add(copy.leads.fCommercialIntent, lead.commercialIntent);
+  add(copy.leads.fTimeline, lead.timeline);
+  add(copy.leads.fProductRoute, lead.productRoute);
+  add(copy.leads.fCommercialPath, lead.commercialPath);
+  if (lead.specialRights && lead.specialRights !== 'None') add(copy.leads.fSpecialRights, lead.specialRights);
 
   const breakdown = Object.entries(lead.scoreBreakdown).filter(
     ([, v]) => typeof v === 'number' || typeof v === 'string',
   );
   if (breakdown.length > 0) {
     add(
-      'Score breakdown',
+      copy.leads.fScoreBreakdown,
       breakdown.map(([k, v]) => `${qualLabel(k)} ${String(v)}`).join(' · '),
     );
   }
 
   const engagement = [
-    lead.documentsViewed > 0 ? `${lead.documentsViewed} document${lead.documentsViewed === 1 ? '' : 's'} viewed` : null,
-    lead.ctaClicked ? 'clicked the call-to-action' : null,
-    lead.humanHandoffTrigger ? 'asked for a human' : null,
-    lead.valueDelivered ? 'value delivered' : null,
+    lead.documentsViewed > 0 ? copy.leads.documentsViewed(lead.documentsViewed) : null,
+    lead.ctaClicked ? copy.leads.clickedCta : null,
+    lead.humanHandoffTrigger ? copy.leads.askedForHuman : null,
+    lead.valueDelivered ? copy.leads.valueDelivered : null,
   ].filter(Boolean);
-  if (engagement.length > 0) add('Engagement', engagement.join(' · '));
+  if (engagement.length > 0) add(copy.leads.fEngagement, engagement.join(' · '));
 
-  if (lead.recommendedNextStep) add('System suggestion', lead.recommendedNextStep);
+  if (lead.recommendedNextStep) add(copy.leads.fSystemSuggestion, lead.recommendedNextStep);
 
   const answers = Object.entries(lead.qualification).filter(([, v]) => typeof v === 'string' && v !== '');
 
   if (facts.length === 0 && answers.length === 0) return null;
 
   return (
-    <Panel title="About this lead">
+    <Panel title={copy.leads.aboutThisLead}>
       <dl className="grid gap-x-6 gap-y-2 text-sm sm:grid-cols-2">
         {facts.map(([label, value]) => (
           <div key={label}>
@@ -388,6 +398,7 @@ function AboutPanel({ lead }: { lead: LeadDetail }) {
 }
 
 function ConversationsPanel({ lead }: { lead: LeadDetail }) {
+  const copy = useCopy();
   // The transcript already links thread → lead; this closes the loop the
   // other way so working a lead never means hunting the Conversations board.
   const board = useThreadBoard();
@@ -400,13 +411,12 @@ function ConversationsPanel({ lead }: { lead: LeadDetail }) {
   const leadConversations = (conversations.data ?? []).filter((c) => c.leadId === lead.id);
 
   return (
-    <Panel title={`Conversations${threads.length > 1 ? ` (${threads.length})` : ''}`}>
+    <Panel title={copy.leads.conversationsTitle(threads.length)}>
       {threads.length === 0 && leadConversations.length === 0 && (
         <p className="text-sm text-muted-foreground">
-          Nothing linked to this lead yet — a conversation attaches once the visitor&apos;s
-          thread is qualified.{' '}
+          {copy.leads.noConversationsYet}{' '}
           <Link href="/conversations" className="underline">
-            Browse all conversations
+            {copy.leads.browseAllConversations}
           </Link>
           .
         </p>
@@ -415,7 +425,7 @@ function ConversationsPanel({ lead }: { lead: LeadDetail }) {
         {threads.map((thread) => (
           <div key={thread.threadId} className="flex flex-wrap items-center gap-2">
             <Link href={`/conversations/${thread.threadId}`} className="min-w-0 flex-1 truncate hover:underline">
-              {thread.title || 'Untitled conversation'}
+              {thread.title || copy.leads.untitledConversation}
             </Link>
             <span className="text-xs text-muted-foreground">
               {thread.visitorTurns} visitor {thread.visitorTurns === 1 ? 'turn' : 'turns'} ·{' '}
@@ -438,7 +448,7 @@ function ConversationsPanel({ lead }: { lead: LeadDetail }) {
                 href={`/conversations/messages/${c.id}`}
                 className="min-w-0 flex-1 truncate hover:underline"
               >
-                {c.title || 'Messages'}
+                {c.title || copy.leads.messagesFallback}
               </Link>
               {c.lastMessageAt && (
                 <span className="text-xs text-muted-foreground"><Stamp at={c.lastMessageAt} /></span>
@@ -457,13 +467,14 @@ function ConversationsPanel({ lead }: { lead: LeadDetail }) {
 }
 
 function NotesPanel({ lead }: { lead: LeadDetail }) {
+  const copy = useCopy();
   const { toast } = useToast();
   const addNote = useAddNote(lead.id);
   const [draft, setDraft] = useState('');
   const notesCap = useCapped(lead.notes);
 
   return (
-    <Panel title="Notes">
+    <Panel title={copy.leads.notesTitle}>
       <form
         onSubmit={(e) => {
           e.preventDefault();
@@ -479,15 +490,15 @@ function NotesPanel({ lead }: { lead: LeadDetail }) {
         <input
           value={draft}
           onChange={(e) => setDraft(e.target.value)}
-          placeholder="Add a note…"
+          placeholder={copy.leads.addNotePlaceholder}
           className="h-8 min-w-0 flex-1 rounded-md border border-input bg-card px-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
         />
         <Button type="submit" size="sm" disabled={addNote.isPending || !draft.trim()}>
-          Add
+          {copy.leads.addNote}
         </Button>
       </form>
       {lead.notes.length === 0 ? (
-        <p className="text-xs text-muted-foreground">No notes yet.</p>
+        <p className="text-xs text-muted-foreground">{copy.leads.noNotesYet}</p>
       ) : (
         <ul className="space-y-2">
           {notesCap.visible.map((note) => (
@@ -506,6 +517,7 @@ function NotesPanel({ lead }: { lead: LeadDetail }) {
 }
 
 function TimelinePanel({ lead }: { lead: LeadDetail }) {
+  const copy = useCopy();
   const entries = [
     ...lead.activity.map((a) => ({
       id: `a-${a.id}`,
@@ -523,9 +535,9 @@ function TimelinePanel({ lead }: { lead: LeadDetail }) {
   const cap = useCapped(entries);
 
   return (
-    <Panel title="History">
+    <Panel title={copy.leads.historyTitle}>
       {entries.length === 0 ? (
-        <p className="text-xs text-muted-foreground">Nothing yet.</p>
+        <p className="text-xs text-muted-foreground">{copy.leads.nothingYet}</p>
       ) : (
         <ul className="space-y-1.5">
           {cap.visible.map((entry) => (
@@ -547,16 +559,20 @@ function TimelinePanel({ lead }: { lead: LeadDetail }) {
 }
 
 export function LeadDetailView({ leadId }: { leadId: string }) {
+  const copy = useCopy();
   const lead = useLead(leadId);
 
   if (lead.isLoading) {
-    return <div className="glass-surface animate-pulse rounded-xl p-10 text-sm text-muted-foreground">Loading…</div>;
+    return <div className="glass-surface animate-pulse rounded-xl p-10 text-sm text-muted-foreground">{copy.leads.loading}</div>;
   }
   if (!lead.data) {
     return (
       <div>
         <p className="text-sm text-muted-foreground">
-          Lead not found. <Link href="/leads" className="underline">Back to all leads.</Link>
+          {copy.leads.notFound}{' '}
+          <Link href="/leads" className="underline">
+            {copy.leads.backToAll}
+          </Link>
         </p>
       </div>
     );

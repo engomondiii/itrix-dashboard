@@ -17,8 +17,10 @@ import { inScope, type TodayScope } from '../scope';
 import { TodayBand } from '../today-band';
 import { ShowMore, useCapped } from '../use-capped';
 import { Stamp } from '@/components/shared/timestamp';
+import { useCopy } from '@/lib/i18n/locale-provider';
 
 function LeadCard({ row }: { row: LeadRow }) {
+  const copy = useCopy();
   const { toast } = useToast();
   const { user } = useAuth();
   const take = useTakeLead();
@@ -38,7 +40,8 @@ function LeadCard({ row }: { row: LeadRow }) {
       }
       meta={
         <>
-          {row.primaryPain || row.productRoute || 'New enquiry'} · <Stamp at={row.submittedAt} />
+          {row.primaryPain || row.productRoute || copy.today.newEnquiry} ·{' '}
+          <Stamp at={row.submittedAt} />
           {row.owner ? ` · ${row.owner}` : ''}
         </>
       }
@@ -51,7 +54,11 @@ function LeadCard({ row }: { row: LeadRow }) {
               take.mutate(
                 { id: row.id, owner: user.email },
                 {
-                  onSuccess: () => toast({ title: `${row.company || 'Lead'} is yours`, tone: 'success' }),
+                  onSuccess: () =>
+                    toast({
+                      title: copy.today.claimedToast(row.company || copy.today.leadFallback),
+                      tone: 'success',
+                    }),
                   onError: (error) =>
                     toast({ title: normalizeError(error).message, tone: 'destructive' }),
                 },
@@ -67,6 +74,7 @@ function LeadCard({ row }: { row: LeadRow }) {
 }
 
 export function NewLeadsBand({ ownerScope, forceOpen = false }: { ownerScope: TodayScope; forceOpen?: boolean }) {
+  const copy = useCopy();
   const { user } = useAuth();
   const leads = useNewLeads();
   // Priority 1 first, then newest within a priority.
@@ -78,8 +86,9 @@ export function NewLeadsBand({ ownerScope, forceOpen = false }: { ownerScope: To
   return (
     <TodayBand
       forceOpen={forceOpen}
-      title="New leads"
-      hint="unworked — highest priority first"
+      title={copy.today.newLeadsTitle}
+      storageKey="leads"
+      hint={copy.today.newLeadsHint}
       count={rows.length}
       isLoading={leads.isLoading}
       tone="neutral"

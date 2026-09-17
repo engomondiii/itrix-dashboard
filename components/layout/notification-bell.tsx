@@ -37,8 +37,10 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import { useCopy } from '@/lib/i18n/locale-provider';
 
 export function NotificationBell() {
+  const copy = useCopy();
   const router = useRouter();
   const [open, setOpen] = useState(false);
 
@@ -66,7 +68,7 @@ export function NotificationBell() {
         <button
           type="button"
           aria-label={
-            unreadCount > 0 ? `Notifications, ${unreadCount} unread` : 'Notifications'
+            unreadCount > 0 ? copy.ui.notificationsUnread(unreadCount) : copy.ui.notifications
           }
           className="relative flex h-8 w-8 items-center justify-center rounded-md text-foreground/80 transition-colors hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
         >
@@ -84,7 +86,7 @@ export function NotificationBell() {
 
       <DropdownMenuContent align="end" sideOffset={6} className="w-80 p-0">
         <div className="flex items-center justify-between px-3 py-2.5">
-          <p className="text-sm font-semibold">Notifications</p>
+          <p className="text-sm font-semibold">{copy.ui.notifications}</p>
           {unreadCount > 0 && (
             <Button
               variant="ghost"
@@ -93,14 +95,14 @@ export function NotificationBell() {
               disabled={markAllRead.isPending}
               className="h-6 px-2 text-xs font-normal text-muted-foreground hover:text-foreground"
             >
-              Mark all read
+              {copy.ui.markAllRead}
             </Button>
           )}
         </div>
         <DropdownMenuSeparator className="my-0" />
 
         {list.isLoading && (
-          <p className="px-3 py-6 text-center text-sm text-muted-foreground">Loading…</p>
+          <p className="px-3 py-6 text-center text-sm text-muted-foreground">{copy.ui.loading}</p>
         )}
 
         {!list.isLoading && notifications.length === 0 && (

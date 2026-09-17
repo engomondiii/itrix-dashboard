@@ -33,8 +33,10 @@ import { useAuth } from '@/lib/auth/auth-context';
 import { canAssignToOthers, canClaimLeads } from '@/lib/auth/roles';
 import { useAssignLead } from '@/lib/leads/hooks';
 import { assignableMembers, useTeam } from '@/lib/team';
+import { useCopy } from '@/lib/i18n/locale-provider';
 
 export function AssignControl({ leadId, owner }: { leadId: string; owner: string | null }) {
+  const copy = useCopy();
   const { user } = useAuth();
   const { toast } = useToast();
   const assign = useAssignLead(leadId);
@@ -55,7 +57,7 @@ export function AssignControl({ leadId, owner }: { leadId: string; owner: string
     if (owner) return <span className="text-xs text-muted-foreground">Owner: {owner}</span>;
     if (!canClaimLeads(user)) return null;
     return (
-      <Button size="sm" disabled={assign.isPending} onClick={() => handoff(user!.email, 'This lead is yours')}>
+      <Button size="sm" disabled={assign.isPending} onClick={() => handoff(user!.email, copy.leads.thisLeadIsYours)}>
         Take it
       </Button>
     );
@@ -68,7 +70,7 @@ export function AssignControl({ leadId, owner }: { leadId: string; owner: string
         <DropdownMenuTrigger asChild>
           <Button size="sm" variant={owner ? 'outline' : 'primary'} disabled={assign.isPending}>
             <UserPlus className="h-3.5 w-3.5" />
-            {owner ? 'Reassign' : 'Assign'}
+            {owner ? copy.leads.reassign : copy.leads.assign}
             <ChevronDown className="h-3 w-3" />
           </Button>
         </DropdownMenuTrigger>
@@ -76,8 +78,8 @@ export function AssignControl({ leadId, owner }: { leadId: string; owner: string
         <DropdownMenuContent align="end" sideOffset={6} className="w-64">
           {user?.email && (
             <>
-              <DropdownMenuItem onClick={() => handoff(user.email, 'This lead is yours')}>
-                <span>Take it myself</span>
+              <DropdownMenuItem onClick={() => handoff(user.email, copy.leads.thisLeadIsYours)}>
+                <span>{copy.leads.takeItMyself}</span>
               </DropdownMenuItem>
               <DropdownMenuSeparator />
             </>
@@ -106,8 +108,8 @@ export function AssignControl({ leadId, owner }: { leadId: string; owner: string
           {owner && (
             <>
               <DropdownMenuSeparator />
-              <DropdownMenuItem onClick={() => handoff(null, 'Back in the unassigned queue')}>
-                <span>Put back in the queue</span>
+              <DropdownMenuItem onClick={() => handoff(null, copy.leads.backInQueue)}>
+                <span>{copy.leads.putBackInQueue}</span>
               </DropdownMenuItem>
             </>
           )}

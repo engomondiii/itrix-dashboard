@@ -22,6 +22,7 @@ import {
   viewerTimeZone,
 } from '@/lib/time/zones';
 import { cn } from '@/lib/utils';
+import { useCopy } from '@/lib/i18n/locale-provider';
 
 /**
  * Ticks on the minute boundary, not every 60s from mount — otherwise the
@@ -43,6 +44,7 @@ function subscribeToTheMinute(onChange: () => void) {
 }
 
 export function OfficeClock({ className }: { className?: string }) {
+  const copy = useCopy();
   // The server has no viewer zone and no honest "now", so its snapshot is
   // null and the clock appears after hydration. Rendering a server time here
   // would be a hydration mismatch AND a wrong number.
@@ -65,7 +67,7 @@ export function OfficeClock({ className }: { className?: string }) {
   return (
     <div
       className={cn('hidden items-baseline gap-1.5 text-xs sm:flex', className)}
-      title={`${tooltip}${here ? '' : ` · you ${clockInZone(zone, now)} (${zone})`}`}
+      title={`${tooltip}${here ? '' : ` · ${copy.ui.youAt(clockInZone(zone, now), zone)}`}`}
     >
       <span className="font-medium tabular-nums" data-numeric>
         {clockAt(OPERATING_SITE, now)}

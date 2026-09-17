@@ -23,17 +23,10 @@ import { ReasonAction } from '../reason-action';
 import { TodayBand } from '../today-band';
 import { ShowMore, useCapped } from '../use-capped';
 import { Stamp } from '@/components/shared/timestamp';
-
-/** Staff-facing risk vocabulary (spec: claim level). */
-const RISK_LABEL: Record<number, string> = {
-  1: 'Risk 1 · conversational',
-  2: 'Risk 2 · qualitative',
-  3: 'Risk 3 · needs citation',
-  4: 'Risk 4 · commercial',
-  5: 'Risk 5 · legal',
-};
+import { useCopy } from '@/lib/i18n/locale-provider';
 
 function ApprovalCard({ row }: { row: ApprovalRow }) {
+  const copy = useCopy();
   const { toast } = useToast();
   const { hasPermission } = useAuth();
   const act = useApprovalAction();
@@ -48,7 +41,12 @@ function ApprovalCard({ row }: { row: ApprovalRow }) {
       {
         onSuccess: () =>
           toast({
-            title: action === 'approve' ? (secondOk ? 'Second OK given' : 'Approved') : 'Rejected',
+            title:
+              action === 'approve'
+                ? secondOk
+                  ? copy.today.secondOkToast
+                  : copy.today.approvedToast
+                : copy.today.rejectedToast,
             tone: action === 'approve' ? 'success' : 'default',
           }),
         onError: (error) =>
@@ -63,9 +61,10 @@ function ApprovalCard({ row }: { row: ApprovalRow }) {
       href="/approvals"
       title={
         <>
-          {secondOk ? 'Needs a second OK' : 'Needs an OK'} · {RISK_LABEL[row.claimLevel]}
+          {secondOk ? copy.today.needsSecondOk : copy.today.needsOk} ·{' '}
+          {copy.status.riskLabel(row.claimLevel)}
           {secondOk && row.firstApprover ? (
-            <span className="text-muted-foreground"> (first OK: {row.firstApprover})</span>
+            <span className="text-muted-foreground"> {copy.today.firstOkBy(row.firstApprover)}</span>
           ) : null}
         </>
       }
@@ -84,11 +83,11 @@ function ApprovalCard({ row }: { row: ApprovalRow }) {
               disabled={act.isPending}
               onClick={() => run('approve')}
             >
-              {secondOk ? 'Give second OK' : 'Approve'}
+              {secondOk ? copy.today.giveSecondOk : copy.today.approve}
             </Button>
             <ReasonAction
-              label="Reject"
-              placeholder="Why this can't go out"
+              label={copy.today.reject}
+              placeholder={copy.today.rejectPlaceholder}
               busy={act.isPending}
               onConfirm={(reason) => run('reject', reason)}
             />
@@ -100,6 +99,7 @@ function ApprovalCard({ row }: { row: ApprovalRow }) {
 }
 
 export function ApprovalsBand({ forceOpen = false }: { forceOpen?: boolean }) {
+  const copy = useCopy();
   const queue = useApprovalQueue();
   const rows = queue.data ?? [];
   const { visible, remaining, showMore } = useCapped(rows);
@@ -107,8 +107,9 @@ export function ApprovalsBand({ forceOpen = false }: { forceOpen?: boolean }) {
   return (
     <TodayBand
       forceOpen={forceOpen}
-      title="Waiting for your OK"
-      hint="messages the AI won't send without a human"
+      title={copy.today.approvalsTitle}
+      storageKey="approvals"
+      hint={copy.today.approvalsHint}
       count={rows.length}
       isLoading={queue.isLoading}
       alwaysShow
@@ -116,7 +117,7 @@ export function ApprovalsBand({ forceOpen = false }: { forceOpen?: boolean }) {
     >
       {rows.length === 0 && !queue.isLoading ? (
         <p className="px-1 text-sm text-muted-foreground">
-          Nothing waiting — the AI has no held drafts right now.
+          {copy.today.approvalsEmpty}
         </p>
       ) : (
         <>

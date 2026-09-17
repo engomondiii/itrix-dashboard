@@ -23,23 +23,29 @@ import { useConversation, useSendMessage } from '@/lib/conversations/hooks';
 import type { ConsoleMessage } from '@/lib/conversations/types';
 import { MessageBody } from './message-body';
 import { Stamp } from '@/components/shared/timestamp';
+import { useCopy } from '@/lib/i18n/locale-provider';
 
 const RISK_OPTIONS = [
-  { level: 1, label: 'Risk 1 · conversational' },
-  { level: 2, label: 'Risk 2 · qualitative' },
-  { level: 3, label: 'Risk 3 · needs citation (held for OK)' },
-  { level: 4, label: 'Risk 4 · commercial (held, 2 OKs)' },
-  { level: 5, label: 'Risk 5 · legal (held, 2 OKs)' },
+  { level: 1 },
+  { level: 2 },
+  { level: 3 },
+  { level: 4 },
+  { level: 5 },
 ];
 
 function Message({ message }: { message: ConsoleMessage }) {
+  const copy = useCopy();
   const fromUs = message.senderKind === 'agent' || message.senderKind === 'team';
   return (
     <li className={cn('flex', fromUs ? 'justify-end' : 'justify-start')}>
       <div className={cn('max-w-[42rem] rounded-xl px-3.5 py-2.5 text-sm break-words', fromUs ? 'bg-secondary' : 'glass-surface')}>
         <p className="mb-1 text-xs text-muted-foreground">
           <span className="font-medium text-foreground">
-            {message.senderKind === 'team' ? 'Team' : message.senderKind === 'agent' ? 'AI' : 'Visitor'}
+            {message.senderKind === 'team'
+              ? copy.conversations.senderTeam
+              : message.senderKind === 'agent'
+                ? copy.conversations.senderAi
+                : copy.conversations.senderVisitor}
           </span>{' '}
           · <Stamp at={message.at} />
         </p>
@@ -56,6 +62,7 @@ function Message({ message }: { message: ConsoleMessage }) {
 }
 
 export function MessagesView({ conversationId }: { conversationId: string }) {
+  const copy = useCopy();
   const { toast } = useToast();
   const conversation = useConversation(conversationId);
   const send = useSendMessage(conversationId);
@@ -86,7 +93,7 @@ export function MessagesView({ conversationId }: { conversationId: string }) {
           <ArrowLeft className="h-3 w-3" /> All conversations
         </Link>
         <h1 className="font-display tracking-display text-xl font-semibold">
-          {detail.title || 'Messages'}
+          {detail.title || copy.conversations.messagesFallback}
         </h1>
         {detail.leadId && (
           <p className="mt-0.5 text-xs text-muted-foreground">
@@ -123,11 +130,11 @@ export function MessagesView({ conversationId }: { conversationId: string }) {
               onSuccess: (result) => {
                 setDraft('');
                 if (result.governanceStatus === 'auto_approved') {
-                  toast({ title: 'Sent', tone: 'success' });
+                  toast({ title: copy.conversations.sentToast, tone: 'success' });
                 } else if (result.governanceStatus === 'pending') {
-                  toast({ title: 'Held for an OK — it will send once approved' });
+                  toast({ title: copy.conversations.heldToast });
                 } else {
-                  toast({ title: 'Blocked by the language guard — rephrase and try again', tone: 'destructive' });
+                  toast({ title: copy.conversations.blockedByGuard, tone: 'destructive' });
                 }
               },
               onError: (error) => toast({ title: normalizeError(error).message, tone: 'destructive' }),
@@ -140,7 +147,7 @@ export function MessagesView({ conversationId }: { conversationId: string }) {
           value={draft}
           onChange={(e) => setDraft(e.target.value)}
           rows={3}
-          placeholder="Reply as a person…"
+          placeholder={copy.conversations.replyPlaceholder}
           className="w-full rounded-md border border-input bg-card p-2.5 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
         />
         <div className="flex flex-wrap items-center justify-between gap-2">
@@ -148,16 +155,20 @@ export function MessagesView({ conversationId }: { conversationId: string }) {
             value={claimLevel}
             onChange={(e) => setClaimLevel(Number(e.target.value))}
             className="h-8 rounded-md border border-input bg-card px-2 text-xs focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-            aria-label="Risk level of this message"
+            aria-label={copy.conversations.riskAriaLabel}
           >
             {RISK_OPTIONS.map((option) => (
               <option key={option.level} value={option.level}>
-                {option.label}
+                {copy.conversations.riskOption(option.level)}
               </option>
             ))}
           </select>
           <Button type="submit" size="sm" disabled={send.isPending || !draft.trim()}>
-            {send.isPending ? 'Sending…' : claimLevel >= 3 ? 'Send for OK' : 'Send'}
+            {send.isPending
+            ? copy.conversations.sending
+            : claimLevel >= 3
+              ? copy.conversations.sendForOk
+              : copy.conversations.send}
           </Button>
         </div>
       </form>

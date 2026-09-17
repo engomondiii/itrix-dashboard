@@ -15,6 +15,7 @@ import { useCustomer, useCustomerSupport } from '@/lib/customers/hooks';
 import { ShowMore, useCapped } from '@/components/today/use-capped';
 import type { HealthClass } from '@/lib/customers/types';
 import { Stamp } from '@/components/shared/timestamp';
+import { useCopy } from '@/lib/i18n/locale-provider';
 
 const HEALTH_STYLE: Record<HealthClass, string> = {
   critical: 'bg-destructive-soft text-destructive',
@@ -24,6 +25,7 @@ const HEALTH_STYLE: Record<HealthClass, string> = {
 };
 
 export function CustomerDetailView({ clientId }: { clientId: string }) {
+  const copy = useCopy();
   const customer = useCustomer(clientId);
   const support = useCustomerSupport(clientId);
   const supportCap = useCapped(support.data?.results ?? []);
@@ -31,12 +33,15 @@ export function CustomerDetailView({ clientId }: { clientId: string }) {
   const detail = customer.data;
 
   if (customer.isLoading) {
-    return <div className="glass-surface animate-pulse rounded-xl p-10 text-sm text-muted-foreground">Loading…</div>;
+    return <div className="glass-surface animate-pulse rounded-xl p-10 text-sm text-muted-foreground">{copy.customers.loading}</div>;
   }
   if (!detail) {
     return (
       <p className="text-sm text-muted-foreground">
-        Account not found. <Link href="/customers" className="underline">Back to customers.</Link>
+        {copy.customers.notFound}{' '}
+        <Link href="/customers" className="underline">
+          {copy.customers.backToCustomers}
+        </Link>
       </p>
     );
   }
@@ -62,9 +67,9 @@ export function CustomerDetailView({ clientId }: { clientId: string }) {
       </header>
 
       <div className="glass-surface mb-4 rounded-xl p-4">
-        <h2 className="font-display tracking-display mb-2 text-sm font-semibold">Why this health</h2>
+        <h2 className="font-display tracking-display mb-2 text-sm font-semibold">{copy.customers.whyThisHealth}</h2>
         {detail.reasons.length === 0 ? (
-          <p className="text-sm text-muted-foreground">No flags — nothing is dragging this account down.</p>
+          <p className="text-sm text-muted-foreground">{copy.customers.noFlags}</p>
         ) : (
           <ul className="list-disc space-y-1 pl-5 text-sm">
             {detail.reasons.map((reason) => (
@@ -73,24 +78,25 @@ export function CustomerDetailView({ clientId }: { clientId: string }) {
           </ul>
         )}
         <p className="mt-3 text-xs text-muted-foreground">
-          {detail.outcomesOffPlan > 0 && `${detail.outcomesOffPlan} outcome(s) off plan · `}
-          {detail.degradedDeployments > 0 && `${detail.degradedDeployments} degraded deployment(s) · `}
-          {detail.negativePulse && 'negative pulse · '}
-          expansion {detail.expansionAllowed ? 'allowed' : 'on hold'}
+          {detail.outcomesOffPlan > 0 && `${copy.customers.outcomesOffPlan(detail.outcomesOffPlan)} · `}
+          {detail.degradedDeployments > 0 &&
+            `${copy.customers.degradedDeployments(detail.degradedDeployments)} · `}
+          {detail.negativePulse && `${copy.customers.negativePulse} · `}
+          {detail.expansionAllowed ? copy.customers.expansionAllowed : copy.customers.expansionOnHold}
         </p>
       </div>
 
       <div className="glass-surface rounded-xl p-4">
         <h2 className="font-display tracking-display mb-2 text-sm font-semibold">
-          Support requests{' '}
+          {copy.customers.supportRequests}{' '}
           <span className="font-sans text-xs font-normal text-muted-foreground">
-            — read-only here; handled outside the dashboard for now
+            {copy.customers.supportReadOnly}
           </span>
         </h2>
         {support.isLoading ? (
-          <p className="text-sm text-muted-foreground">Loading…</p>
+          <p className="text-sm text-muted-foreground">{copy.customers.loading}</p>
         ) : (support.data?.results.length ?? 0) === 0 ? (
-          <p className="text-sm text-muted-foreground">No support requests.</p>
+          <p className="text-sm text-muted-foreground">{copy.customers.noSupportRequests}</p>
         ) : (
           <ul className="space-y-2">
             {supportCap.visible.map((row) => (
@@ -99,13 +105,14 @@ export function CustomerDetailView({ clientId }: { clientId: string }) {
                   {row.subject}
                   {row.blocking && (
                     <span className="ml-2 rounded-full bg-destructive-soft px-1.5 py-0.5 text-[10px] font-semibold text-destructive">
-                      blocking
+                      {copy.customers.blocking}
                     </span>
                   )}
                 </p>
                 <p className="text-xs text-muted-foreground">
                   {row.status.replace(/_/g, ' ')} · {row.urgency}
-                  {row.slaBreaching && ' · past its response window'} · {row.owner || 'unowned'} · opened{' '}
+                  {row.slaBreaching && ` · ${copy.customers.pastResponseWindow}`} ·{' '}
+                  {row.owner || copy.customers.unowned} · {copy.customers.opened}{' '}
                   <Stamp at={row.createdAt} />
                 </p>
               </li>
@@ -116,8 +123,7 @@ export function CustomerDetailView({ clientId }: { clientId: string }) {
       </div>
 
       <p className="mt-4 text-xs text-muted-foreground">
-        Outcome tracking, success plans, and the relationship team live in the customer&apos;s own
-        portal and aren&apos;t exposed to staff accounts yet.
+        {copy.customers.portalNote}
       </p>
     </section>
   );

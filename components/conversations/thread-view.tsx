@@ -21,7 +21,6 @@ import { useState } from 'react';
 import { ArrowLeft } from 'lucide-react';
 
 import { cn } from '@/lib/utils';
-import { journeyLabel } from '@/lib/leads/journey-labels';
 import { useConversation, useConversations, useThreadDetail } from '@/lib/conversations/hooks';
 import type {
   ConversationSummary,
@@ -33,21 +32,29 @@ import type {
 import { MessageBody } from './message-body';
 import { MessageComposer } from './message-composer';
 import { Stamp } from '@/components/shared/timestamp';
+import { useCopy } from '@/lib/i18n/locale-provider';
 
-const SENDER_LABEL: Record<SenderKind, string> = {
-  visitor: 'Visitor',
-  client: 'Customer',
-  agent: 'AI',
-  team: 'Team',
-  system: 'System',
+/** Keys into `copy.conversations`, resolved at render. */
+const SENDER_LABEL: Record<
+  SenderKind,
+  'senderVisitor' | 'senderCustomer' | 'senderAi' | 'senderTeam' | 'senderSystem'
+> = {
+  visitor: 'senderVisitor',
+  client: 'senderCustomer',
+  agent: 'senderAi',
+  team: 'senderTeam',
+  system: 'senderSystem',
 };
 
-const GOVERNANCE_BADGE: Partial<Record<GovernanceStatus, { label: string; className: string }>> = {
-  pending: { label: 'held for OK', className: 'bg-warning-soft text-warning' },
-  blocked: { label: 'blocked', className: 'bg-destructive-soft text-destructive' },
+const GOVERNANCE_BADGE: Partial<
+  Record<GovernanceStatus, { labelKey: 'heldForOk' | 'blocked'; className: string }>
+> = {
+  pending: { labelKey: 'heldForOk', className: 'bg-warning-soft text-warning' },
+  blocked: { labelKey: 'blocked', className: 'bg-destructive-soft text-destructive' },
 };
 
 function Turn({ turn }: { turn: ThreadTurn }) {
+  const copy = useCopy();
   const fromUs = turn.senderKind === 'agent' || turn.senderKind === 'team';
   const badge = GOVERNANCE_BADGE[turn.governanceStatus];
 
@@ -62,12 +69,12 @@ function Turn({ turn }: { turn: ThreadTurn }) {
       >
         <p className="mb-1 flex items-center gap-2 text-xs text-muted-foreground">
           <span className="font-medium text-foreground">
-            {SENDER_LABEL[turn.senderKind]}
+            {copy.conversations[SENDER_LABEL[turn.senderKind]]}
             {turn.agentKey ? ` · ${turn.agentKey}` : ''}
           </span>
           {badge && (
             <span className={cn('rounded-full px-1.5 py-0.5 text-[10px] font-semibold', badge.className)}>
-              {badge.label}
+              {copy.conversations[badge.labelKey]}
             </span>
           )}
           <span><Stamp at={turn.at} /></span>
@@ -134,6 +141,7 @@ function mergedTurns(
 }
 
 export function ThreadView({ threadId }: { threadId: string }) {
+  const copy = useCopy();
   const thread = useThreadDetail(threadId);
   const conversations = useConversations();
   // A long-running conversation can be hundreds of turns - render the tail.
@@ -170,11 +178,16 @@ export function ThreadView({ threadId }: { threadId: string }) {
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div>
             <h1 className="font-display tracking-display text-xl font-semibold">
-              {detail.title || 'Untitled conversation'}
+              {detail.title || copy.conversations.untitled}
             </h1>
             <p className="mt-0.5 text-xs text-muted-foreground">
-              {detail.company || (detail.anonymous ? 'Anonymous visitor' : '')} · {journeyLabel(detail.journeyState)} ·{' '}
-              started <Stamp at={detail.createdAt} />
+              {detail.company || (detail.anonymous ? copy.conversations.anonymousVisitor : '')} ·{' '}
+              {copy.status.relationshipLabel(detail.relationshipState ?? '')} ·{' '}
+              {copy.status.mirrorLabel(detail.mirrorStatus ?? '')}
+              {detail.leadJourneyState
+                ? ` · ${copy.conversations.leadStandingPrefix} ${copy.status.journeyLabel(detail.leadJourneyState)}`
+                : ''}{' '}
+              · started <Stamp at={detail.createdAt} />
               {detail.leadId && (
                 <>
                   {' · '}

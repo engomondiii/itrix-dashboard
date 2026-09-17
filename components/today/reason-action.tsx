@@ -12,6 +12,7 @@
 import { useState } from 'react';
 
 import { Button } from '@/components/ui/button';
+import { useCopy } from '@/lib/i18n/locale-provider';
 
 interface ReasonActionProps {
   label: string;
@@ -31,6 +32,7 @@ export function ReasonAction({
   variant = 'outline',
   onConfirm,
 }: ReasonActionProps) {
+  const copy = useCopy();
   const [open, setOpen] = useState(false);
   const [reason, setReason] = useState('');
 
@@ -57,7 +59,7 @@ export function ReasonAction({
         size="sm"
         variant={variant}
         disabled={busy || tooShort}
-        title={tooShort && minChars > 0 ? `At least ${minChars} characters` : undefined}
+        title={tooShort && minChars > 0 ? copy.today.atLeastChars(minChars) : undefined}
         onClick={() => {
           onConfirm(reason.trim());
           setOpen(false);
@@ -67,7 +69,7 @@ export function ReasonAction({
         {label}
       </Button>
       <Button size="sm" variant="ghost" disabled={busy} onClick={() => setOpen(false)}>
-        Cancel
+        {copy.common.cancel}
       </Button>
     </div>
   );
