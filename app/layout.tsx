@@ -92,7 +92,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
           `public/env-config.js` to .gitignore: it is generated per
           environment and committing it defeats the whole mechanism.
         */}
-        <Script src="/env-config.js" strategy="beforeInteractive" />
+        <Script src="/itx-console-assets/env-config.js" strategy="beforeInteractive" />
 
         {/*
           Applies the stored theme before first paint. Must be inline and
