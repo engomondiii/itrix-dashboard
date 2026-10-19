@@ -9,7 +9,11 @@ export async function api(path, data) {
   if (!response.ok) {
     if (response.status === 403 && path.startsWith('admin/'))
       location.assign(ROOT + '/sign-in?expired=1');
-    throw new Error(result.detail || 'Request failed');
+    const fields = result.error?.fields || result;
+    const error = new Error(fields.detail || result.error?.detail || 'Request failed');
+    error.reason = fields.reason;
+    error.remainingAttempts = fields.remaining_attempts;
+    throw error;
   }
   return result;
 }

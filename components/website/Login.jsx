@@ -29,6 +29,7 @@ export default function Login() {
       setCode('');
       setLeft(300);
     } catch (e) {
+      if (e.reason === 'locked') setStep('locked');
       setError(e.message);
     } finally {
       setBusy(false);
@@ -42,7 +43,8 @@ export default function Login() {
       await api('auth/verify', { email, language, code });
       setStep('done');
     } catch (e) {
-      setTries((v) => Math.max(0, v - 1));
+      if (e.remainingAttempts !== undefined) setTries(Number(e.remainingAttempts));
+      if (e.reason === 'locked') setStep('locked');
       setError(e.message);
     } finally {
       setBusy(false);
@@ -62,7 +64,7 @@ export default function Login() {
         <T
           isEmail={step === 'email'}
           isCode={step === 'code'}
-          isLocked={false}
+          isLocked={step === 'locked'}
           isDone={step === 'done'}
           showExpired={expired && step === 'email'}
           email={email}
