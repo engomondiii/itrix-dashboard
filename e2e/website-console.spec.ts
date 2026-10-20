@@ -1,5 +1,8 @@
 import { test, expect } from '@playwright/test';
 
+// These tests own the network stubs; the legacy demo service worker must not intercept them.
+test.use({ serviceWorkers: 'block' });
+
 const root = '/itx-console-7k2m';
 
 test('OTP displays server attempts, transport errors do not spend an attempt, and lockout is visible', async ({ page }) => {
