@@ -55,13 +55,13 @@ const csp = [
 
   // Tailwind and CSS-in-JS both emit inline styles. Injected CSS is a much
   // weaker primitive than injected script, so this is a reasonable trade.
-  "style-src 'self' 'unsafe-inline'",
+  "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
 
   // data: for inlined SVGs, blob: for object URLs from file downloads and
   // client-side image previews. Narrow `https:` to your actual asset hosts.
   "img-src 'self' data: blob: https:",
 
-  "font-src 'self' data:",
+  "font-src 'self' data: https://fonts.gstatic.com",
 
   // Where the app may send requests. This is the directive that limits data
   // exfiltration, so it is worth being precise: the configured API origin is
@@ -117,6 +117,8 @@ const nextConfig: NextConfig = {
   // Emits .next/standalone with a minimal node_modules — the Docker runtime
   // image is ~150 MB instead of ~1 GB. The Dockerfile depends on this.
   output: 'standalone',
+  assetPrefix: '/itx-console-assets',
+  async rewrites() { return [{source:'/itx-console-assets/env-config.js',destination:'/env-config.js'}, {source:'/itx-console-assets/_next/:path*',destination:'/_next/:path*'}, {source:'/itx-console-assets/brand/:path*',destination:'/brand/:path*'}]; },
 
   reactStrictMode: true,
 
