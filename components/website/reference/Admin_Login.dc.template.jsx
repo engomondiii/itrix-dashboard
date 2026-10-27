@@ -57,11 +57,11 @@ export function Template(values) {
           >
             <img
               src={
-                '/itx-console-assets/brand/fa5afd04db046644e14564cf63d6de02.png'
+                '/itx-console-assets/brand/itrix-logo-inverse.svg'
               }
               alt={'itriX'}
               style={css(
-                'width:96px;height:auto;display:block;filter:invert(1);',
+                'width:96px;height:auto;display:block;',
               )}
             />
             <span
