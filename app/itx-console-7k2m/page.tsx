@@ -1,8 +1,8 @@
-import Console from '@/components/website/Console';
+import Retired from '@/components/website/Retired';
 export const metadata = {
-  title: 'itriX Website Operations',
+  title: 'itriX · Intake moved to Google Forms',
   robots: { index: false, follow: false },
 };
 export default function Page() {
-  return <Console />;
+  return <Retired />;
 }
