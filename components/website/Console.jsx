@@ -241,6 +241,8 @@ export default class Console extends React.Component {
       use: '대상 워크로드',
       message: '문의 내용',
       topic: '문의 유형',
+      inquiry_route: '접수 경로',
+      partnership_type: '협력 유형',
       platform: '플랫폼',
       'Privacy version': '개인정보 처리방침 버전',
       'Privacy consent': '개인정보 수집 동의',
